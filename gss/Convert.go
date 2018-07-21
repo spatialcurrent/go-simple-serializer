@@ -1,9 +1,17 @@
+// =================================================================
+//
+// Copyright (C) 2018 Spatial Current, Inc. - All Rights Reserved
+// Released as open source under the MIT License.  See LICENSE file.
+//
+// =================================================================
+
 package gss
 
 import (
 	"github.com/pkg/errors"
 )
 
+// Convert converts an input_string from the input_format to the output_format and returns an error, if any.
 func Convert(input_string string, input_format string, output_format string) (string, error) {
 	if input_format == "json" || input_format == "hcl" || input_format == "hcl2" || input_format == "toml" || input_format == "yaml" {
 		if output_format == "json" || input_format == "hcl" || input_format == "hcl2" || output_format == "toml" || output_format == "yaml" {
