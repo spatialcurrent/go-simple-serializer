@@ -12,6 +12,5 @@ build_c:
 build: build_so build_c
 run:
 	LD_LIBRARY_PATH=. bin/gss_test_c
-run_python:
 clean:
 	rm -f gss.h gss.so bin/gss_test_c
