@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 import (
@@ -22,22 +23,28 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 )
 
-var GO_GSS_VERSION = "0.0.1"
+var GO_GSS_VERSION = "0.0.2"
+var GO_GSS_FORMATS = []string{"csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
 
 func printUsage() {
-	fmt.Println("Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT")
+	fmt.Println("Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT [-h HEADER] [-c COMMENT]")
 }
 
 func main() {
 
 	var input_format string
+	var input_header_text string
+	var input_comment string
+
 	var output_format string
 
 	var version bool
 	var help bool
 
-	flag.StringVar(&input_format, "i", "", "The input format: csv, hcl, hcl2, json, jsonl, toml, yaml")
-	flag.StringVar(&output_format, "o", "", "The output format: csv, hcl, hcl2, json, jsonl, toml, yaml")
+	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(GO_GSS_FORMATS, ", "))
+	flag.StringVar(&input_header_text, "h", "", "The input header if the stdin input has no header.")
+	flag.StringVar(&input_comment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
+	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(GO_GSS_FORMATS, ", "))
 	flag.BoolVar(&version, "version", false, "Prints version to stdout.")
 	flag.BoolVar(&help, "help", false, "Print help.")
 
@@ -82,7 +89,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	output_string, err := gss.Convert(string(input_bytes), input_format, output_format)
+	input_header := make([]string, 0)
+	if len(input_header_text) > 0 {
+		input_header = strings.Split(input_header_text, ",")
+	}
+
+	output_string, err := gss.Convert(string(input_bytes), input_format, input_header, input_comment, output_format)
 	if err != nil {
 		fmt.Println(errors.Wrap(err, "Error converting"))
 		os.Exit(1)

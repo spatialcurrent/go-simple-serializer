@@ -4,7 +4,11 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.  GSS supports `csv`, `hcl`, `hcl2`, `json`, `jsonl`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.
+
+GSS supports `bson`, `csv`, `tsv`, `hcl`, `hcl2`, `json`, `jsonl`, `properties`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+
+Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
 # Usage
 
@@ -13,14 +17,18 @@
 You can use the command line tool to convert between formats.
 
 ```
-Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT
+Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT [-h HEADER] [-c COMMENT]
 Options:
+  -c string
+    	The input comment character, e.g., #.  Commented lines are not sent to output.
+  -h string
+    	The input header if the stdin input has no header.
   -help
     	Print help.
   -i string
-    	The input format: csv, hcl, hcl2, json, jsonl, toml, yaml
+    	The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
   -o string
-    	The output format: csv, hcl, hcl2, json, jsonl, toml, yaml
+    	The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
   -version
     	Prints version to stdout.
 ```
@@ -33,8 +41,18 @@ You can import **go-simple-serializer** as a library with:
 import (
   "github.com/spatialcurrent/go-simple-serializer/gss"
 )
+```
+
+The `Convert`, `Deserialize`, and `Serialize` functions are the core functions to use.
+
+```go
 ...
-  output_string, err := gss.Convert(input_string, input_format, output_format)
+  output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format)
+...
+  output = map[string]interface{}{}
+  err := gss.Deserialize(input, format, input_header, input_comment, &output)
+...
+  output_string, err := gss.Serialize(input, format)
 ...
 ```
 
@@ -48,8 +66,10 @@ import (
   <body>
     <script>
       var input = "{\"a\":1}";
-      var output = gss.convert(input, "json", "yaml")
+      var output = gss.convert(input, "json", "yaml", )
       ...
+      // You can also pass the input header for a csv/tsv that has none
+      var output = gss.convert(input, "csv", "json", {"header": ["a","b"]})
     </script>
   </body>
 </html>
@@ -57,18 +77,50 @@ import (
 
 **Android**
 
-The `go-simple-serializer` code is available under `com.spatialcurrent.gss`.  For example,
+The `go-simple-serializer` code is available for use in Android applications under `com.spatialcurrent.gss`.  For example,
 
 ```java
 import com.spatialcurrent.gss.Gss;
 ...
-  String output_format = Gss.convert(input_string, input_format, output_format);
+  String output_format = Gss.convert(input_string, input_format, input_header, input_comment, output_format);
 ...
 ```
+
+**C**
+
+A variant of the `Convert` function is exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For example:
+
+```
+char *input_string = "<YOUR INPUT>";
+char *output_string;
+err = Convert(input_string, input_format, input_header_csv, input_comment, output_format, &output_string);
+```
+
+The Go function definition defined in `plugins/gss/main.go` uses `*C.char` for all input except `output_string` which uses a double pointer (`**C.char`) to write to the output.
+
+```
+func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, output_format *C.char, output_string **C.char) *C.char
+```
+
+For complete patterns for `C`, `C++`, and `Python`, see the `examples`.
 
 # Releases
 
 **go-simple-serializer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-simple-serializer/releases.
+
+# Examples
+
+`.gitignore` file to jsonl
+
+```
+cat .gitignore | ./gss -i csv -h pattern -o jsonl
+```
+
+Get language from `.travis.yml` and set to variable
+
+```
+language=$(cat .travis.yml | ./gss_linux_amd64 -i yaml -o json -c '#' | jq .language -r)
+```
 
 # Building
 
