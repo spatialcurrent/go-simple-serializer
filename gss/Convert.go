@@ -8,35 +8,13 @@
 package gss
 
 import (
-	"strings"
-)
-
-import (
 	"github.com/pkg/errors"
 )
 
 // Convert converts an input_string from the input_format to the output_format and returns an error, if any.
 func Convert(input_string string, input_format string, input_header []string, input_comment string, output_format string) (string, error) {
 
-	var object interface{}
-
-	if input_format == "json" {
-		input_string = strings.TrimSpace(input_string)
-		if len(input_string) > 0 && input_string[0] == '[' {
-			object = []map[string]interface{}{}
-		} else {
-			object = map[string]interface{}{}
-		}
-	} else if input_format == "yaml" {
-		input_string = strings.TrimSpace(input_string)
-		if len(input_string) > 0 && input_string[0] == '-' {
-			object = []map[string]interface{}{}
-		} else {
-			object = map[string]interface{}{}
-		}
-	} else if input_format == "bson" || input_format == "hcl" || input_format == "hcl2" || input_format == "properties" || input_format == "toml" {
-		object = map[string]interface{}{}
-	}
+	object := NewObject(input_string, input_format)
 
 	if input_format == "bson" || input_format == "json" || input_format == "hcl" || input_format == "hcl2" || input_format == "properties" || input_format == "toml" || input_format == "yaml" {
 		if output_format == "bson" || output_format == "json" || input_format == "hcl" || input_format == "hcl2" || output_format == "properties" || output_format == "toml" || output_format == "yaml" {
