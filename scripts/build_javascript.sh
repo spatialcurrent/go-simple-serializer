@@ -1,23 +1,29 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEST=$(realpath ${1:-$DIR/../bin})
 
-mkdir -p $DIR/../bin
+mkdir -p $DEST
 
 echo "******************"
-echo "Formatting $DIR/gss"
+echo "Formatting $(realpath $DIR/../gss)"
 cd $DIR/../gss
 go fmt
-echo "Formatting $DIR/../cmd/gss"
-cd $DIR/../cmd/gss
+echo "Formatting $(realpath $DIR/../cmd/gss.js)"
+cd $DIR/../cmd/gss.js
 go fmt
 echo "Done formatting."
 echo "******************"
 echo "Building Javascript for GSS"
-cd $DIR/../bin
+cd $DEST
 gopherjs build -o gss.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.js
 if [[ "$?" != 0 ]] ; then
-    echo "Error building Javascript for GSS"
+    echo "Error building Javascript artifacts for GSS"
     exit 1
 fi
-echo "Executable built at $(realpath $DIR/../bin)"
+gopherjs build -m -o gss.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.js
+if [[ "$?" != 0 ]] ; then
+    echo "Error building Javascript artifacts for GSS"
+    exit 1
+fi
+echo "JavaScript artificats built at $DEST"

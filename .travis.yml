@@ -8,14 +8,22 @@ go:
 
 os:
   - linux
-  - osx
+  #- osx
 
 matrix:
   allow_failures:
     - go: tip
   fast_finish: true
 
+install:
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
+
 script:
+  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./gss/
+  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./plugins/gss/
+  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./cmd/gss/
+  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./cmd/gss.js/
   - cd gss
   - go fmt
   - cd ./../cmd/gss

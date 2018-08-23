@@ -8,7 +8,7 @@
 build_so:
 	go build -o gss.so -buildmode=c-shared github.com/spatialcurrent/go-simple-serializer/plugins/gss
 build_c:
-	mkdir bin && gcc -o bin/gss_test_c test.c -L. -l:gss.so
+	mkdir -p bin && gcc -o bin/gss_test_c test.c -L. -l:gss.so
 build: build_so build_c
 run:
 	LD_LIBRARY_PATH=. bin/gss_test_c

@@ -22,11 +22,9 @@ import (
 	"honnef.co/go/js/console"
 )
 
-var GO_GSS_VERSION = "0.0.2"
-
 func main() {
 	js.Global.Set("gss", map[string]interface{}{
-		"version":        GO_GSS_VERSION,
+		"version": gss.VERSION,
 		"convert": Convert,
 	})
 }

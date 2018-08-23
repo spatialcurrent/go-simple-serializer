@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/spatialcurrent/go-simple-serializer.svg)](https://travis-ci.org/spatialcurrent/go-simple-serializer) [![GoDoc](https://godoc.org/github.com/spatialcurrent/go-simple-serializer?status.svg)](https://godoc.org/github.com/spatialcurrent/go-simple-serializer)
+[![Build Status](https://travis-ci.org/spatialcurrent/go-simple-serializer.svg)](https://travis-ci.org/spatialcurrent/go-simple-serializer) [![Go Report Card](https://goreportcard.com/badge/spatialcurrent/go-simple-serializer)](https://goreportcard.com/report/spatialcurrent/go-simple-serializer)  [![GoDoc](https://godoc.org/github.com/spatialcurrent/go-simple-serializer?status.svg)](https://godoc.org/github.com/spatialcurrent/go-simple-serializer) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://github.com/spatialcurrent/go-simple-serializer/blob/master/LICENSE)
 
 # go-simple-serializer
 
@@ -56,6 +56,8 @@ The `Convert`, `Deserialize`, and `Serialize` functions are the core functions t
 ...
 ```
 
+See [gss](https://godoc.org/github.com/spatialcurrent/go-simple-serializer/gss) in GoDoc for information on how to use Go API.
+
 **JavaScript**
 
 ```html
@@ -102,7 +104,7 @@ The Go function definition defined in `plugins/gss/main.go` uses `*C.char` for a
 func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, output_format *C.char, output_string **C.char) *C.char
 ```
 
-For complete patterns for `C`, `C++`, and `Python`, see the `examples`.
+For complete patterns for `C`, `C++`, and `Python`, see the `go-simpler-serializer/examples` folder.
 
 # Releases
 
@@ -139,6 +141,10 @@ The `build_android.sh` script is used to build an [Android Archive](https://deve
 **Shared Object**
 
 The `build_so.sh` script is used to build a Shared Object (`*.go`), which can be called by `C`, `C++`, and `Python` on Linux machines.
+
+**Changing Destination**
+
+The default destination for build artifacts is `go-simple-serializer/bin`, but you can change the destination with a CLI argument.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `bash scripts/build_cli.sh /usr/local/go/bin`
 
 # Contributing
 

@@ -14,7 +14,10 @@ import (
 // Convert converts an input_string from the input_format to the output_format and returns an error, if any.
 func Convert(input_string string, input_format string, input_header []string, input_comment string, output_format string) (string, error) {
 
-	object := NewObject(input_string, input_format)
+	object, err := NewObject(input_string, input_format)
+	if err != nil {
+		return "", errors.Wrap(err, "error creating new object for format "+input_format)
+	}
 
 	if input_format == "bson" || input_format == "json" || input_format == "hcl" || input_format == "hcl2" || input_format == "properties" || input_format == "toml" || input_format == "yaml" {
 		if output_format == "bson" || output_format == "json" || input_format == "hcl" || input_format == "hcl2" || output_format == "properties" || output_format == "toml" || output_format == "yaml" {

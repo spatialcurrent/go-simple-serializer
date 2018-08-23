@@ -148,9 +148,26 @@ func Deserialize(input string, format string, input_header []string, input_comme
 	} else if format == "json" {
 		return json.Unmarshal([]byte(input), output)
 	} else if format == "jsonl" {
-		switch output.(type) {
+
+		//s.Interface()(type)
+		// reflect.TypeOf(s).Elem()
+
+		/*s := reflect.ValueOf(output)
+		if s.Kind() == reflect.Ptr {
+			fmt.Println("s.Interface():", s.Interface())
+			s = reflect.Indirect(s).Elem()
+			if s.Kind() != reflect.Slice {
+				return errors.New("Output is not of kind slice.")
+			}
+		} else if s.Kind() != reflect.Slice {
+			return errors.New("Output is not of kind slice.")
+		}*/
+
+		//fmt.Println("reflect.TypeOf(output)", reflect.TypeOf(output))
+
+		switch output_slice := output.(type) {
 		case *[]map[string]string:
-			output_slice := output.(*[]map[string]string)
+			//output_slice := s.Interface().(*[]map[string]string)
 			scanner := bufio.NewScanner(strings.NewReader(input))
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
@@ -165,7 +182,7 @@ func Deserialize(input string, format string, input_header []string, input_comme
 				}
 			}
 		case *[]map[string]interface{}:
-			output_slice := output.(*[]map[string]interface{})
+			//output_slice := s.Interface().(*[]map[string]interface{})
 			scanner := bufio.NewScanner(strings.NewReader(input))
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
@@ -179,8 +196,23 @@ func Deserialize(input string, format string, input_header []string, input_comme
 					*output_slice = append(*output_slice, obj)
 				}
 			}
+		case []map[string]interface{}:
+			//output_slice := s.Interface().([]map[string]interface{})
+			scanner := bufio.NewScanner(strings.NewReader(input))
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
+					obj := map[string]interface{}{}
+					err := json.Unmarshal([]byte(line), &obj)
+					if err != nil {
+						return errors.Wrap(err, "Error reading object from JSON line")
+					}
+					output_slice = append(output_slice, obj)
+				}
+			}
 		default:
-			return errors.New("Cannot deserialize to type " + fmt.Sprint(reflect.ValueOf(output)))
+			return errors.New("Cannot deserialize to type " + fmt.Sprint(reflect.TypeOf(output).String()))
 		}
 	} else if format == "hcl" {
 		obj, err := hcl.Parse(input)
@@ -202,5 +234,6 @@ func Deserialize(input string, format string, input_header []string, input_comme
 	} else if format == "yaml" {
 		return yaml.Unmarshal([]byte(input), output)
 	}
+
 	return nil
 }

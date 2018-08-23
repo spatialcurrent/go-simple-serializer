@@ -23,7 +23,6 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 )
 
-var GO_GSS_VERSION = "0.0.2"
 var GO_GSS_FORMATS = []string{"csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
 
 func printUsage() {
@@ -67,7 +66,7 @@ func main() {
 	}
 
 	if version {
-		fmt.Println(GO_GSS_VERSION)
+		fmt.Println(gss.VERSION)
 		os.Exit(0)
 	}
 

@@ -34,6 +34,12 @@ func StringifyMapKeys(in interface{}) interface{} {
 			res[k] = StringifyMapKeys(v)
 		}
 		return res
+	case map[interface{}]struct{}:
+		res := make(map[string]interface{})
+		for k, v := range in {
+			res[fmt.Sprintf("%v", k)] = StringifyMapKeys(v)
+		}
+		return res
 	default:
 		return in
 	}
