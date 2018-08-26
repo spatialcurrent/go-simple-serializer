@@ -8,22 +8,33 @@
 package gss
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 )
 
-// Convert converts an input_string from the input_format to the output_format and returns an error, if any.
-func Convert(input_string string, input_format string, input_header []string, input_comment string, output_format string) (string, error) {
+// Convert converts an input_string from the input_format to the output_format.
+// Returns the output string and error, if any.
+func Convert(input_string string, input_format string, input_header []string, input_comment string, output_format string, verbose bool) (string, error) {
 
-	object, err := NewObject(input_string, input_format)
+	input_type, err := GetType(input_string, input_format)
 	if err != nil {
 		return "", errors.Wrap(err, "error creating new object for format "+input_format)
 	}
 
+	if verbose {
+		fmt.Println("Input Format: " + input_format)
+		fmt.Println("Output Format: " + output_format)
+		fmt.Println("Input Type: " + fmt.Sprint(input_type))
+	}
+
 	if input_format == "bson" || input_format == "json" || input_format == "hcl" || input_format == "hcl2" || input_format == "properties" || input_format == "toml" || input_format == "yaml" {
 		if output_format == "bson" || output_format == "json" || input_format == "hcl" || input_format == "hcl2" || output_format == "properties" || output_format == "toml" || output_format == "yaml" {
-			err := Deserialize(input_string, input_format, input_header, input_comment, &object)
+			object, err := Deserialize(input_string, input_format, input_header, input_comment, input_type, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
+			}
+			if verbose {
+				fmt.Println("Object:", object)
 			}
 			output_string, err := Serialize(object, output_format)
 			if err != nil {
@@ -31,8 +42,7 @@ func Convert(input_string string, input_format string, input_header []string, in
 			}
 			return output_string, nil
 		} else if output_format == "jsonl" {
-			object := []map[string]interface{}{}
-			err := Deserialize(input_string, input_format, input_header, input_comment, &object)
+			object, err := Deserialize(input_string, input_format, input_header, input_comment, input_type, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
@@ -50,8 +60,7 @@ func Convert(input_string string, input_format string, input_header []string, in
 		}
 	} else if input_format == "jsonl" || input_format == "csv" || input_format == "tsv" {
 		if output_format == "bson" || output_format == "json" || output_format == "hcl" || output_format == "hcl2" || output_format == "toml" || output_format == "yaml" || output_format == "jsonl" || output_format == "csv" || output_format == "tsv" {
-			object := []map[string]interface{}{}
-			err := Deserialize(input_string, input_format, input_header, input_comment, &object)
+			object, err := Deserialize(input_string, input_format, input_header, input_comment, input_type, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}

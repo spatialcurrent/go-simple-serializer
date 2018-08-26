@@ -36,83 +36,46 @@ func unescapePropertyText(in string) string {
 }
 
 // Deserialize reads in an object from a string given format
-func Deserialize(input string, format string, input_header []string, input_comment string, output interface{}) error {
+func Deserialize(input string, format string, input_header []string, input_comment string, output_type reflect.Type, verbose bool) (interface{}, error) {
 
 	if format == "csv" || format == "tsv" {
-		switch output_slice := output.(type) {
-		case *[]map[string]string:
-			reader := csv.NewReader(strings.NewReader(input))
-			if format == "tsv" {
-				reader.Comma = '\t'
-			}
-			if len(input_comment) > 1 {
-				return errors.New("go's encoding/csv package only supports single character comment characters")
-			} else if len(input_comment) == 1 {
-				reader.Comment = []rune(input_comment)[0]
-			}
-			if len(input_header) == 0 {
-				h, err := reader.Read()
-				if err != nil {
-					if err != io.EOF {
-						return errors.Wrap(err, "Error reading header from input with format csv")
-					}
-				}
-				input_header = h
-			}
-			for {
-				inRow, err := reader.Read()
-				if err != nil {
-					if err == io.EOF {
-						break
-					} else {
-						return errors.Wrap(err, "Error reading row from input with format csv")
-					}
-				}
-				*output_slice = append(*output_slice, RowToMapOfStrings(input_header, inRow))
-			}
-		case *[]map[string]interface{}:
-			reader := csv.NewReader(strings.NewReader(input))
-			if format == "tsv" {
-				reader.Comma = '\t'
-			}
-			if len(input_comment) > 1 {
-				return errors.New("go's encoding/csv package only supports single character comment characters")
-			} else if len(input_comment) == 1 {
-				reader.Comment = []rune(input_comment)[0]
-			}
-			if len(input_header) == 0 {
-				h, err := reader.Read()
-				if err != nil {
-					if err != io.EOF {
-						return errors.Wrap(err, "Error reading header from input with format csv")
-					}
-				}
-				input_header = h
-			}
-			for {
-				inRow, err := reader.Read()
-				if err != nil {
-					if err == io.EOF {
-						break
-					} else {
-						return errors.Wrap(err, "Error reading row from input with format csv")
-					}
-				}
-				*output_slice = append(*output_slice, RowToMapOfInterfaces(input_header, inRow))
-			}
-		default:
-			return errors.New("Cannot deserialize to type " + fmt.Sprint(reflect.ValueOf(output)))
+		output := reflect.MakeSlice(output_type, 0, 0)
+		reader := csv.NewReader(strings.NewReader(input))
+		if format == "tsv" {
+			reader.Comma = '\t'
 		}
+		if len(input_comment) > 1 {
+			return nil, errors.New("go's encoding/csv package only supports single character comment characters")
+		} else if len(input_comment) == 1 {
+			reader.Comment = []rune(input_comment)[0]
+		}
+		if len(input_header) == 0 {
+			h, err := reader.Read()
+			if err != nil {
+				if err != io.EOF {
+					return nil, errors.Wrap(err, "Error reading header from input with format csv")
+				}
+			}
+			input_header = h
+		}
+		for {
+			inRow, err := reader.Read()
+			if err != nil {
+				if err == io.EOF {
+					break
+				} else {
+					return nil, errors.Wrap(err, "Error reading row from input with format csv")
+				}
+			}
+			m := reflect.MakeMap(reflect.TypeOf(output.Elem()))
+			for i, h := range input_header {
+				m.SetMapIndex(reflect.ValueOf(strings.ToLower(h)), reflect.ValueOf(inRow[i]))
+			}
+			output = reflect.Append(output, m)
+		}
+		return output.Interface(), nil
 	} else if format == "properties" {
-		m := reflect.ValueOf(output)
-		if m.Kind() == reflect.Ptr {
-			if m.Elem().Kind() != reflect.Map {
-				return errors.New("Output is not of kind map.")
-			}
-			m = m.Elem()
-		} else if m.Kind() != reflect.Map {
-			return errors.New("Output is not of kind map.")
-		}
+		m := reflect.MakeMap(output_type)
 		if len(input_comment) == 0 {
 			input_comment = "#"
 		}
@@ -136,104 +99,94 @@ func Deserialize(input string, format string, input_header []string, input_comme
 						}
 					}
 					if len(propertyName) == 0 {
-						return errors.New("error deserializing properties for property " + property)
+						return nil, errors.New("error deserializing properties for property " + property)
 					}
 					m.SetMapIndex(reflect.ValueOf(unescapePropertyText(strings.TrimSpace(propertyName))), reflect.ValueOf(unescapePropertyText(strings.TrimSpace(propertyValue))))
 					property = ""
 				}
 			}
 		}
+		return m.Interface(), nil
 	} else if format == "bson" {
-		return bson.Unmarshal([]byte(input), output)
-	} else if format == "json" {
-		return json.Unmarshal([]byte(input), output)
-	} else if format == "jsonl" {
-
-		//s.Interface()(type)
-		// reflect.TypeOf(s).Elem()
-
-		/*s := reflect.ValueOf(output)
-		if s.Kind() == reflect.Ptr {
-			fmt.Println("s.Interface():", s.Interface())
-			s = reflect.Indirect(s).Elem()
-			if s.Kind() != reflect.Slice {
-				return errors.New("Output is not of kind slice.")
-			}
-		} else if s.Kind() != reflect.Slice {
-			return errors.New("Output is not of kind slice.")
-		}*/
-
-		//fmt.Println("reflect.TypeOf(output)", reflect.TypeOf(output))
-
-		switch output_slice := output.(type) {
-		case *[]map[string]string:
-			//output_slice := s.Interface().(*[]map[string]string)
-			scanner := bufio.NewScanner(strings.NewReader(input))
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
-				line := strings.TrimSpace(scanner.Text())
-				if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
-					obj := map[string]string{}
-					err := json.Unmarshal([]byte(line), &obj)
-					if err != nil {
-						return errors.Wrap(err, "Error reading object from JSON line")
-					}
-					*output_slice = append(*output_slice, obj)
-				}
-			}
-		case *[]map[string]interface{}:
-			//output_slice := s.Interface().(*[]map[string]interface{})
-			scanner := bufio.NewScanner(strings.NewReader(input))
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
-				line := strings.TrimSpace(scanner.Text())
-				if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
-					obj := map[string]interface{}{}
-					err := json.Unmarshal([]byte(line), &obj)
-					if err != nil {
-						return errors.Wrap(err, "Error reading object from JSON line")
-					}
-					*output_slice = append(*output_slice, obj)
-				}
-			}
-		case []map[string]interface{}:
-			//output_slice := s.Interface().([]map[string]interface{})
-			scanner := bufio.NewScanner(strings.NewReader(input))
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
-				line := strings.TrimSpace(scanner.Text())
-				if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
-					obj := map[string]interface{}{}
-					err := json.Unmarshal([]byte(line), &obj)
-					if err != nil {
-						return errors.Wrap(err, "Error reading object from JSON line")
-					}
-					output_slice = append(output_slice, obj)
-				}
-			}
-		default:
-			return errors.New("Cannot deserialize to type " + fmt.Sprint(reflect.TypeOf(output).String()))
+		if output_type.Kind() == reflect.Map {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeMap(output_type))
+			err := bson.Unmarshal([]byte(input), ptr.Interface())
+			return ptr.Elem().Interface(), err
+		} else {
+			return nil, errors.New("Invalid output type for json " + fmt.Sprint(output_type))
 		}
+	} else if format == "json" {
+		if output_type.Kind() == reflect.Map {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeMap(output_type))
+			err := json.Unmarshal([]byte(input), ptr.Interface())
+			return ptr.Elem().Interface(), err
+		} else if output_type.Kind() == reflect.Slice {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeSlice(output_type, 0, 0))
+			err := json.Unmarshal([]byte(input), ptr.Interface())
+			return ptr.Elem().Interface(), err
+		} else {
+			return nil, errors.New("Invalid output type for json " + fmt.Sprint(output_type))
+		}
+	} else if format == "jsonl" {
+		output := reflect.MakeSlice(output_type, 0, 0)
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		scanner.Split(bufio.ScanLines)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
+				obj := reflect.MakeMap(output_type.Elem())
+				err := json.Unmarshal([]byte(line), obj.Interface())
+				if err != nil {
+					return nil, errors.Wrap(err, "Error reading object from JSON line")
+				}
+				output = reflect.Append(output, obj)
+			}
+		}
+		return output, nil
 	} else if format == "hcl" {
+		ptr := reflect.New(output_type)
+		ptr.Elem().Set(reflect.MakeMap(output_type))
 		obj, err := hcl.Parse(input)
 		if err != nil {
-			return errors.Wrap(err, "Error parsing hcl")
+			return nil, errors.Wrap(err, "Error parsing hcl")
 		}
-		if err := hcl.DecodeObject(output, obj); err != nil {
-			return errors.Wrap(err, "Error decoding hcl")
+		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
+			return nil, errors.Wrap(err, "Error decoding hcl")
 		}
+		return ptr.Elem().Interface(), nil
 	} else if format == "hcl2" {
 		file, diags := hclsyntax.ParseConfig([]byte(input), "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
 		if diags.HasErrors() {
-			return errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
+			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
 		}
-		output = &file.Body
+		return &file.Body, nil
 	} else if format == "toml" {
-		_, err := toml.Decode(input, output)
-		return err
+		if output_type.Kind() == reflect.Map {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeMap(output_type))
+			_, err := toml.Decode(input, ptr.Interface())
+			return ptr.Elem().Interface(), err
+		} else {
+			return nil, errors.New("Invalid output type for toml " + fmt.Sprint(output_type))
+		}
 	} else if format == "yaml" {
-		return yaml.Unmarshal([]byte(input), output)
+		if output_type.Kind() == reflect.Map {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeMap(output_type))
+			err := yaml.Unmarshal([]byte(input), ptr.Interface())
+			return ptr.Elem().Interface(), err
+		} else if output_type.Kind() == reflect.Slice {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeSlice(output_type, 0, 0))
+			err := yaml.Unmarshal([]byte(input), ptr.Interface())
+			return StringifyMapKeys(ptr.Elem().Interface()), err
+		} else {
+			return nil, errors.New("Invalid output type for yaml " + fmt.Sprint(output_type))
+		}
 	}
 
-	return nil
+	return nil, nil
 }

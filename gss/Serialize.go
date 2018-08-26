@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -102,14 +103,24 @@ func Serialize(input interface{}, format string) (string, error) {
 		}
 	} else if format == "properties" {
 		m := reflect.ValueOf(input)
-		if m.Kind() != reflect.Map {
-			return "", errors.New("Input is not of kind map.")
-		}
-		output = ""
-		for i, key := range m.MapKeys() {
-			output += escapePropertyText(fmt.Sprint(key)) + "=" + escapePropertyText(fmt.Sprint(m.MapIndex(key).Interface()))
-			if i < m.Len()-1 {
-				output += "\n"
+		if m.Kind() == reflect.Map {
+			output = ""
+			for i, key := range m.MapKeys() {
+				output += escapePropertyText(fmt.Sprint(key)) + "=" + escapePropertyText(fmt.Sprint(m.MapIndex(key).Interface()))
+				if i < m.Len()-1 {
+					output += "\n"
+				}
+			}
+		} else {
+			switch input.(type) {
+			case string:
+				output = input.(string)
+			case int:
+				output = strconv.Itoa(input.(int))
+			case float64:
+				output = strconv.FormatFloat(input.(float64), 'f', -1, 64)
+			default:
+				return "", errors.New("Input is not of kind map but " + fmt.Sprint(reflect.TypeOf(input)))
 			}
 		}
 	} else if format == "bson" {

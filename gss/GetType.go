@@ -8,29 +8,31 @@
 package gss
 
 import (
+	"github.com/pkg/errors"
+	"reflect"
 	"strings"
 	"unicode"
 )
 
-func NewObject(content string, format string) (interface{}, error) {
+func GetType(content string, format string) (reflect.Type, error) {
 
 	if format == "json" {
 		content = strings.TrimLeftFunc(content, unicode.IsSpace)
 		if len(content) > 0 && content[0] == '[' {
-			return []map[string]interface{}{}, nil
+			return reflect.TypeOf([]map[string]interface{}{}), nil
 		}
-		return map[string]interface{}{}, nil
+		return reflect.TypeOf(map[string]interface{}{}), nil
 	} else if format == "yaml" {
 		content = strings.TrimLeftFunc(content, unicode.IsSpace)
 		if len(content) > 0 && content[0] == '-' {
-			return []map[string]interface{}{}, nil
+			return reflect.TypeOf([]map[string]interface{}{}), nil
 		}
-		return map[string]interface{}{}, nil
+		return reflect.TypeOf(map[string]interface{}{}), nil
 	} else if format == "bson" || format == "hcl" || format == "hcl2" || format == "properties" || format == "toml" {
-		return map[string]interface{}{}, nil
+		return reflect.TypeOf(map[string]interface{}{}), nil
 	} else if format == "jsonl" || format == "csv" || format == "tsv" {
-		return []map[string]interface{}{}, nil
+		return reflect.TypeOf([]map[string]interface{}{}), nil
 	}
 
-	return nil, nil
+	return nil, errors.New("could not get type for format " + format)
 }

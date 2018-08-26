@@ -58,7 +58,7 @@ func Convert(input_string string, input_format string, output_format string, opt
 		}
 	}
 
-	output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format)
+	output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format, false)
 	if err != nil {
 		console.Log(err.Error())
 		return ""
