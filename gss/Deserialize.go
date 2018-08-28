@@ -114,7 +114,7 @@ func Deserialize(input string, format string, input_header []string, input_comme
 			err := bson.Unmarshal([]byte(input), ptr.Interface())
 			return ptr.Elem().Interface(), err
 		} else {
-			return nil, errors.New("Invalid output type for json " + fmt.Sprint(output_type))
+			return nil, errors.New("Invalid output type for bson " + fmt.Sprint(output_type))
 		}
 	} else if format == "json" {
 		if output_type.Kind() == reflect.Map {
