@@ -47,10 +47,13 @@ The `Convert`, `Deserialize`, and `Serialize` functions are the core functions t
 
 ```go
 ...
-  output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format)
+  output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format, verbose)
 ...
-  output = map[string]interface{}{}
-  err := gss.Deserialize(input, format, input_header, input_comment, &output)
+  input_type, err := GetType(input_string, input_format)
+	if err != nil {
+		return "", errors.Wrap(err, "error creating new object for format "+input_format)
+	}
+  output, err := gss.Deserialize(input, format, input_header, input_comment, input_type, verbose)
 ...
   output_string, err := gss.Serialize(input, format)
 ...
@@ -84,7 +87,7 @@ The `go-simple-serializer` code is available for use in Android applications und
 ```java
 import com.spatialcurrent.gss.Gss;
 ...
-  String output_format = Gss.convert(input_string, input_format, input_header, input_comment, output_format);
+  String output_format = Gss.convert(input_string, input_format, input_header, input_comment, output_format, verbose);
 ...
 ```
 

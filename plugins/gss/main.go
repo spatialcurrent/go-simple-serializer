@@ -19,8 +19,6 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 )
 
-var GO_GSS_VERSION = "0.0.2"
-
 func main() {}
 
 //export Convert
@@ -31,7 +29,8 @@ func Convert(input_string *C.char, input_format *C.char, input_header *C.char, i
 		C.GoString(input_format),
 		strings.Split(C.GoString(input_header), ","),
 		C.GoString(input_comment),
-		C.GoString(output_format))
+		C.GoString(output_format),
+		false)
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -39,4 +38,9 @@ func Convert(input_string *C.char, input_format *C.char, input_header *C.char, i
 	*output_string = C.CString(s)
 
 	return nil
+}
+
+//export Version
+func Version() *C.char {
+	return C.CString(gss.VERSION)
 }

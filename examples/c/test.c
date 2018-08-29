@@ -18,6 +18,7 @@ main(int argc, char **argv) {
     char *input_string = "{\"a\":\"b\",\"c\":[\"d\"]}";
     char *output_string;
 
+    printf("Version: %s\n", Version());
     printf("%s\n", input_string);
 
     err = Convert(input_string, "json", "", "", "yaml", &output_string);

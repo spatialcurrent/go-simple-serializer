@@ -14,6 +14,9 @@ import (
 	"unicode"
 )
 
+// GetType takes in the content of an object as a string and the serialization format.
+// Returns the type using reflection.
+// This type is fixed and can be passed through functions without losing type information (unlike an empty object).
 func GetType(content string, format string) (reflect.Type, error) {
 
 	if format == "json" {

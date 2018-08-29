@@ -137,15 +137,16 @@ func Deserialize(input string, format string, input_header []string, input_comme
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
-				obj := reflect.MakeMap(output_type.Elem())
-				err := json.Unmarshal([]byte(line), obj.Interface())
+				ptr := reflect.New(output_type.Elem())
+				ptr.Elem().Set(reflect.MakeMap(output_type.Elem()))
+				err := json.Unmarshal([]byte(line), ptr.Interface())
 				if err != nil {
 					return nil, errors.Wrap(err, "Error reading object from JSON line")
 				}
-				output = reflect.Append(output, obj)
+				output = reflect.Append(output, ptr.Elem())
 			}
 		}
-		return output, nil
+		return output.Interface(), nil
 	} else if format == "hcl" {
 		ptr := reflect.New(output_type)
 		ptr.Elem().Set(reflect.MakeMap(output_type))

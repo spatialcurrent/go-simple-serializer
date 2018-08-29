@@ -48,6 +48,9 @@ int main(int argc, char **argv) {
   std::string output_format("yaml");
   char *output_char_ptr;
 
+  // Write version to stderr
+  std::cout << "Version" << Version() <<std::endl;
+
   // Write input to stderr
   std::cout << input_string << std::endl;
 
