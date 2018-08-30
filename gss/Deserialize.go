@@ -112,7 +112,18 @@ func Deserialize(input string, format string, input_header []string, input_comme
 			ptr := reflect.New(output_type)
 			ptr.Elem().Set(reflect.MakeMap(output_type))
 			err := bson.Unmarshal([]byte(input), ptr.Interface())
-			return ptr.Elem().Interface(), err
+			if err != nil {
+				return nil, errors.Wrap(err, "error unmarshalling bytes into BSON")
+			}
+			return ptr.Elem().Interface(), nil
+		} else if output_type.Kind() == reflect.Slice {
+			ptr := reflect.New(output_type)
+			ptr.Elem().Set(reflect.MakeSlice(output_type, 0, 0))
+			err := bson.Unmarshal([]byte(input), ptr.Interface())
+			if err != nil {
+				return nil, errors.Wrap(err, "error unmarshalling bytes into BSON")
+			}
+			return ptr.Elem().Interface(), nil
 		} else {
 			return nil, errors.New("Invalid output type for bson " + fmt.Sprint(output_type))
 		}
@@ -121,12 +132,18 @@ func Deserialize(input string, format string, input_header []string, input_comme
 			ptr := reflect.New(output_type)
 			ptr.Elem().Set(reflect.MakeMap(output_type))
 			err := json.Unmarshal([]byte(input), ptr.Interface())
-			return ptr.Elem().Interface(), err
+			if err != nil {
+				return nil, errors.Wrap(err, "error unmarshalling bytes into JSON")
+			}
+			return ptr.Elem().Interface(), nil
 		} else if output_type.Kind() == reflect.Slice {
 			ptr := reflect.New(output_type)
 			ptr.Elem().Set(reflect.MakeSlice(output_type, 0, 0))
 			err := json.Unmarshal([]byte(input), ptr.Interface())
-			return ptr.Elem().Interface(), err
+			if err != nil {
+				return nil, errors.Wrap(err, "error unmarshalling bytes into JSON")
+			}
+			return ptr.Elem().Interface(), nil
 		} else {
 			return nil, errors.New("Invalid output type for json " + fmt.Sprint(output_type))
 		}

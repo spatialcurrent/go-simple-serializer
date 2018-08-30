@@ -7,5 +7,5 @@
 
 package gss
 
-// VERSION is the version of this package and updated during a release.
-var VERSION = "0.0.4"
+// Formats is the formats supported by go-simple-serializer (GSS).
+var Formats = []string{"bson", "csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}

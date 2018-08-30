@@ -5,6 +5,8 @@
 //
 // =================================================================
 
+// gss is the command line program for go-simple-serializer (GSS).
+//
 package main
 
 import (
@@ -23,8 +25,6 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 )
 
-var GO_GSS_FORMATS = []string{"csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
-
 func printUsage() {
 	fmt.Println("Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT [-h HEADER] [-c COMMENT]")
 }
@@ -41,10 +41,10 @@ func main() {
 	var verbose bool
 	var help bool
 
-	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(GO_GSS_FORMATS, ", "))
+	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
 	flag.StringVar(&input_header_text, "h", "", "The input header if the stdin input has no header.")
 	flag.StringVar(&input_comment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
-	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(GO_GSS_FORMATS, ", "))
+	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
 	flag.BoolVar(&version, "version", false, "Prints version to stdout")
 	flag.BoolVar(&verbose, "verbose", false, "Print debug info to stdout")
 	flag.BoolVar(&help, "help", false, "Print help.")
