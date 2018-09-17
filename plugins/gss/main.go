@@ -22,14 +22,16 @@ import (
 func main() {}
 
 //export Convert
-func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, output_format *C.char, output_string **C.char) *C.char {
+func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, input_limit C.long, output_format *C.char, output_limit C.long, output_string **C.char) *C.char {
 
 	s, err := gss.Convert(
-		C.GoString(input_string),
+		[]byte(C.GoString(input_string)),
 		C.GoString(input_format),
 		strings.Split(C.GoString(input_header), ","),
 		C.GoString(input_comment),
+		int(input_limit),
 		C.GoString(output_format),
+		int(output_limit),
 		false)
 	if err != nil {
 		return C.CString(err.Error())

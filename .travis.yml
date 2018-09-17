@@ -15,13 +15,8 @@ matrix:
     - go: tip
   fast_finish: true
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl -L -s https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://github.com/golang/dep/releases/download/v0.5.0/dep-darwin-amd64 -O $GOPATH/bin/dep; fi
-  - chmod +x $GOPATH/bin/dep
-
 install:
-  - dep ensure
+  - go get ./...
   - go get -u github.com/alecthomas/gometalinter
   - gometalinter --install
 

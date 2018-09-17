@@ -25,6 +25,8 @@ func Convert(input_string string, input_format string, output_format string, opt
 
 	input_header := []string{}
 	input_comment := ""
+	input_limit := -1
+	output_limit := -1
 
 	if v, ok := m["header"]; ok {
 		switch v.(type) {
@@ -45,11 +47,25 @@ func Convert(input_string string, input_format string, output_format string, opt
 		}
 	}
 
-	output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format, false)
+	if v, ok := m["input_limit"]; ok {
+		switch v := v.(type) {
+		case int:
+			input_limit = v
+		}
+	}
+
+	if v, ok := m["output_limit"]; ok {
+		switch v := v.(type) {
+		case int:
+			output_limit = v
+		}
+	}
+
+	output_string, err := gss.Convert([]byte(input_string), input_format, input_header, input_comment, input_limit, output_format, output_limit, false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error converting input").Error())
 		return ""
 	}
-	
+
 	return output_string
 }

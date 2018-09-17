@@ -8,4 +8,4 @@
 package gss
 
 // VERSION is the version of this package and updated during a release.
-var VERSION = "0.0.4"
+var VERSION = "0.0.5"

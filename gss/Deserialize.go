@@ -36,7 +36,7 @@ func unescapePropertyText(in string) string {
 }
 
 // Deserialize reads in an object from a string given format
-func Deserialize(input string, format string, input_header []string, input_comment string, output_type reflect.Type, verbose bool) (interface{}, error) {
+func Deserialize(input string, format string, input_header []string, input_comment string, input_limit int, output_type reflect.Type, verbose bool) (interface{}, error) {
 
 	if format == "csv" || format == "tsv" {
 		output := reflect.MakeSlice(output_type, 0, 0)
@@ -149,18 +149,23 @@ func Deserialize(input string, format string, input_header []string, input_comme
 		}
 	} else if format == "jsonl" {
 		output := reflect.MakeSlice(output_type, 0, 0)
-		scanner := bufio.NewScanner(strings.NewReader(input))
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
-				ptr := reflect.New(output_type.Elem())
-				ptr.Elem().Set(reflect.MakeMap(output_type.Elem()))
-				err := json.Unmarshal([]byte(line), ptr.Interface())
-				if err != nil {
-					return nil, errors.Wrap(err, "Error reading object from JSON line")
+		if input_limit != 0 {
+			scanner := bufio.NewScanner(strings.NewReader(input))
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
+					ptr := reflect.New(output_type.Elem())
+					ptr.Elem().Set(reflect.MakeMap(output_type.Elem()))
+					err := json.Unmarshal([]byte(line), ptr.Interface())
+					if err != nil {
+						return nil, errors.Wrap(err, "Error reading object from JSON line")
+					}
+					output = reflect.Append(output, ptr.Elem())
+					if input_limit > 0 && output.Len() >= input_limit {
+						break
+					}
 				}
-				output = reflect.Append(output, ptr.Elem())
 			}
 		}
 		return output.Interface(), nil

@@ -34,8 +34,10 @@ func main() {
 	var input_format string
 	var input_header_text string
 	var input_comment string
+	var input_limit int
 
 	var output_format string
+	var output_limit int
 
 	var version bool
 	var verbose bool
@@ -44,7 +46,9 @@ func main() {
 	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
 	flag.StringVar(&input_header_text, "h", "", "The input header if the stdin input has no header.")
 	flag.StringVar(&input_comment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
+	flag.IntVar(&input_limit, "", -1, "The input limit")
 	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
+	flag.IntVar(&output_limit, "", -1, "the output limit")
 	flag.BoolVar(&version, "version", false, "Prints version to stdout")
 	flag.BoolVar(&verbose, "verbose", false, "Print debug info to stdout")
 	flag.BoolVar(&help, "help", false, "Print help.")
@@ -95,7 +99,7 @@ func main() {
 		input_header = strings.Split(input_header_text, ",")
 	}
 
-	output_string, err := gss.Convert(string(input_bytes), input_format, input_header, input_comment, output_format, verbose)
+	output_string, err := gss.Convert(input_bytes, input_format, input_header, input_comment, input_limit, output_format, output_limit, verbose)
 	if err != nil {
 		fmt.Println(errors.Wrap(err, "Error converting"))
 		os.Exit(1)

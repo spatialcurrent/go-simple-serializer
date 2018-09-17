@@ -25,6 +25,7 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 
 	input_header := []string{}
 	input_comment := ""
+	input_limit := -1
 
 	if v, ok := m["header"]; ok {
 		switch v.(type) {
@@ -45,13 +46,20 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		}
 	}
 
-	input_type, err := gss.GetType(input_string, input_format)
+	if v, ok := m["input_limit"]; ok {
+		switch v := v.(type) {
+		case int:
+			input_limit = v
+		}
+	}
+
+	input_type, err := gss.GetType([]byte(input_string), input_format)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error creating new object for format "+input_format))
 		return ""
 	}
 
-	output_object, err := gss.Deserialize(input_string, input_format, input_header, input_comment, input_type, false)
+	output_object, err := gss.Deserialize(input_string, input_format, input_header, input_comment, input_limit, input_type, false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error deserializing input into object").Error())
 		return ""
