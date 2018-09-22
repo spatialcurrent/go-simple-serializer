@@ -21,7 +21,7 @@ import (
 
 func main() {
 	js.Global.Set("gss", map[string]interface{}{
-		"version":     gss.VERSION,
+		"version":     gss.Version,
 		"formats":     gss.Formats,
 		"convert":     gssjs.Convert,
 		"deserialize": gssjs.Deserialize,

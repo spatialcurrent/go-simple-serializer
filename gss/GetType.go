@@ -24,20 +24,22 @@ func GetType(content []byte, format string) (reflect.Type, error) {
 		if format == "json" {
 			str = strings.TrimLeftFunc(str, unicode.IsSpace)
 			if len(str) > 0 && str[0] == '[' {
-				return reflect.TypeOf([]map[string]interface{}{}), nil
+				return reflect.TypeOf([]interface{}{}), nil
 			}
 			return reflect.TypeOf(map[string]interface{}{}), nil
 		} else if format == "yaml" {
 			str = strings.TrimLeftFunc(str, unicode.IsSpace)
 			if len(str) > 0 && str[0] == '-' {
-				return reflect.TypeOf([]map[string]interface{}{}), nil
+				return reflect.TypeOf([]interface{}{}), nil
 			}
 			return reflect.TypeOf(map[string]interface{}{}), nil
 		}
 	} else if format == "bson" || format == "hcl" || format == "hcl2" || format == "properties" || format == "toml" {
 		return reflect.TypeOf(map[string]interface{}{}), nil
-	} else if format == "jsonl" || format == "csv" || format == "tsv" {
+	} else if format == "csv" || format == "tsv" {
 		return reflect.TypeOf([]map[string]interface{}{}), nil
+	} else if format == "jsonl" {
+		return reflect.TypeOf([]interface{}{}), nil
 	}
 
 	return nil, errors.New("could not get type for format " + format)

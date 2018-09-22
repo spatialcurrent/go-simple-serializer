@@ -25,6 +25,7 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 
 	input_header := []string{}
 	input_comment := ""
+	input_lazy_quotes := false
 	input_limit := -1
 
 	if v, ok := m["header"]; ok {
@@ -46,6 +47,15 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		}
 	}
 
+	if v, ok := m["input_lazy_quotes"]; ok {
+		switch v := v.(type) {
+		case bool:
+			input_lazy_quotes = v
+		case int:
+			input_lazy_quotes = v > 0
+		}
+	}
+
 	if v, ok := m["input_limit"]; ok {
 		switch v := v.(type) {
 		case int:
@@ -59,7 +69,7 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		return ""
 	}
 
-	output_object, err := gss.Deserialize(input_string, input_format, input_header, input_comment, input_limit, input_type, false)
+	output_object, err := gss.DeserializeString(input_string, input_format, input_header, input_comment, input_lazy_quotes, input_limit, input_type, false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error deserializing input into object").Error())
 		return ""

@@ -7,5 +7,8 @@
 
 package gss
 
-// Version is the version of this package and updated during a release.
-var Version = "0.0.6"
+// SerializeString serializes an object to its representation given by format.
+func SerializeString(input interface{}, format string, header []string, limit int) (string, error) {
+	b, err := SerializeBytes(input, format, header, limit)
+	return string(b), err
+}

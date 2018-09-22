@@ -6,11 +6,6 @@ DEST=$(realpath ${1:-$DIR/../bin})
 mkdir -p $DEST
 
 echo "******************"
-echo "Formatting $(realpath $DIR/../gss)"
-cd $DIR/../gss
-go fmt
-echo "Done formatting."
-echo "******************"
 echo "Building AAR for GSS"
 cd $DEST
 gomobile bind -target android -javapkg=com.spatialcurrent -o gss.aar github.com/spatialcurrent/go-simple-serializer/gss

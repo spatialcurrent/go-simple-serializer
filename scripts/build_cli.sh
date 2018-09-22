@@ -6,14 +6,6 @@ DEST=$(realpath ${1:-$DIR/../bin})
 mkdir -p $DEST
 
 echo "******************"
-echo "Formatting $(realpath $DIR/../gss)"
-cd $DIR/../gss
-go fmt
-echo "Formatting $(realpath $DIR/../cmd/gss)"
-cd $DIR/../cmd/gss
-go fmt
-echo "Done formatting."
-echo "******************"
 echo "Building program gss"
 cd $DEST
 ####################################################

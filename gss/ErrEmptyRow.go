@@ -7,5 +7,8 @@
 
 package gss
 
-// Version is the version of this package and updated during a release.
-var Version = "0.0.6"
+type ErrEmptyRow struct{}
+
+func (e ErrEmptyRow) Error() string {
+	return "empty row"
+}

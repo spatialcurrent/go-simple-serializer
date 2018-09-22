@@ -2,8 +2,9 @@ sudo: false
 language: go
 
 go:
-  - 1.9
+  - "1.9"
   - "1.10"
+  - "1.11"
   - tip
 
 os:
@@ -21,13 +22,5 @@ install:
   - gometalinter --install
 
 script:
-  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./gss/
-  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./plugins/gss/
-  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./cmd/gss/
-  - gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet ./cmd/gss.js/
-  - cd gss
-  - go fmt
-  - cd ./../cmd/gss
-  - go fmt
-  - cd ./../../cmd/gss.js
-  - go fmt
+  - scripts/format.sh
+  - scripts/test.sh

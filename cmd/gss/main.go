@@ -34,9 +34,11 @@ func main() {
 	var input_format string
 	var input_header_text string
 	var input_comment string
+	var input_lazy_quotes bool
 	var input_limit int
 
 	var output_format string
+	var output_header_text string
 	var output_limit int
 
 	var version bool
@@ -44,10 +46,12 @@ func main() {
 	var help bool
 
 	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
-	flag.StringVar(&input_header_text, "h", "", "The input header if the stdin input has no header.")
+	flag.StringVar(&input_header_text, "", "", "The input header if the stdin input has no header.")
 	flag.StringVar(&input_comment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
+	flag.BoolVar(&input_lazy_quotes, "", false, "allows lazy quotes for CSV and TSV")
 	flag.IntVar(&input_limit, "", -1, "The input limit")
 	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
+	flag.StringVar(&output_header_text, "", "", "The output header if the stdout output has no header.")
 	flag.IntVar(&output_limit, "", -1, "the output limit")
 	flag.BoolVar(&version, "version", false, "Prints version to stdout")
 	flag.BoolVar(&verbose, "verbose", false, "Print debug info to stdout")
@@ -72,7 +76,7 @@ func main() {
 	}
 
 	if version {
-		fmt.Println(gss.VERSION)
+		fmt.Println(gss.Version)
 		os.Exit(0)
 	}
 
@@ -99,7 +103,12 @@ func main() {
 		input_header = strings.Split(input_header_text, ",")
 	}
 
-	output_string, err := gss.Convert(input_bytes, input_format, input_header, input_comment, input_limit, output_format, output_limit, verbose)
+	output_header := make([]string, 0)
+	if len(input_header_text) > 0 {
+		output_header = strings.Split(output_header_text, ",")
+	}
+
+	output_string, err := gss.Convert(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_limit, output_format, output_header, output_limit, verbose)
 	if err != nil {
 		fmt.Println(errors.Wrap(err, "Error converting"))
 		os.Exit(1)

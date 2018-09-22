@@ -6,14 +6,6 @@ DEST=$(realpath ${1:-$DIR/../bin})
 mkdir -p $DEST
 
 echo "******************"
-echo "Formatting $(realpath $DIR/../gss)"
-cd $DIR/../gss
-go fmt
-echo "Formatting $(realpath $DIR/../cmd/gss.js)"
-cd $DIR/../cmd/gss.js
-go fmt
-echo "Done formatting."
-echo "******************"
 echo "Building Javascript for GSS"
 cd $DEST
 gopherjs build -o gss.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.js

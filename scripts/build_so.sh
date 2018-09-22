@@ -6,14 +6,6 @@ DEST=$(realpath ${1:-$DIR/../bin})
 mkdir -p $DEST
 
 echo "******************"
-echo "Formatting $(realpath $DIR/../gss)"
-cd $DIR/../gss
-go fmt
-echo "Formatting $(realpath $DIR/../plugins/gss)"
-cd $DIR/../plugins/gss
-go fmt
-echo "Done formatting."
-echo "******************"
 echo "Building Shared Object (*.so) for GSS"
 cd $DEST
 go build -o gss.so -buildmode=c-shared github.com/spatialcurrent/go-simple-serializer/plugins/gss

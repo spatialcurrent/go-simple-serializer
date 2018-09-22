@@ -7,7 +7,10 @@
 
 // gss.so creates a shared library of Go that can be called by C, C++, or Python
 //
-
+//
+//  - https://godoc.org/cmd/cgo
+//  - https://blog.golang.org/c-go-cgo
+//
 package main
 
 import (
@@ -22,15 +25,17 @@ import (
 func main() {}
 
 //export Convert
-func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, input_limit C.long, output_format *C.char, output_limit C.long, output_string **C.char) *C.char {
+func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, input_lazy_quotes C.int, input_limit C.long, output_format *C.char, output_header *C.char, output_limit C.long, output_string **C.char) *C.char {
 
 	s, err := gss.Convert(
 		[]byte(C.GoString(input_string)),
 		C.GoString(input_format),
 		strings.Split(C.GoString(input_header), ","),
 		C.GoString(input_comment),
+		int(input_lazy_quotes) > 0,
 		int(input_limit),
 		C.GoString(output_format),
+		strings.Split(C.GoString(input_header), ","),
 		int(output_limit),
 		false)
 	if err != nil {
@@ -44,5 +49,5 @@ func Convert(input_string *C.char, input_format *C.char, input_header *C.char, i
 
 //export Version
 func Version() *C.char {
-	return C.CString(gss.VERSION)
+	return C.CString(gss.Version)
 }
