@@ -1,0 +1,84 @@
+version: 2.1
+executors:
+  base:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/spatialcurrent/go-simple-serializer
+jobs:
+  pre_deps_golang:
+    executor: base
+    steps:
+      - checkout
+      - run: go get -d ./...
+      - run: sudo chown -R circleci /go/src
+      - save_cache:
+          key: v1-go-src-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - /go/src
+  test:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run:
+          name: Install gometalinter
+          command: |
+            go get -u github.com/alecthomas/gometalinter
+            gometalinter --install
+      - run:
+          name: Test
+          command: bash scripts/test.sh
+  build_cli:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: bash scripts/build_cli.sh
+      - store_artifacts:
+          path: bin
+          destination: /
+  build_javascript:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run:
+          name: Install GopherJS
+          command: go get -u github.com/gopherjs/gopherjs
+      - run: bash scripts/build_javascript.sh
+      - store_artifacts:
+          path: bin
+          destination: /
+  build_so:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: bash scripts/build_so.sh
+      - store_artifacts:
+          path: bin
+          destination: /
+workflows:
+  main:
+    jobs:
+      - pre_deps_golang
+      - test:
+          requires:
+            - pre_deps_golang
+      - build_cli:
+          requires:
+            - pre_deps_golang
+      - build_javascript:
+          requires:
+            - pre_deps_golang
+      - build_so:
+          requires:
+            - pre_deps_golang
