@@ -172,5 +172,5 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 	} else if format == "yaml" {
 		return yaml.Marshal(input)
 	}
-	return make([]byte, 0), nil
+	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: format}, "could not serialize object")
 }

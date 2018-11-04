@@ -7,5 +7,11 @@
 
 package gss
 
-// Version is the version of this package and updated during a release.
-var Version = "0.0.7"
+type ErrUnknownFormat struct {
+	Name string // the name of the unknown format
+}
+
+// Error returns the error as a string.
+func (e ErrUnknownFormat) Error() string {
+	return "unknown format " + e.Name
+}

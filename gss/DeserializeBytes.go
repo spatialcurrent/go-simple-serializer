@@ -85,5 +85,5 @@ func DeserializeBytes(input []byte, format string, input_header []string, input_
 		return DeserializeYAML(input, output_type)
 	}
 
-	return nil, nil
+	return nil, errors.Wrap(&ErrUnknownFormat{Name: format}, "could not deserialize bytes")
 }
