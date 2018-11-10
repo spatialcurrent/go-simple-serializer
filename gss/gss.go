@@ -67,3 +67,5 @@
 package gss
 
 var NoLimit = -1
+var NoHeader = []string{}
+var NoComment = ""
