@@ -12,15 +12,16 @@ import (
 )
 
 // DeserializeString reads in an object as a string and returns the representative Go instance.
-func DeserializeString(input string, format string, input_header []string, input_comment string, input_lazy_quotes bool, input_limit int, output_type reflect.Type, verbose bool) (interface{}, error) {
+func DeserializeString(input string, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputType reflect.Type, verbose bool) (interface{}, error) {
 
 	return DeserializeBytes(
 		[]byte(input),
-		format,
-		input_header,
-		input_comment,
-		input_lazy_quotes,
-		input_limit,
-		output_type,
+		inputFormat,
+		inputHeader,
+		inputComment,
+		inputLazyQuotes,
+		inputSkipLines,
+		inputLimit,
+		outputType,
 		verbose)
 }

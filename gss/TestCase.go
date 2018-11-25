@@ -19,6 +19,7 @@ type TestCase struct {
 	Header     []string     // if format is a csv or tsv, the names of the columns
 	Comment    string       // the line comment prefix
 	LazyQuotes bool         // if format is csv or tsv, allow LazyQuotes.
+	SkipLines  int          // if format is csv, tsv, or jsonl, then the number of lines to skip before processing.
 	Limit      int          // if format is a csv, tsv, or jsonl, then limit the number of items processed.
 	Type       reflect.Type // // the type of the object when in Go
 }
@@ -71,20 +72,22 @@ var testCases = []TestCase{
 
 var serializeTestCases = append(testCases, []TestCase{
 	TestCase{
-		String: "{\"a\":\"x\"}",
-		Format: "jsonl",
-		Limit:  1,
-		Type:   reflect.TypeOf([]map[string]interface{}{}),
-		Object: []map[string]interface{}{map[string]interface{}{"a": "x"}, map[string]interface{}{"ab": "y"}},
+		String:    "{\"a\":\"x\"}",
+		Format:    "jsonl",
+		SkipLines: NoSkip,
+		Limit:     1,
+		Type:      reflect.TypeOf([]map[string]interface{}{}),
+		Object:    []map[string]interface{}{map[string]interface{}{"a": "x"}, map[string]interface{}{"ab": "y"}},
 	},
 }...)
 
 var deserializeTestCases = append(testCases, []TestCase{
 	TestCase{
-		String: "{\"a\":\"x\"}\n{\"b\":\"y\"}",
-		Format: "jsonl",
-		Limit:  1,
-		Type:   reflect.TypeOf([]map[string]interface{}{}),
-		Object: []map[string]interface{}{map[string]interface{}{"a": "x"}},
+		String:    "{\"a\":\"x\"}\n{\"b\":\"y\"}\n{\"c\":\"z\"}",
+		Format:    "jsonl",
+		SkipLines: 1,
+		Limit:     1,
+		Type:      reflect.TypeOf([]map[string]interface{}{}),
+		Object:    []map[string]interface{}{map[string]interface{}{"b": "y"}},
 	},
 }...)

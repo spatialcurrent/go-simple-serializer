@@ -66,6 +66,7 @@
 //
 package gss
 
+var NoSkip = 0
 var NoLimit = -1
 var NoHeader = []string{}
 var NoComment = ""

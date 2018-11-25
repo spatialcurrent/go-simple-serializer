@@ -12,66 +12,66 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Convert converts an input_string from the input_format to the output_format.
+// Convert converts an input_string from the inputFormat to the outputFormat.
 // Returns the output string and error, if any.
-func Convert(input_bytes []byte, input_format string, input_header []string, input_comment string, input_lazy_quotes bool, input_limit int, output_format string, output_header []string, output_limit int, verbose bool) (string, error) {
+func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputFormat string, outputHeader []string, outputLimit int, verbose bool) (string, error) {
 
-	input_type, err := GetType(input_bytes, input_format)
+	inputType, err := GetType(inputBytes, inputFormat)
 	if err != nil {
-		return "", errors.Wrap(err, "error creating new object for format "+input_format)
+		return "", errors.Wrap(err, "error creating new object for format "+inputFormat)
 	}
 
 	if verbose {
-		fmt.Println("Input Format: " + input_format)
-		fmt.Println("Output Format: " + output_format)
-		fmt.Println("Input Type: " + fmt.Sprint(input_type))
+		fmt.Println("Input Format: " + inputFormat)
+		fmt.Println("Output Format: " + outputFormat)
+		fmt.Println("Input Type: " + fmt.Sprint(inputType))
 	}
 
-	if input_format == "bson" || input_format == "json" || input_format == "hcl" || input_format == "hcl2" || input_format == "properties" || input_format == "toml" || input_format == "yaml" {
-		if output_format == "bson" || output_format == "json" || input_format == "hcl" || input_format == "hcl2" || output_format == "properties" || output_format == "toml" || output_format == "yaml" {
-			object, err := DeserializeBytes(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_limit, input_type, verbose)
+	if inputFormat == "bson" || inputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || inputFormat == "properties" || inputFormat == "toml" || inputFormat == "yaml" {
+		if outputFormat == "bson" || outputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || outputFormat == "properties" || outputFormat == "toml" || outputFormat == "yaml" {
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
 			if verbose {
 				fmt.Println("Object:", object)
 			}
-			output_string, err := SerializeString(object, output_format, output_header, output_limit)
+			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
-		} else if output_format == "jsonl" {
-			object, err := DeserializeBytes(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_limit, input_type, verbose)
+		} else if outputFormat == "jsonl" {
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			output_string, err := SerializeString(object, output_format, output_header, output_limit)
+			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
-		} else if output_format == "csv" {
-			return "", errors.New("Error: incompatible output format \"" + output_format + "\"")
-		} else if output_format == "tsv" {
-			return "", errors.New("Error: incompatible output format \"" + output_format + "\"")
+		} else if outputFormat == "csv" {
+			return "", errors.New("Error: incompatible output format \"" + outputFormat + "\"")
+		} else if outputFormat == "tsv" {
+			return "", errors.New("Error: incompatible output format \"" + outputFormat + "\"")
 		} else {
-			return "", errors.New("Error: unknown output format \"" + output_format + "\"")
+			return "", errors.New("Error: unknown output format \"" + outputFormat + "\"")
 		}
-	} else if input_format == "jsonl" || input_format == "csv" || input_format == "tsv" {
-		if output_format == "bson" || output_format == "json" || output_format == "hcl" || output_format == "hcl2" || output_format == "toml" || output_format == "yaml" || output_format == "jsonl" || output_format == "csv" || output_format == "tsv" {
-			object, err := DeserializeBytes(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_limit, input_type, verbose)
+	} else if inputFormat == "jsonl" || inputFormat == "csv" || inputFormat == "tsv" {
+		if outputFormat == "bson" || outputFormat == "json" || outputFormat == "hcl" || outputFormat == "hcl2" || outputFormat == "toml" || outputFormat == "yaml" || outputFormat == "jsonl" || outputFormat == "csv" || outputFormat == "tsv" {
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			output_string, err := SerializeString(object, output_format, output_header, output_limit)
+			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
 		} else {
-			return "", errors.New("Error: unknown output format \"" + input_format + "\"")
+			return "", errors.New("Error: unknown output format \"" + inputFormat + "\"")
 		}
 	}
-	return "", errors.New("Error: unknown input format \"" + input_format + "\"")
+	return "", errors.New("Error: unknown input format \"" + inputFormat + "\"")
 }

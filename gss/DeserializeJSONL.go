@@ -17,16 +17,21 @@ import (
 
 // DeserializeJSONL deserializes the input JSON lines bytes into a Go object.
 //  - https://golang.org/pkg/encoding/json/
-func DeserializeJSONL(input string, input_comment string, input_limit int, output_type reflect.Type) (interface{}, error) {
-	output := reflect.MakeSlice(output_type, 0, 0)
-	if input_limit == 0 {
+func DeserializeJSONL(input string, inputComment string, inputSkipLines int, inputLimit int, outputType reflect.Type) (interface{}, error) {
+	output := reflect.MakeSlice(outputType, 0, 0)
+	if inputLimit == 0 {
 		return output.Interface(), nil
 	}
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	scanner.Split(bufio.ScanLines)
+	for i := 0; i < inputSkipLines; i++ {
+		if !scanner.Scan() {
+			break
+		}
+	}
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if len(input_comment) == 0 || !strings.HasPrefix(line, input_comment) {
+		if len(inputComment) == 0 || !strings.HasPrefix(line, inputComment) {
 			lineType, err := GetType([]byte(line), "json")
 			if err != nil {
 				return nil, errors.Wrap(err, "error getting type for input line")
@@ -46,7 +51,7 @@ func DeserializeJSONL(input string, input_comment string, input_limit int, outpu
 				return nil, errors.Wrap(err, "Error reading object from JSON line")
 			}
 			output = reflect.Append(output, ptr.Elem())
-			if input_limit > 0 && output.Len() >= input_limit {
+			if inputLimit > 0 && output.Len() >= inputLimit {
 				break
 			}
 		}

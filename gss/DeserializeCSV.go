@@ -18,7 +18,7 @@ import (
 
 // DeserializeCSV deserializes a CSV or TSV string into a Go instance.
 //  - https://golang.org/pkg/encoding/csv/
-func DeserializeCSV(input string, format string, input_header []string, input_comment string, input_lazy_quotes bool, input_limit int, output_type reflect.Type) (interface{}, error) {
+func DeserializeCSV(input string, format string, input_header []string, input_comment string, input_lazy_quotes bool, inputSkipLines int, input_limit int, output_type reflect.Type) (interface{}, error) {
 
 	if output_type.Kind() == reflect.Map {
 		if input_limit != 1 {
