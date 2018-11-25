@@ -23,43 +23,44 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		m[key] = options.Get(key).Interface()
 	}
 
-	input_header := []string{}
-	input_comment := ""
-	input_lazy_quotes := false
-	input_limit := -1
+	inputHeader := gss.NoHeader
+	inputComment := gss.NoComment
+	inputLazyQuotes := false
+	inputSkipLines := gss.NoSkip
+	inputLimit := gss.NoLimit
 
 	if v, ok := m["header"]; ok {
 		switch v.(type) {
 		case []string:
-			input_header = v.([]string)
+			inputHeader = v.([]string)
 		case []interface{}:
-			input_header = make([]string, 0, len(v.([]interface{})))
+			inputHeader = make([]string, 0, len(v.([]interface{})))
 			for _, h := range v.([]interface{}) {
-				input_header = append(input_header, fmt.Sprint(h))
+				inputHeader = append(inputHeader, fmt.Sprint(h))
 			}
 		}
 	}
 
-	if v, ok := m["input_comment"]; ok {
+	if v, ok := m["inputComment"]; ok {
 		switch v := v.(type) {
 		case string:
-			input_comment = v
+			inputComment = v
 		}
 	}
 
-	if v, ok := m["input_lazy_quotes"]; ok {
+	if v, ok := m["inputLazyQuotes"]; ok {
 		switch v := v.(type) {
 		case bool:
-			input_lazy_quotes = v
+			inputLazyQuotes = v
 		case int:
-			input_lazy_quotes = v > 0
+			inputLazyQuotes = v > 0
 		}
 	}
 
-	if v, ok := m["input_limit"]; ok {
+	if v, ok := m["inputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			input_limit = v
+			inputLimit = v
 		}
 	}
 
@@ -69,11 +70,11 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		return ""
 	}
 
-	output_object, err := gss.DeserializeString(input_string, input_format, input_header, input_comment, input_lazy_quotes, input_limit, input_type, false)
+	outputObject, err := gss.DeserializeString(input_string, input_format, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, input_type, false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error deserializing input into object").Error())
 		return ""
 	}
 
-	return output_object
+	return outputObject
 }

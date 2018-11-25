@@ -16,75 +16,87 @@ import (
 )
 
 // Convert is a function provided to gss.js that wraps gss.Convert to support JavaScript.
-func Convert(input_string string, input_format string, output_format string, options *js.Object) string {
+func Convert(inputString string, inputFormat string, outputFormat string, options *js.Object) string {
 
 	m := map[string]interface{}{}
 	for _, key := range js.Keys(options) {
 		m[key] = options.Get(key).Interface()
 	}
 
-	input_header := []string{}
-	input_comment := ""
-	input_lazy_quotes := false
-	input_limit := -1
-	output_header := []string{}
-	output_limit := -1
+	inputHeader := gss.NoHeader
+	inputComment := gss.NoComment
+	inputLazyQuotes := false
+	inputSkipLines := gss.NoSkip
+	inputLimit := gss.NoLimit
+	outputHeader := gss.NoHeader
+	outputLimit := gss.NoLimit
 
-	if v, ok := m["input_header"]; ok {
+	if v, ok := m["inputHeader"]; ok {
 		switch v.(type) {
 		case []string:
-			input_header = v.([]string)
+			inputHeader = v.([]string)
 		case []interface{}:
-			input_header = make([]string, 0, len(v.([]interface{})))
+			inputHeader = make([]string, 0, len(v.([]interface{})))
 			for _, h := range v.([]interface{}) {
-				input_header = append(input_header, fmt.Sprint(h))
+				inputHeader = append(inputHeader, fmt.Sprint(h))
 			}
 		}
 	}
 
-	if v, ok := m["input_comment"]; ok {
+	if v, ok := m["inputComment"]; ok {
 		switch v := v.(type) {
 		case string:
-			input_comment = v
+			inputComment = v
 		}
 	}
 
-	if v, ok := m["input_lazy_quotes"]; ok {
+	if v, ok := m["inputLazyQuotes"]; ok {
 		switch v := v.(type) {
 		case bool:
-			input_lazy_quotes = v
+			inputLazyQuotes = v
 		case int:
-			input_lazy_quotes = v > 0
+			inputLazyQuotes = v > 0
 		}
 	}
 
-	if v, ok := m["input_limit"]; ok {
+	if v, ok := m["inputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			input_limit = v
+			inputLimit = v
 		}
 	}
 
-	if v, ok := m["output_header"]; ok {
+	if v, ok := m["outputHeader"]; ok {
 		switch v.(type) {
 		case []string:
-			output_header = v.([]string)
+			outputHeader = v.([]string)
 		case []interface{}:
-			output_header = make([]string, 0, len(v.([]interface{})))
+			outputHeader = make([]string, 0, len(v.([]interface{})))
 			for _, h := range v.([]interface{}) {
-				output_header = append(output_header, fmt.Sprint(h))
+				outputHeader = append(outputHeader, fmt.Sprint(h))
 			}
 		}
 	}
 
-	if v, ok := m["output_limit"]; ok {
+	if v, ok := m["outputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			output_limit = v
+			outputLimit = v
 		}
 	}
 
-	output_string, err := gss.Convert([]byte(input_string), input_format, input_header, input_comment, input_lazy_quotes, input_limit, output_format, output_header, output_limit, false)
+	output_string, err := gss.Convert(
+		[]byte(inputString),
+		inputFormat,
+		inputHeader,
+		inputComment,
+		inputLazyQuotes,
+		inputSkipLines,
+		inputLimit,
+		outputFormat,
+		outputHeader,
+		outputLimit,
+		false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error converting input").Error())
 		return ""

@@ -23,29 +23,29 @@ func Serialize(input_object interface{}, output_format string, options *js.Objec
 		m[key] = options.Get(key).Interface()
 	}
 
-	output_header := []string{}
-	output_limit := -1
+	outputHeader := gss.NoHeader
+	outputLimit := gss.NoLimit
 
-	if v, ok := m["output_header"]; ok {
+	if v, ok := m["outputHeader"]; ok {
 		switch v.(type) {
 		case []string:
-			output_header = v.([]string)
+			outputHeader = v.([]string)
 		case []interface{}:
-			output_header = make([]string, 0, len(v.([]interface{})))
+			outputHeader = make([]string, 0, len(v.([]interface{})))
 			for _, h := range v.([]interface{}) {
-				output_header = append(output_header, fmt.Sprint(h))
+				outputHeader = append(outputHeader, fmt.Sprint(h))
 			}
 		}
 	}
 
-	if v, ok := m["output_limit"]; ok {
+	if v, ok := m["outputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			output_limit = v
+			outputLimit = v
 		}
 	}
 
-	output_string, err := gss.SerializeString(input_object, output_format, output_header, output_limit)
+	output_string, err := gss.SerializeString(input_object, output_format, outputHeader, outputLimit)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error serializing object").Error())
 		return ""
