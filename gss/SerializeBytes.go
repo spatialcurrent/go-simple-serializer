@@ -107,7 +107,7 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 			w.WriteAll(rows) // nolint: gosec
 			return buf.Bytes(), nil
 		}
-	} else if format == "properties" {
+	} else if format == "properties" || format == "text" {
 		t := reflect.TypeOf(input)
 		if t.Kind() == reflect.Map {
 			if t.Key().Kind() != reflect.String {
@@ -121,10 +121,22 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 			sort.Strings(keys)
 			output := ""
 			for i, key := range keys {
-				output += escapePropertyText(key) + "=" + escapePropertyText(fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface()))
-				if i < m.Len()-1 {
-					output += "\n"
+				if format == "properties" {
+					output += escapePropertyText(key) + "=" + escapePropertyText(fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface()))
+					if i < m.Len()-1 {
+						output += "\n"
+					}
+				} else if format == "text" {
+					value := strings.Replace(fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface()), "\"", "\\\"", -1)
+					if strings.Contains(value, " ") {
+						value = "\"" + value + "\""
+					}
+					output += key + "=" + value
+					if i < m.Len()-1 {
+						output += " "
+					}
 				}
+
 			}
 			return []byte(output), nil
 		} else {
