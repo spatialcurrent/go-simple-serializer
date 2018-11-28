@@ -14,7 +14,7 @@ import (
 
 // Convert converts an input_string from the inputFormat to the outputFormat.
 // Returns the output string and error, if any.
-func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputFormat string, outputHeader []string, outputLimit int, verbose bool) (string, error) {
+func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputFormat string, outputHeader []string, outputLimit int, async bool, verbose bool) (string, error) {
 
 	inputType, err := GetType(inputBytes, inputFormat)
 	if err != nil {
@@ -29,7 +29,7 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 
 	if inputFormat == "bson" || inputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || inputFormat == "properties" || inputFormat == "toml" || inputFormat == "yaml" {
 		if outputFormat == "bson" || outputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || outputFormat == "properties" || outputFormat == "toml" || outputFormat == "yaml" {
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
@@ -42,7 +42,7 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 			}
 			return output_string, nil
 		} else if outputFormat == "jsonl" {
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
@@ -60,7 +60,7 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 		}
 	} else if inputFormat == "jsonl" || inputFormat == "csv" || inputFormat == "tsv" {
 		if outputFormat == "bson" || outputFormat == "json" || outputFormat == "hcl" || outputFormat == "hcl2" || outputFormat == "toml" || outputFormat == "yaml" || outputFormat == "jsonl" || outputFormat == "csv" || outputFormat == "tsv" {
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, verbose)
+			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}

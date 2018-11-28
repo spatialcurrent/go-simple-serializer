@@ -20,16 +20,17 @@ type Options struct {
 	SkipLines  int          // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
 	Limit      int          // if format is a csv, tsv, or jsonl, then limit the number of items processed.
 	Type       reflect.Type // the type of the output object
+	Async      bool         // async processing
 }
 
 // Deserialize the input bytes using the values in the options object.
 func (o Options) DeserializeBytes(content []byte, verbose bool) (interface{}, error) {
-	return DeserializeBytes(content, o.Format, o.Header, o.Comment, o.LazyQuotes, o.SkipLines, o.Limit, o.Type, verbose)
+	return DeserializeBytes(content, o.Format, o.Header, o.Comment, o.LazyQuotes, o.SkipLines, o.Limit, o.Type, o.Async, verbose)
 }
 
 // Deserialize the input string using the values in the options object.
 func (o Options) DeserializeString(content string, verbose bool) (interface{}, error) {
-	return DeserializeString(content, o.Format, o.Header, o.Comment, o.LazyQuotes, o.SkipLines, o.Limit, o.Type, verbose)
+	return DeserializeString(content, o.Format, o.Header, o.Comment, o.LazyQuotes, o.SkipLines, o.Limit, o.Type, o.Async, verbose)
 }
 
 func (o Options) SerializeString(object interface{}) (string, error) {

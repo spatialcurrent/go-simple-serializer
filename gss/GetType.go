@@ -22,11 +22,7 @@ func GetType(content []byte, format string) (reflect.Type, error) {
 	if format == "json" || format == "yaml" {
 		str := string(content)
 		if format == "json" {
-			str = strings.TrimLeftFunc(str, unicode.IsSpace)
-			if len(str) > 0 && str[0] == '[' {
-				return reflect.TypeOf([]interface{}{}), nil
-			}
-			return reflect.TypeOf(map[string]interface{}{}), nil
+			return GetTypeJSON(strings.TrimLeftFunc(str, unicode.IsSpace)), nil
 		} else if format == "yaml" {
 			str = strings.TrimLeftFunc(str, unicode.IsSpace)
 			if len(str) > 0 && str[0] == '-' {

@@ -50,7 +50,7 @@ func deserializeBSON(input_bytes []byte, outputType reflect.Type) (interface{}, 
 }
 
 // DeserializeBytes reads in an object as string bytes and returns the representative Go instance.
-func DeserializeBytes(input []byte, format string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputType reflect.Type, verbose bool) (interface{}, error) {
+func DeserializeBytes(input []byte, format string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputType reflect.Type, async bool, verbose bool) (interface{}, error) {
 
 	if format == "csv" || format == "tsv" {
 		return DeserializeCSV(string(input), format, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, outputType)
@@ -61,7 +61,7 @@ func DeserializeBytes(input []byte, format string, inputHeader []string, inputCo
 	} else if format == "json" {
 		return DeserializeJSON(input, outputType)
 	} else if format == "jsonl" {
-		return DeserializeJSONL(string(input), inputComment, inputSkipLines, inputLimit, outputType)
+		return DeserializeJSONL(string(input), inputComment, inputSkipLines, inputLimit, outputType, async)
 	} else if format == "hcl" {
 		ptr := reflect.New(outputType)
 		ptr.Elem().Set(reflect.MakeMap(outputType))

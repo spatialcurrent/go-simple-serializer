@@ -30,6 +30,7 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 	inputLimit := gss.NoLimit
 	outputHeader := gss.NoHeader
 	outputLimit := gss.NoLimit
+	async := false
 
 	if v, ok := m["inputHeader"]; ok {
 		switch v.(type) {
@@ -85,6 +86,13 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 		}
 	}
 
+	if v, ok := m["async"]; ok {
+		switch v := v.(type) {
+		case bool:
+			async = v
+		}
+	}
+
 	output_string, err := gss.Convert(
 		[]byte(inputString),
 		inputFormat,
@@ -96,6 +104,7 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 		outputFormat,
 		outputHeader,
 		outputLimit,
+		async,
 		false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error converting input").Error())

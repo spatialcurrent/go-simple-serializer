@@ -25,7 +25,7 @@ import (
 func main() {}
 
 //export Convert
-func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, input_lazy_quotes C.int, input_skip_lines C.long, input_limit C.long, output_format *C.char, output_header *C.char, output_limit C.long, output_string **C.char) *C.char {
+func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, input_lazy_quotes C.int, input_skip_lines C.long, input_limit C.long, output_format *C.char, output_header *C.char, output_limit C.long, async C.int, output_string **C.char) *C.char {
 
 	s, err := gss.Convert(
 		[]byte(C.GoString(input_string)),
@@ -38,6 +38,7 @@ func Convert(input_string *C.char, input_format *C.char, input_header *C.char, i
 		C.GoString(output_format),
 		strings.Split(C.GoString(input_header), ","),
 		int(output_limit),
+		int(async) > 0,
 		false)
 	if err != nil {
 		return C.CString(err.Error())
