@@ -183,6 +183,8 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 		return buf.Bytes(), nil
 	} else if format == "yaml" {
 		return yaml.Marshal(input)
+	} else if format == "golang" || format == "go" {
+		return []byte(fmt.Sprint(input)), nil
 	}
 	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: format}, "could not serialize object")
 }

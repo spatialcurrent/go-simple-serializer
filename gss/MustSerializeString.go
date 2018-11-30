@@ -7,15 +7,11 @@
 
 package gss
 
-import (
-	"fmt"
-)
-
-// SerializeString serializes an object to its representation given by format.
-func SerializeString(input interface{}, format string, header []string, limit int) (string, error) {
-	if format == "golang" || format == "go" {
-		return fmt.Sprint(input), nil
-	}
+// MustSerializeString serializes an object to its representation given by format and panics if there is any error.
+func MustSerializeString(input interface{}, format string, header []string, limit int) string {
 	b, err := SerializeBytes(input, format, header, limit)
-	return string(b), err
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
