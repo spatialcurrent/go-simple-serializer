@@ -27,8 +27,10 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 		fmt.Println("Input Type: " + fmt.Sprint(inputType))
 	}
 
-	if inputFormat == "bson" || inputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || inputFormat == "properties" || inputFormat == "toml" || inputFormat == "yaml" {
-		if outputFormat == "bson" || outputFormat == "json" || inputFormat == "hcl" || inputFormat == "hcl2" || outputFormat == "properties" || outputFormat == "toml" || outputFormat == "yaml" {
+	switch inputFormat {
+	case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
+		switch outputFormat {
+		case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
 			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
@@ -41,7 +43,7 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
-		} else if outputFormat == "jsonl" {
+		case "jsonl":
 			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
@@ -51,15 +53,13 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
-		} else if outputFormat == "csv" {
+		case "csv", "tsv":
 			return "", errors.New("Error: incompatible output format \"" + outputFormat + "\"")
-		} else if outputFormat == "tsv" {
-			return "", errors.New("Error: incompatible output format \"" + outputFormat + "\"")
-		} else {
-			return "", errors.New("Error: unknown output format \"" + outputFormat + "\"")
 		}
-	} else if inputFormat == "jsonl" || inputFormat == "csv" || inputFormat == "tsv" {
-		if outputFormat == "bson" || outputFormat == "json" || outputFormat == "hcl" || outputFormat == "hcl2" || outputFormat == "toml" || outputFormat == "yaml" || outputFormat == "jsonl" || outputFormat == "csv" || outputFormat == "tsv" {
+		return "", errors.New("Error: unknown output format \"" + outputFormat + "\"")
+	case "jsonl", "csv", "tsv":
+		switch outputFormat {
+		case "bson", "json", "hcl", "hcl2", "toml", "yaml", "jsonl", "csv", "tsv":
 			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
@@ -69,9 +69,8 @@ func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputC
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
-		} else {
-			return "", errors.New("Error: unknown output format \"" + inputFormat + "\"")
 		}
+		return "", errors.New("Error: unknown output format \"" + inputFormat + "\"")
 	}
 	return "", errors.New("Error: unknown input format \"" + inputFormat + "\"")
 }

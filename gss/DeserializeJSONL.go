@@ -11,11 +11,15 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
+)
+
+import (
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 // DeserializeJSONL deserializes the input JSON lines bytes into a Go object.
@@ -99,7 +103,7 @@ func DeserializeJSONL(input string, inputComment string, inputSkipLines int, inp
 			}
 			err := json.Unmarshal([]byte(line), ptr.Interface())
 			if err != nil {
-				return nil, errors.Wrap(err, "Error reading object from JSON line")
+				return nil, errors.Wrap(err, fmt.Sprintf("Error reading object from JSON line with content %q", line))
 			}
 			output = reflect.Append(output, ptr.Elem())
 			if inputLimit > 0 && output.Len() >= inputLimit {

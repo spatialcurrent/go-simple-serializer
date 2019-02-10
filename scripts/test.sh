@@ -1,20 +1,20 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 set -eu
+cd $DIR/..
+pkgs=$(go list ./... )
 echo "******************"
-echo "Running unit tests"
-cd $DIR/../gss
-go test
+echo "Running unit tests for: "
+for pkg in "${pkgs[@]}"; do
+   go test -p 1 -count 1 -short $pkgs
+done
 echo "******************"
 echo "Using gometalinter with misspell, vet, ineffassign, and gosec"
-echo "Testing $DIR/../gss"
-gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet --enable=ineffassign --enable=gosec $DIR/../gss
-
-echo "Testing $DIR/../plugins/gss"
-gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet --enable=ineffassign --enable=gosec $DIR/../plugins/gss
-
-echo "Testing $DIR/../cmd/gss"
-gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet --enable=ineffassign --enable=gosec $DIR/../cmd/gss
-
-echo "Testing $DIR/../cmd/gss.js"
-gometalinter --misspell-locale=US --disable-all --enable=misspell --enable=vet --enable=ineffassign --enable=gosec $DIR/../cmd/gss.js
+gometalinter \
+--misspell-locale=US \
+--disable-all \
+--enable=misspell \
+--enable=vet \
+--enable=ineffassign \
+--enable=gosec \
+./...

@@ -37,18 +37,18 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 
 	if format == "csv" || format == "tsv" {
 		s := reflect.ValueOf(input)
-		if s.Kind() != reflect.Slice {
-			return make([]byte, 0), errors.New("Input is not of kind slice.")
+		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
+			return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}
 		}
 		if s.Len() > 0 {
-			first := s.Index(0).Type()
+			first := reflect.TypeOf(s.Index(0).Interface())
 			if first.Kind() == reflect.Ptr {
 				first = first.Elem()
 			}
 			rows := make([][]string, 0)
 			switch first.Kind() {
 			case reflect.Map:
-				mapKeys := s.Index(0).MapKeys()
+				mapKeys := reflect.ValueOf(s.Index(0).Interface()).MapKeys()
 				if len(header) == 0 {
 					header = make([]string, 0, len(mapKeys))
 					for _, key := range mapKeys {
@@ -59,9 +59,9 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 				for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
 					rows = append(rows, make([]string, len(header)))
 					for j, key := range header {
-						m := s.Index(i)
+						m := reflect.ValueOf(s.Index(i).Interface())
 						if m.Kind() != reflect.Map {
-							return make([]byte, 0), errors.New("Row is not of kind map.")
+							return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
 						}
 						rows[i][j] = fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface())
 					}
@@ -107,11 +107,13 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 			w.WriteAll(rows) // nolint: gosec
 			return buf.Bytes(), nil
 		}
+		// If there are no records then just return an empty string
+		return []byte(""), nil
 	} else if format == "properties" || format == "text" {
 		t := reflect.TypeOf(input)
 		if t.Kind() == reflect.Map {
-			if t.Key().Kind() != reflect.String {
-				return nil, errors.New("can only serialize a map with string keys")
+			if k := t.Key().Kind(); k != reflect.String {
+				return nil, errors.Wrap(&ErrInvalidKind{Value: k, Valid: []reflect.Kind{reflect.String}}, "can only serialize a map with string keys")
 			}
 			m := reflect.ValueOf(input)
 			keys := make([]string, m.Len())
@@ -139,25 +141,24 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 
 			}
 			return []byte(output), nil
-		} else {
-			switch input.(type) {
-			case string:
-				return []byte(input.(string)), nil
-			case int:
-				return []byte(strconv.Itoa(input.(int))), nil
-			case float64:
-				return []byte(strconv.FormatFloat(input.(float64), 'f', -1, 64)), nil
-			}
-			return make([]byte, 0), errors.New("Input is not of kind map but " + fmt.Sprint(reflect.TypeOf(input)))
 		}
+		switch input.(type) {
+		case string:
+			return []byte(input.(string)), nil
+		case int:
+			return []byte(strconv.Itoa(input.(int))), nil
+		case float64:
+			return []byte(strconv.FormatFloat(input.(float64), 'f', -1, 64)), nil
+		}
+		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(input).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "input is not valid")
 	} else if format == "bson" {
 		return bson.Marshal(StringifyMapKeys(input))
 	} else if format == "json" {
 		return json.Marshal(StringifyMapKeys(input))
 	} else if format == "jsonl" {
 		s := reflect.ValueOf(input)
-		if s.Kind() != reflect.Slice {
-			return make([]byte, 0), errors.New("Input is not of kind slice.")
+		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
+			return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(input).Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}, "input is not valid")
 		}
 		output := make([]byte, 0)
 		for i := 0; i < s.Len() && (limit < 0 || i < limit); i++ {

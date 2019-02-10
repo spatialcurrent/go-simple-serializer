@@ -99,7 +99,7 @@ func main() {
 
 	input_bytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		fmt.Println(errors.Wrap(err, "Error reading from stdin"))
+		fmt.Println(errors.Wrap(err, "error reading from stdin"))
 		os.Exit(1)
 	}
 
@@ -115,7 +115,7 @@ func main() {
 
 	output_string, err := gss.Convert(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_skip_lines, input_limit, output_format, output_header, output_limit, async, verbose)
 	if err != nil {
-		fmt.Println(errors.Wrap(err, "Error converting"))
+		fmt.Println(errors.Wrap(err, "error converting"))
 		os.Exit(1)
 	}
 	fmt.Println(output_string)
