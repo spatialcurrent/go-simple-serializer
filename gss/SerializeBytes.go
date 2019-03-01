@@ -63,7 +63,11 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 						if m.Kind() != reflect.Map {
 							return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
 						}
-						rows[i][j] = fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface())
+						if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
+							rows[i][j] = fmt.Sprint(v.Interface())
+						} else {
+							rows[i][j] = ""
+						}
 					}
 				}
 			case reflect.Struct:
