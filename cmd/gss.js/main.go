@@ -19,9 +19,23 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/gssjs"
 )
 
+var gitTag string
+var gitBranch string
+var gitCommit string
+
 func main() {
+	version := map[string]interface{}{}
+	if len(gitTag) > 0 {
+		version["tag"] = gitTag
+	}
+	if len(gitBranch) > 0 {
+		version["branch"] = gitBranch
+	}
+	if len(gitCommit) > 0 {
+		version["commit"] = gitCommit
+	}
 	js.Global.Set("gss", map[string]interface{}{
-		"version":     gss.Version,
+		"version":     version,
 		"formats":     gss.Formats,
 		"convert":     gssjs.Convert,
 		"deserialize": gssjs.Deserialize,

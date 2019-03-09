@@ -14,63 +14,98 @@ import (
 
 // Convert converts an input_string from the inputFormat to the outputFormat.
 // Returns the output string and error, if any.
-func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputFormat string, outputHeader []string, outputLimit int, async bool, verbose bool) (string, error) {
+//func Convert(inputBytes []byte, inputFormat string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputFormat string, outputHeader []string, outputLimit int, async bool, verbose bool) (string, error) {
+func Convert(input *ConvertInput) (string, error) {
 
-	inputType, err := GetType(inputBytes, inputFormat)
+	inputType, err := GetType(input.InputBytes, input.InputFormat)
 	if err != nil {
-		return "", errors.Wrap(err, "error creating new object for format "+inputFormat)
+		return "", errors.Wrap(err, "error creating new object for format "+input.InputFormat)
 	}
 
-	if verbose {
-		fmt.Println("Input Format: " + inputFormat)
-		fmt.Println("Output Format: " + outputFormat)
+	if input.Verbose {
+		fmt.Println("Input Format: " + input.InputFormat)
+		fmt.Println("Output Format: " + input.OutputFormat)
 		fmt.Println("Input Type: " + fmt.Sprint(inputType))
 	}
 
-	switch inputFormat {
+	switch input.InputFormat {
 	case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
-		switch outputFormat {
+		switch input.OutputFormat {
 		case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
+			object, err := DeserializeBytes(
+				input.InputBytes,
+				input.InputFormat,
+				input.InputHeader,
+				input.InputComment,
+				input.InputLazyQuotes,
+				input.InputSkipLines,
+				input.InputLimit,
+				inputType,
+				input.Async,
+				input.Verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			if verbose {
+			if input.Verbose {
 				fmt.Println("Object:", object)
 			}
-			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
+			outputString, err := SerializeString(object, input.OutputFormat, input.OutputHeader, input.OutputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
-			return output_string, nil
+			return outputString, nil
 		case "jsonl":
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
+			object, err := DeserializeBytes(
+				input.InputBytes,
+				input.InputFormat,
+				input.InputHeader,
+				input.InputComment,
+				input.InputLazyQuotes,
+				input.InputSkipLines,
+				input.InputLimit,
+				inputType,
+				input.Async,
+				input.Verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
+			output_string, err := SerializeString(object, input.OutputFormat, input.OutputHeader, input.OutputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return output_string, nil
 		case "csv", "tsv":
-			return "", errors.New("Error: incompatible output format \"" + outputFormat + "\"")
+			return "", &ErrIncompatibleFormats{Input: input.InputFormat, Output: input.OutputFormat}
 		}
-		return "", errors.New("Error: unknown output format \"" + outputFormat + "\"")
+		return "", errors.Wrap(&ErrUnknownFormat{Name: input.OutputFormat}, "unknown output format")
 	case "jsonl", "csv", "tsv":
-		switch outputFormat {
+		switch input.OutputFormat {
 		case "bson", "json", "hcl", "hcl2", "toml", "yaml", "jsonl", "csv", "tsv":
-			object, err := DeserializeBytes(inputBytes, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, verbose)
+			object, err := DeserializeBytes(
+				input.InputBytes,
+				input.InputFormat,
+				input.InputHeader,
+				input.InputComment,
+				input.InputLazyQuotes,
+				input.InputSkipLines,
+				input.InputLimit,
+				inputType,
+				input.Async,
+				input.Verbose)
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			output_string, err := SerializeString(object, outputFormat, outputHeader, outputLimit)
+			outputString, err := SerializeString(
+				object,
+				input.OutputFormat,
+				input.OutputHeader,
+				input.OutputLimit)
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
-			return output_string, nil
+			return outputString, nil
 		}
-		return "", errors.New("Error: unknown output format \"" + inputFormat + "\"")
+		return "", errors.Wrap(&ErrUnknownFormat{Name: input.OutputFormat}, "unknown output format")
 	}
-	return "", errors.New("Error: unknown input format \"" + inputFormat + "\"")
+	return "", errors.Wrap(&ErrUnknownFormat{Name: input.InputFormat}, "unknown output format")
 }

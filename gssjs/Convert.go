@@ -93,23 +93,24 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 		}
 	}
 
-	output_string, err := gss.Convert(
-		[]byte(inputString),
-		inputFormat,
-		inputHeader,
-		inputComment,
-		inputLazyQuotes,
-		inputSkipLines,
-		inputLimit,
-		outputFormat,
-		outputHeader,
-		outputLimit,
-		async,
-		false)
+	outputString, err := gss.Convert(&gss.ConvertInput{
+		InputBytes:      []byte(inputString),
+		InputFormat:     inputFormat,
+		InputHeader:     inputHeader,
+		InputComment:    inputComment,
+		InputLazyQuotes: inputLazyQuotes,
+		InputSkipLines:  inputSkipLines,
+		InputLimit:      inputLimit,
+		OutputFormat:    outputFormat,
+		OutputHeader:    outputHeader,
+		OutputLimit:     outputLimit,
+		Async:           async,
+		Verbose:         false,
+	})
 	if err != nil {
 		console.Error(errors.Wrap(err, "error converting input").Error())
 		return ""
 	}
 
-	return output_string
+	return outputString
 }

@@ -1,10 +1,8 @@
 #!/bin/bash
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DEST=$(realpath ${1:-$DIR/../bin})
-
+LDFLAGS="-X main.gitBranch=$(git branch | grep \* | cut -d ' ' -f2) -X main.gitCommit=$(git rev-list -1 HEAD)"
 mkdir -p $DEST
-
 echo "******************"
 echo "Building Javascript for GSS"
 cd $DEST

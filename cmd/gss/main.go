@@ -10,7 +10,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -19,104 +18,106 @@ import (
 
 import (
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 )
 
-func printUsage() {
-	fmt.Println("Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT [-h HEADER] [-c COMMENT]")
-}
+var gitTag string
+var gitBranch string
+var gitCommit string
 
 func main() {
+	root := &cobra.Command{
+		Use:   "gss",
+		Short: "gss",
+		Long:  `gss is a simple program for serializing/deserializing data.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
 
-	var input_format string
-	var input_header_text string
-	var input_comment string
-	var input_lazy_quotes bool
-	var input_skip_lines int
-	var input_limit int
+			v := viper.New()
+			err := v.BindPFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+			v.AutomaticEnv()
 
-	var output_format string
-	var output_header_text string
-	var output_limit int
+			inputFormat := v.GetString("input-format")
 
-	var async bool
+			if len(inputFormat) == 0 {
+				return errors.New("input-format is required")
+			}
 
-	var version bool
-	var verbose bool
-	var help bool
+			outputFormat := v.GetString("output-format")
 
-	flag.StringVar(&input_format, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
-	flag.StringVar(&input_header_text, "input_header", "", "The input header if the stdin input has no header.")
-	flag.StringVar(&input_comment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
-	flag.BoolVar(&input_lazy_quotes, "input_lazy_quotes", false, "allows lazy quotes for CSV and TSV")
-	flag.IntVar(&input_skip_lines, "input_skip_lines", gss.NoSkip, "The number of lines to skip before processing")
-	flag.IntVar(&input_limit, "input_limit", gss.NoLimit, "The input limit")
-	flag.StringVar(&output_format, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
-	flag.StringVar(&output_header_text, "output_header", "", "The output header if the stdout output has no header.")
-	flag.IntVar(&output_limit, "output_limit", gss.NoLimit, "the output limit")
-	flag.BoolVar(&async, "async", false, "async processing")
-	flag.BoolVar(&version, "version", false, "Prints version to stdout")
-	flag.BoolVar(&verbose, "verbose", false, "Print debug info to stdout")
-	flag.BoolVar(&help, "help", false, "Print help.")
+			if len(outputFormat) == 0 {
+				return errors.New("output-format is required")
+			}
 
-	flag.Parse()
+			inputBytes, err := ioutil.ReadAll(os.Stdin)
+			if err != nil {
+				return errors.Wrap(err, "error reading from stdin")
+			}
 
-	if help {
-		printUsage()
-		fmt.Println("Options:")
-		flag.PrintDefaults()
-		os.Exit(0)
-	} else if len(os.Args) == 1 {
-		fmt.Println("Error: Provided no arguments.")
-		fmt.Println("Run \"gss -help\" for more information.")
-		os.Exit(0)
-	} else if len(os.Args) == 2 && os.Args[1] == "help" {
-		printUsage()
-		fmt.Println("Options:")
-		flag.PrintDefaults()
-		os.Exit(0)
+			outputString, err := gss.Convert(&gss.ConvertInput{
+				InputBytes:      inputBytes,
+				InputFormat:     inputFormat,
+				InputHeader:     v.GetStringSlice("input-header"),
+				InputComment:    v.GetString("input-comment"),
+				InputLazyQuotes: v.GetBool("input-lazy-quotes"),
+				InputSkipLines:  v.GetInt("input-skip-lines"),
+				InputLimit:      v.GetInt("input-limit"),
+				OutputFormat:    outputFormat,
+				OutputHeader:    v.GetStringSlice("output-header"),
+				OutputLimit:     v.GetInt("output-limit"),
+				Async:           v.GetBool("async"),
+				Verbose:         v.GetBool("verbose"),
+			})
+			if err != nil {
+				return errors.Wrap(err, "error converting")
+			}
+			fmt.Println(outputString)
+			return nil
+		},
+	}
+	flags := root.Flags()
+	flags.StringP("input-format", "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
+	flags.StringSlice("input-header", []string{}, "The input header if the stdin input has no header.")
+	flags.StringP("input-comment", "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
+	flags.Bool("input-lazy-quotes", false, "allows lazy quotes for CSV and TSV")
+	flags.Int("input-skip-lines", gss.NoSkip, "The number of lines to skip before processing")
+	flags.IntP("input-limit", "l", gss.NoLimit, "The input limit")
+	flags.StringP("output-format", "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
+	flags.StringSlice("output-header", []string{}, "The output header if the stdout output has no header.")
+	flags.Int("output-limit", gss.NoLimit, "the output limit")
+	flags.BoolP("async", "a", false, "async processing")
+	flags.Bool("verbose", false, "Print debug info to stdout")
+
+	version := &cobra.Command{
+		Use:   "version",
+		Short: "print version information to stdout",
+		Long:  "print version information to stdout",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(gitTag) > 0 {
+				fmt.Println("Tag: " + gitTag)
+			}
+			if len(gitBranch) > 0 {
+				fmt.Println("Branch: " + gitBranch)
+			}
+			if len(gitCommit) > 0 {
+				fmt.Println("Commit: " + gitCommit)
+			}
+			return nil
+		},
 	}
 
-	if version {
-		fmt.Println(gss.Version)
-		os.Exit(0)
-	}
+	root.AddCommand(version)
 
-	if len(input_format) == 0 {
-		fmt.Println("Error: Provided no -input_format.")
-		fmt.Println("Run \"gss -help\" for more information.")
+	if err := root.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, err.Error()+"\n")
 		os.Exit(1)
 	}
-
-	if len(output_format) == 0 {
-		fmt.Println("Error: Provided no -output_format.")
-		fmt.Println("Run \"gss -help\" for more information.")
-		os.Exit(1)
-	}
-
-	input_bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		fmt.Println(errors.Wrap(err, "error reading from stdin"))
-		os.Exit(1)
-	}
-
-	input_header := make([]string, 0)
-	if len(input_header_text) > 0 {
-		input_header = strings.Split(input_header_text, ",")
-	}
-
-	output_header := make([]string, 0)
-	if len(input_header_text) > 0 {
-		output_header = strings.Split(output_header_text, ",")
-	}
-
-	output_string, err := gss.Convert(input_bytes, input_format, input_header, input_comment, input_lazy_quotes, input_skip_lines, input_limit, output_format, output_header, output_limit, async, verbose)
-	if err != nil {
-		fmt.Println(errors.Wrap(err, "error converting"))
-		os.Exit(1)
-	}
-	fmt.Println(output_string)
 }
