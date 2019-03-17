@@ -62,6 +62,12 @@ func StringifyMapKeys(in interface{}) interface{} {
 			res[k] = StringifyMapKeys(v).([]interface{})
 		}
 		return res
+	case map[string]map[string]interface{}:
+		res := make(map[string]map[string]interface{})
+		for k, v := range in {
+			res[k] = StringifyMapKeys(v).(map[string]interface{})
+		}
+		return res
 	case map[string]map[string][]interface{}:
 		res := make(map[string]map[string][]interface{})
 		for k, v := range in {
