@@ -73,6 +73,7 @@ func main() {
 				OutputFormat:    outputFormat,
 				OutputHeader:    v.GetStringSlice("output-header"),
 				OutputLimit:     v.GetInt("output-limit"),
+				OutputPretty:    v.GetBool("output-pretty"),
 				Async:           v.GetBool("async"),
 				Verbose:         v.GetBool("verbose"),
 			})
@@ -93,6 +94,7 @@ func main() {
 	flags.StringP("output-format", "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
 	flags.StringSlice("output-header", []string{}, "The output header if the stdout output has no header.")
 	flags.Int("output-limit", gss.NoLimit, "the output limit")
+	flags.BoolP("output-pretty", "p", false, "print pretty output")
 	flags.BoolP("async", "a", false, "async processing")
 	flags.Bool("verbose", false, "Print debug info to stdout")
 

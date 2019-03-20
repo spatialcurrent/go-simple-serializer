@@ -18,7 +18,12 @@ func TestSerialize(t *testing.T) {
 
 	for _, testCase := range serializeTestCases {
 
-		got, err := SerializeString(testCase.Object, testCase.Format, testCase.Header, testCase.Limit)
+		got, err := SerializeString(&SerializeInput{
+			Object: testCase.Object,
+			Format: testCase.Format,
+			Header: testCase.Header,
+			Limit:  testCase.Limit,
+		})
 		if err != nil {
 			t.Errorf(errors.Wrap(err, "error running test").Error())
 		} else if !reflect.DeepEqual(strings.TrimSpace(got), strings.TrimSpace(testCase.String)) {

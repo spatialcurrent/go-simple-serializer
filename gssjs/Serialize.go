@@ -16,7 +16,7 @@ import (
 )
 
 // Serialize is a function provided to gss.js that wraps gss.Serialize to support JavaScript.
-func Serialize(input_object interface{}, output_format string, options *js.Object) interface{} {
+func Serialize(inputObject interface{}, outputFormat string, options *js.Object) interface{} {
 
 	m := map[string]interface{}{}
 	for _, key := range js.Keys(options) {
@@ -25,6 +25,7 @@ func Serialize(input_object interface{}, output_format string, options *js.Objec
 
 	outputHeader := gss.NoHeader
 	outputLimit := gss.NoLimit
+	outputPretty := false
 
 	if v, ok := m["outputHeader"]; ok {
 		switch v.(type) {
@@ -45,11 +46,24 @@ func Serialize(input_object interface{}, output_format string, options *js.Objec
 		}
 	}
 
-	output_string, err := gss.SerializeString(input_object, output_format, outputHeader, outputLimit)
+	if v, ok := m["outputPretty"]; ok {
+		switch v := v.(type) {
+		case bool:
+			outputPretty = v
+		}
+	}
+
+	outputString, err := gss.SerializeString(&gss.SerializeInput{
+		Object: inputObject,
+		Format: outputFormat,
+		Header: outputHeader,
+		Limit:  outputLimit,
+		Pretty: outputPretty,
+	})
 	if err != nil {
 		console.Error(errors.Wrap(err, "error serializing object").Error())
 		return ""
 	}
 
-	return output_string
+	return outputString
 }

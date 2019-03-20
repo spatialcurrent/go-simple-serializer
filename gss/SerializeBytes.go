@@ -25,6 +25,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var jsonPrefix = ""
+var jsonIndent = "  "
+
 func escapePropertyText(in string) string {
 	out := in
 	out = strings.Replace(fmt.Sprint(out), "\\", "\\\\", -1)
@@ -32,11 +35,24 @@ func escapePropertyText(in string) string {
 	return out
 }
 
+func marshalJson(object interface{}, pretty bool) ([]byte, error) {
+	if pretty {
+		return json.MarshalIndent(StringifyMapKeys(object), jsonPrefix, jsonIndent)
+	}
+	return json.Marshal(StringifyMapKeys(object))
+}
+
 // SerializeBytes serializes an object to its representation given by format.
-func SerializeBytes(input interface{}, format string, header []string, limit int) ([]byte, error) {
+func SerializeBytes(input *SerializeInput) ([]byte, error) {
+
+	object := input.Object
+	format := input.Format
+	limit := input.Limit
 
 	if format == "csv" || format == "tsv" {
-		s := reflect.ValueOf(input)
+		header := input.Header
+
+		s := reflect.ValueOf(object)
 		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
 			return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}
 		}
@@ -114,12 +130,12 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 		// If there are no records then just return an empty string
 		return []byte(""), nil
 	} else if format == "properties" || format == "text" {
-		t := reflect.TypeOf(input)
+		t := reflect.TypeOf(object)
 		if t.Kind() == reflect.Map {
 			if k := t.Key().Kind(); k != reflect.String {
 				return nil, errors.Wrap(&ErrInvalidKind{Value: k, Valid: []reflect.Kind{reflect.String}}, "can only serialize a map with string keys")
 			}
-			m := reflect.ValueOf(input)
+			m := reflect.ValueOf(object)
 			keys := make([]string, m.Len())
 			for i, key := range m.MapKeys() {
 				keys[i] = key.Interface().(string)
@@ -146,27 +162,27 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 			}
 			return []byte(output), nil
 		}
-		switch input.(type) {
+		switch object.(type) {
 		case string:
-			return []byte(input.(string)), nil
+			return []byte(object.(string)), nil
 		case int:
-			return []byte(strconv.Itoa(input.(int))), nil
+			return []byte(strconv.Itoa(object.(int))), nil
 		case float64:
-			return []byte(strconv.FormatFloat(input.(float64), 'f', -1, 64)), nil
+			return []byte(strconv.FormatFloat(object.(float64), 'f', -1, 64)), nil
 		}
-		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(input).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "input is not valid")
+		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "object is not valid")
 	} else if format == "bson" {
-		return bson.Marshal(StringifyMapKeys(input))
+		return bson.Marshal(StringifyMapKeys(object))
 	} else if format == "json" {
-		return json.Marshal(StringifyMapKeys(input))
+		return marshalJson(object, input.Pretty)
 	} else if format == "jsonl" {
-		s := reflect.ValueOf(input)
+		s := reflect.ValueOf(object)
 		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
-			return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(input).Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}, "input is not valid")
+			return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}, "object is not valid")
 		}
 		output := make([]byte, 0)
 		for i := 0; i < s.Len() && (limit < 0 || i < limit); i++ {
-			b, err := json.Marshal(s.Index(i).Interface())
+			b, err := marshalJson(s.Index(i).Interface(), input.Pretty)
 			if err != nil {
 				return output, err
 			}
@@ -182,14 +198,14 @@ func SerializeBytes(input interface{}, format string, header []string, limit int
 		return make([]byte, 0), errors.New("Error cannot serialize to HCL2")
 	} else if format == "toml" {
 		buf := new(bytes.Buffer)
-		if err := toml.NewEncoder(buf).Encode(input); err != nil {
+		if err := toml.NewEncoder(buf).Encode(object); err != nil {
 			return make([]byte, 0), errors.Wrap(err, "Error encoding TOML")
 		}
 		return buf.Bytes(), nil
 	} else if format == "yaml" {
-		return yaml.Marshal(input)
+		return yaml.Marshal(object)
 	} else if format == "golang" || format == "go" {
-		return []byte(fmt.Sprint(input)), nil
+		return []byte(fmt.Sprint(object)), nil
 	}
 	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: format}, "could not serialize object")
 }

@@ -31,49 +31,33 @@ func Convert(input *ConvertInput) (string, error) {
 	switch input.InputFormat {
 	case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
 		switch input.OutputFormat {
-		case "bson", "json", "hcl", "hcl2", "properties", "toml", "yaml":
-			object, err := DeserializeBytes(
-				input.InputBytes,
-				input.InputFormat,
-				input.InputHeader,
-				input.InputComment,
-				input.InputLazyQuotes,
-				input.InputSkipLines,
-				input.InputLimit,
-				inputType,
-				input.Async,
-				input.Verbose)
+		case "bson", "json", "jsonl", "hcl", "hcl2", "properties", "toml", "yaml":
+			object, err := DeserializeBytes(&DeserializeInput{
+				Bytes:      input.InputBytes,
+				Format:     input.InputFormat,
+				Header:     input.InputHeader,
+				Comment:    input.InputComment,
+				LazyQuotes: input.InputLazyQuotes,
+				SkipLines:  input.InputSkipLines,
+				Limit:      input.InputLimit,
+				Type:       inputType,
+				Async:      input.Async,
+				Verbose:    input.Verbose,
+			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			if input.Verbose {
-				fmt.Println("Object:", object)
-			}
-			outputString, err := SerializeString(object, input.OutputFormat, input.OutputHeader, input.OutputLimit)
+			outputString, err := SerializeString(&SerializeInput{
+				Object: object,
+				Format: input.OutputFormat,
+				Header: input.OutputHeader,
+				Limit:  input.OutputLimit,
+				Pretty: input.OutputPretty,
+			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}
 			return outputString, nil
-		case "jsonl":
-			object, err := DeserializeBytes(
-				input.InputBytes,
-				input.InputFormat,
-				input.InputHeader,
-				input.InputComment,
-				input.InputLazyQuotes,
-				input.InputSkipLines,
-				input.InputLimit,
-				inputType,
-				input.Async,
-				input.Verbose)
-			if err != nil {
-				return "", errors.Wrap(err, "Error deserializing input")
-			}
-			output_string, err := SerializeString(object, input.OutputFormat, input.OutputHeader, input.OutputLimit)
-			if err != nil {
-				return "", errors.Wrap(err, "Error serializing output")
-			}
-			return output_string, nil
 		case "csv", "tsv":
 			return "", &ErrIncompatibleFormats{Input: input.InputFormat, Output: input.OutputFormat}
 		}
@@ -81,25 +65,28 @@ func Convert(input *ConvertInput) (string, error) {
 	case "jsonl", "csv", "tsv":
 		switch input.OutputFormat {
 		case "bson", "json", "hcl", "hcl2", "toml", "yaml", "jsonl", "csv", "tsv":
-			object, err := DeserializeBytes(
-				input.InputBytes,
-				input.InputFormat,
-				input.InputHeader,
-				input.InputComment,
-				input.InputLazyQuotes,
-				input.InputSkipLines,
-				input.InputLimit,
-				inputType,
-				input.Async,
-				input.Verbose)
+			object, err := DeserializeBytes(&DeserializeInput{
+				Bytes:      input.InputBytes,
+				Format:     input.InputFormat,
+				Header:     input.InputHeader,
+				Comment:    input.InputComment,
+				LazyQuotes: input.InputLazyQuotes,
+				SkipLines:  input.InputSkipLines,
+				Limit:      input.InputLimit,
+				Type:       inputType,
+				Async:      input.Async,
+				Verbose:    input.Verbose,
+			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
-			outputString, err := SerializeString(
-				object,
-				input.OutputFormat,
-				input.OutputHeader,
-				input.OutputLimit)
+			outputString, err := SerializeString(&SerializeInput{
+				Object: object,
+				Format: input.OutputFormat,
+				Header: input.OutputHeader,
+				Limit:  input.OutputLimit,
+				Pretty: input.OutputPretty,
+			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
 			}

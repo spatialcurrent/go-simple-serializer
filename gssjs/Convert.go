@@ -18,21 +18,15 @@ import (
 // Convert is a function provided to gss.js that wraps gss.Convert to support JavaScript.
 func Convert(inputString string, inputFormat string, outputFormat string, options *js.Object) string {
 
+	convertInput := gss.NewConvertInput([]byte(inputString), inputFormat, outputFormat)
+
 	m := map[string]interface{}{}
 	for _, key := range js.Keys(options) {
 		m[key] = options.Get(key).Interface()
 	}
 
-	inputHeader := gss.NoHeader
-	inputComment := gss.NoComment
-	inputLazyQuotes := false
-	inputSkipLines := gss.NoSkip
-	inputLimit := gss.NoLimit
-	outputHeader := gss.NoHeader
-	outputLimit := gss.NoLimit
-	async := false
-
 	if v, ok := m["inputHeader"]; ok {
+		inputHeader := make([]string, 0)
 		switch v.(type) {
 		case []string:
 			inputHeader = v.([]string)
@@ -42,32 +36,34 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 				inputHeader = append(inputHeader, fmt.Sprint(h))
 			}
 		}
+		convertInput.InputHeader = inputHeader
 	}
 
 	if v, ok := m["inputComment"]; ok {
 		switch v := v.(type) {
 		case string:
-			inputComment = v
+			convertInput.InputComment = v
 		}
 	}
 
 	if v, ok := m["inputLazyQuotes"]; ok {
 		switch v := v.(type) {
 		case bool:
-			inputLazyQuotes = v
+			convertInput.InputLazyQuotes = v
 		case int:
-			inputLazyQuotes = v > 0
+			convertInput.InputLazyQuotes = v > 0
 		}
 	}
 
 	if v, ok := m["inputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			inputLimit = v
+			convertInput.InputLimit = v
 		}
 	}
 
 	if v, ok := m["outputHeader"]; ok {
+		outputHeader := make([]string, 0)
 		switch v.(type) {
 		case []string:
 			outputHeader = v.([]string)
@@ -77,36 +73,31 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 				outputHeader = append(outputHeader, fmt.Sprint(h))
 			}
 		}
+		convertInput.OutputHeader = outputHeader
 	}
 
 	if v, ok := m["outputLimit"]; ok {
 		switch v := v.(type) {
 		case int:
-			outputLimit = v
+			convertInput.OutputLimit = v
 		}
 	}
 
 	if v, ok := m["async"]; ok {
 		switch v := v.(type) {
 		case bool:
-			async = v
+			convertInput.Async = v
 		}
 	}
 
-	outputString, err := gss.Convert(&gss.ConvertInput{
-		InputBytes:      []byte(inputString),
-		InputFormat:     inputFormat,
-		InputHeader:     inputHeader,
-		InputComment:    inputComment,
-		InputLazyQuotes: inputLazyQuotes,
-		InputSkipLines:  inputSkipLines,
-		InputLimit:      inputLimit,
-		OutputFormat:    outputFormat,
-		OutputHeader:    outputHeader,
-		OutputLimit:     outputLimit,
-		Async:           async,
-		Verbose:         false,
-	})
+	if v, ok := m["outputPretty"]; ok {
+		switch v := v.(type) {
+		case bool:
+			convertInput.OutputPretty = v
+		}
+	}
+
+	outputString, err := gss.Convert(convertInput)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error converting input").Error())
 		return ""

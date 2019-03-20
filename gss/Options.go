@@ -21,11 +21,23 @@ type Options struct {
 	Limit      int          // if format is a csv, tsv, or jsonl, then limit the number of items processed.
 	Type       reflect.Type // the type of the output object
 	Async      bool         // async processing
+	Pretty     bool         // pretty output
 }
 
 // Deserialize the input bytes using the values in the options object.
 func (o Options) DeserializeBytes(content []byte, verbose bool) (interface{}, error) {
-	return DeserializeBytes(content, o.Format, o.Header, o.Comment, o.LazyQuotes, o.SkipLines, o.Limit, o.Type, o.Async, verbose)
+	return DeserializeBytes(&DeserializeInput{
+		Bytes:      content,
+		Format:     o.Format,
+		Header:     o.Header,
+		Comment:    o.Comment,
+		LazyQuotes: o.LazyQuotes,
+		SkipLines:  o.SkipLines,
+		Limit:      o.Limit,
+		Type:       o.Type,
+		Async:      o.Async,
+		Verbose:    verbose,
+	})
 }
 
 // Deserialize the input string using the values in the options object.
@@ -34,5 +46,11 @@ func (o Options) DeserializeString(content string, verbose bool) (interface{}, e
 }
 
 func (o Options) SerializeString(object interface{}) (string, error) {
-	return SerializeString(object, o.Format, o.Header, o.Limit)
+	return SerializeString(&SerializeInput{
+		Object: object,
+		Format: o.Format,
+		Header: o.Header,
+		Limit:  o.Limit,
+		Pretty: o.Pretty,
+	})
 }

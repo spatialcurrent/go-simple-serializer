@@ -50,22 +50,23 @@ func deserializeBSON(input_bytes []byte, outputType reflect.Type) (interface{}, 
 }
 
 // DeserializeBytes reads in an object as string bytes and returns the representative Go instance.
-func DeserializeBytes(input []byte, format string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputType reflect.Type, async bool, verbose bool) (interface{}, error) {
+func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 
-	if format == "csv" || format == "tsv" {
-		return DeserializeCSV(string(input), format, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, outputType)
-	} else if format == "properties" {
-		return DeserializeProperties(string(input), inputComment, outputType)
-	} else if format == "bson" {
-		return deserializeBSON(input, outputType)
-	} else if format == "json" {
-		return DeserializeJSON(input, outputType)
-	} else if format == "jsonl" {
-		return DeserializeJSONL(string(input), inputComment, inputSkipLines, inputLimit, outputType, async)
-	} else if format == "hcl" {
-		ptr := reflect.New(outputType)
-		ptr.Elem().Set(reflect.MakeMap(outputType))
-		obj, err := hcl.Parse(string(input))
+	switch input.Format {
+	case "csv", "tsv":
+		return DeserializeCSV(string(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
+	case "properties":
+		return DeserializeProperties(string(input.Bytes), input.Comment, input.Type)
+	case "bson":
+		return deserializeBSON(input.Bytes, input.Type)
+	case "json":
+		return DeserializeJSON(input.Bytes, input.Type)
+	case "jsonl":
+		return DeserializeJSONL(string(input.Bytes), input.Comment, input.SkipLines, input.Limit, input.Type, input.Async)
+	case "hcl":
+		ptr := reflect.New(input.Type)
+		ptr.Elem().Set(reflect.MakeMap(input.Type))
+		obj, err := hcl.Parse(string(input.Bytes))
 		if err != nil {
 			return nil, errors.Wrap(err, "Error parsing hcl")
 		}
@@ -73,17 +74,17 @@ func DeserializeBytes(input []byte, format string, inputHeader []string, inputCo
 			return nil, errors.Wrap(err, "Error decoding hcl")
 		}
 		return ptr.Elem().Interface(), nil
-	} else if format == "hcl2" {
-		file, diags := hclsyntax.ParseConfig([]byte(input), "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
+	case "hcl2":
+		file, diags := hclsyntax.ParseConfig([]byte(input.Bytes), "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
 		if diags.HasErrors() {
 			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
 		}
 		return &file.Body, nil
-	} else if format == "toml" {
-		return DeserializeTOML(string(input), outputType)
-	} else if format == "yaml" {
-		return DeserializeYAML(input, outputType)
+	case "toml":
+		return DeserializeTOML(string(input.Bytes), input.Type)
+	case "yaml":
+		return DeserializeYAML(input.Bytes, input.Type)
 	}
 
-	return nil, errors.Wrap(&ErrUnknownFormat{Name: format}, "could not deserialize bytes")
+	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")
 }

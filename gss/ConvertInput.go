@@ -19,6 +19,25 @@ type ConvertInput struct {
 	OutputFormat    string
 	OutputHeader    []string
 	OutputLimit     int
+	OutputPretty    bool
 	Async           bool
 	Verbose         bool
+}
+
+func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *ConvertInput {
+	return &ConvertInput{
+		InputBytes:      bytes,
+		InputFormat:     inputFormat,
+		InputHeader:     NoHeader,
+		InputComment:    NoComment,
+		InputLazyQuotes: false,
+		InputSkipLines:  NoSkip,
+		InputLimit:      NoLimit,
+		OutputFormat:    outputFormat,
+		OutputHeader:    NoHeader,
+		OutputLimit:     NoLimit,
+		OutputPretty:    false,
+		Async:           false,
+		Verbose:         false,
+	}
 }

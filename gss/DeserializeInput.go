@@ -8,14 +8,19 @@
 package gss
 
 import (
-	"fmt"
+	"reflect"
 )
 
-// SerializeString serializes an object to its representation given by format.
-func SerializeString(input *SerializeInput) (string, error) {
-	if input.Format == "golang" || input.Format == "go" {
-		return fmt.Sprint(input.Object), nil
-	}
-	b, err := SerializeBytes(input)
-	return string(b), err
+// DeserializeInput provides the input for the DeserializeBytes function.
+type DeserializeInput struct {
+	Bytes      []byte
+	Format     string
+	Header     []string
+	Comment    string
+	LazyQuotes bool
+	SkipLines  int
+	Limit      int
+	Type       reflect.Type
+	Async      bool
+	Verbose    bool
 }

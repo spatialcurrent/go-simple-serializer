@@ -7,11 +7,11 @@
 
 package gss
 
-// MustSerializeString serializes an object to its representation given by format and panics if there is any error.
-func MustSerializeString(input *SerializeInput) string {
-	str, err := SerializeString(input)
-	if err != nil {
-		panic(err)
-	}
-	return str
+// SerializeInput provides the input for the SerializeString and SerializeBytes function.
+type SerializeInput struct {
+	Object interface{}
+	Format string
+	Header []string
+	Limit  int
+	Pretty bool
 }
