@@ -42,6 +42,50 @@ func marshalJson(object interface{}, pretty bool) ([]byte, error) {
 	return json.Marshal(StringifyMapKeys(object))
 }
 
+func unknownKeys(obj reflect.Value, knownKeys map[string]struct{}) []string {
+	unknownKeys := make([]string, 0)
+	for _, k := range obj.MapKeys() {
+		str := fmt.Sprint(k.Interface())
+		if _, exists := knownKeys[str]; !exists {
+			unknownKeys = append(unknownKeys, str)
+		}
+	}
+	return unknownKeys
+}
+
+func serializeRow(header []string, knownKeys map[string]struct{}, obj interface{}) ([]string, map[string]struct{}, []string, error) {
+	m := reflect.ValueOf(obj)
+	if m.Kind() != reflect.Map {
+		return header, knownKeys, make([]string, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
+	}
+
+	newHeader := make([]string, 0, len(header))
+	newKnownKeys := map[string]struct{}{}
+	for _, k := range header {
+		if k == "*" {
+			for _, unknownKey := range unknownKeys(m, knownKeys) {
+				newHeader = append(newHeader, unknownKey)
+				newKnownKeys[unknownKey] = struct{}{}
+			}
+			newHeader = append(newHeader, k)
+		} else {
+			newHeader = append(newHeader, k)
+			newKnownKeys[k] = struct{}{}
+		}
+	}
+
+	row := make([]string, len(newHeader))
+	for j, key := range newHeader {
+		if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
+			row[j] = fmt.Sprint(v.Interface())
+		} else {
+			row[j] = ""
+		}
+	}
+
+	return newHeader, newKnownKeys, row, nil
+}
+
 // SerializeBytes serializes an object to its representation given by format.
 func SerializeBytes(input *SerializeInput) ([]byte, error) {
 
@@ -51,6 +95,15 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 
 	if format == "csv" || format == "tsv" {
 		header := input.Header
+		wildcard := false
+		knownKeys := map[string]struct{}{}
+		for _, k := range header {
+			if k == "*" {
+				wildcard = true
+			} else {
+				knownKeys[k] = struct{}{}
+			}
+		}
 
 		s := reflect.ValueOf(object)
 		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
@@ -72,18 +125,31 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 					}
 					sort.Strings(header)
 				}
-				for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-					rows = append(rows, make([]string, len(header)))
-					for j, key := range header {
+				if wildcard {
+					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
+						newHeader, newKnownKeys, row, err := serializeRow(header, knownKeys, s.Index(i).Interface())
+						if err != nil {
+							return make([]byte, 0), errors.Wrap(err, "error serializing row")
+						}
+						header = newHeader
+						knownKeys = newKnownKeys
+						rows = append(rows, row)
+					}
+				} else {
+					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
 						m := reflect.ValueOf(s.Index(i).Interface())
 						if m.Kind() != reflect.Map {
 							return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
 						}
-						if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
-							rows[i][j] = fmt.Sprint(v.Interface())
-						} else {
-							rows[i][j] = ""
+						row := make([]string, len(header))
+						for j, key := range header {
+							if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
+								row[j] = fmt.Sprint(v.Interface())
+							} else {
+								row[j] = ""
+							}
 						}
+						rows = append(rows, row)
 					}
 				}
 			case reflect.Struct:
@@ -123,8 +189,14 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			if format == "tsv" {
 				w.Comma = '\t'
 			}
-			w.Write(header)  // nolint: gosec
-			w.WriteAll(rows) // nolint: gosec
+			newHeader := make([]string, 0)
+			for _, k := range header {
+				if k != "*" {
+					newHeader = append(newHeader, k)
+				}
+			}
+			w.Write(newHeader) // nolint: gosec
+			w.WriteAll(rows)   // nolint: gosec
 			return buf.Bytes(), nil
 		}
 		// If there are no records then just return an empty string
