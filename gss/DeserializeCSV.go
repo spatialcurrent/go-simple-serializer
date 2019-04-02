@@ -9,7 +9,6 @@ package gss
 
 import (
 	"encoding/csv"
-	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"reflect"
@@ -22,13 +21,13 @@ func DeserializeCSV(input string, format string, input_header []string, input_co
 
 	if output_type.Kind() == reflect.Map {
 		if input_limit != 1 {
-			return nil, errors.New("deserializeCSV when returning a map type expects input_limit to be set to 1 but got " + fmt.Sprint(input_limit))
+			return nil, errors.Wrap(&ErrInvalidLimit{Value: input_limit}, "DeserializeCSV expects input limit of 1 when output type is of kind map.")
 		}
 		if len(input_header) == 0 {
 			return nil, errors.New("deserializeCSV when returning a map type expects a input header")
 		}
 	} else if !(output_type.Kind() == reflect.Array || output_type.Kind() == reflect.Slice) {
-		return nil, errors.New("deserializeCSV expects an array, map, or slice type but got " + fmt.Sprint(output_type))
+		return nil, &ErrInvalidKind{Value: output_type.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice, reflect.Map}}
 	}
 
 	reader := csv.NewReader(strings.NewReader(input))
