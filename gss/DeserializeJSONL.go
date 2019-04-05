@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 	"sync"
@@ -24,14 +25,14 @@ import (
 
 // DeserializeJSONL deserializes the input JSON lines bytes into a Go object.
 //  - https://golang.org/pkg/encoding/json/
-func DeserializeJSONL(input string, inputComment string, inputSkipLines int, inputLimit int, outputType reflect.Type, async bool) (interface{}, error) {
+func DeserializeJSONL(input io.Reader, inputComment string, inputSkipLines int, inputLimit int, outputType reflect.Type, async bool) (interface{}, error) {
 
 	output := reflect.MakeSlice(outputType, 0, 0)
 	if inputLimit == 0 {
 		return output.Interface(), nil
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(input))
+	scanner := bufio.NewScanner(input)
 	scanner.Split(bufio.ScanLines)
 	for i := 0; i < inputSkipLines; i++ {
 		if !scanner.Scan() {

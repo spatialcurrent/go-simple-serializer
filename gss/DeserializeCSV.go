@@ -12,16 +12,15 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"reflect"
-	"strings"
 )
 
 // DeserializeCSV deserializes a CSV or TSV string into a Go instance.
 //  - https://golang.org/pkg/encoding/csv/
-func DeserializeCSV(input string, format string, input_header []string, input_comment string, input_lazy_quotes bool, inputSkipLines int, input_limit int, output_type reflect.Type) (interface{}, error) {
+func DeserializeCSV(input io.Reader, format string, input_header []string, input_comment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, output_type reflect.Type) (interface{}, error) {
 
 	if output_type.Kind() == reflect.Map {
-		if input_limit != 1 {
-			return nil, errors.Wrap(&ErrInvalidLimit{Value: input_limit}, "DeserializeCSV expects input limit of 1 when output type is of kind map.")
+		if inputLimit != 1 {
+			return nil, errors.Wrap(&ErrInvalidLimit{Value: inputLimit}, "DeserializeCSV expects input limit of 1 when output type is of kind map.")
 		}
 		if len(input_header) == 0 {
 			return nil, errors.New("deserializeCSV when returning a map type expects a input header")
@@ -30,11 +29,12 @@ func DeserializeCSV(input string, format string, input_header []string, input_co
 		return nil, &ErrInvalidKind{Value: output_type.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice, reflect.Map}}
 	}
 
-	reader := csv.NewReader(strings.NewReader(input))
+	reader := csv.NewReader(input)
 	if format == "tsv" {
 		reader.Comma = '\t'
 	}
-	reader.LazyQuotes = input_lazy_quotes
+	reader.LazyQuotes = inputLazyQuotes
+	reader.FieldsPerRecord = -1 // records may have a variable number of fields
 
 	if len(input_comment) > 1 {
 		return nil, errors.New("go's encoding/csv package only supports single character comment characters")
@@ -45,7 +45,7 @@ func DeserializeCSV(input string, format string, input_header []string, input_co
 	if output_type.Kind() == reflect.Map {
 		inRow, err := reader.Read()
 		if err != nil {
-			return nil, errors.Wrap(err, "Error reading row from input with format csv")
+			return nil, errors.Wrap(err, "error reading row from input with format csv")
 		}
 		if len(inRow) == 0 {
 			return nil, &ErrEmptyRow{}
@@ -79,14 +79,23 @@ func DeserializeCSV(input string, format string, input_header []string, input_co
 			if err == io.EOF {
 				break
 			} else {
-				return nil, errors.Wrap(err, "Error reading row from input with format csv")
+				return nil, errors.Wrap(err, "error reading row from input with format csv")
 			}
 		}
 		m := reflect.MakeMap(output_type.Elem())
 		for i, h := range input_header {
-			m.SetMapIndex(reflect.ValueOf(h), reflect.ValueOf(inRow[i]))
+			if i < len(inRow) {
+				m.SetMapIndex(reflect.ValueOf(h), reflect.ValueOf(inRow[i]))
+			}
+			//else {
+			//	m.SetMapIndex(reflect.ValueOf(h), "")
+			//}
 		}
 		output = reflect.Append(output, m)
+
+		if inputLimit > 0 && output.Len() >= inputLimit {
+			break
+		}
 	}
 
 	return output.Interface(), nil

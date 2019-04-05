@@ -8,6 +8,7 @@
 package gss
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -54,7 +55,7 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 
 	switch input.Format {
 	case "csv", "tsv":
-		return DeserializeCSV(string(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
+		return DeserializeCSV(bytes.NewReader(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
 	case "properties":
 		return DeserializeProperties(string(input.Bytes), input.Comment, input.Type)
 	case "bson":
@@ -62,7 +63,7 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 	case "json":
 		return DeserializeJSON(input.Bytes, input.Type)
 	case "jsonl":
-		return DeserializeJSONL(string(input.Bytes), input.Comment, input.SkipLines, input.Limit, input.Type, input.Async)
+		return DeserializeJSONL(bytes.NewReader(input.Bytes), input.Comment, input.SkipLines, input.Limit, input.Type, input.Async)
 	case "hcl":
 		ptr := reflect.New(input.Type)
 		ptr.Elem().Set(reflect.MakeMap(input.Type))
