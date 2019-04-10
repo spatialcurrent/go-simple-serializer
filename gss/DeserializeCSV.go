@@ -45,7 +45,10 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 	if output_type.Kind() == reflect.Map {
 		inRow, err := reader.Read()
 		if err != nil {
-			return nil, errors.Wrap(err, "error reading row from input with format csv")
+			if err == io.EOF {
+				return nil, err
+			}
+			return nil, errors.Wrap(err, "error reading row into map from input with format csv")
 		}
 		if len(inRow) == 0 {
 			return nil, &ErrEmptyRow{}
@@ -79,7 +82,7 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 			if err == io.EOF {
 				break
 			} else {
-				return nil, errors.Wrap(err, "error reading row from input with format csv")
+				return nil, errors.Wrap(err, "error reading row into slice from input with format csv")
 			}
 		}
 		m := reflect.MakeMap(output_type.Elem())
