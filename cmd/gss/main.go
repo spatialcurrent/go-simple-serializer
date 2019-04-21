@@ -31,7 +31,7 @@ var gitBranch string
 var gitCommit string
 
 func main() {
-	root := &cobra.Command{
+	rootCommand := &cobra.Command{
 		Use:   "gss",
 		Short: "gss",
 		Long:  `gss is a simple program for serializing/deserializing data.`,
@@ -84,7 +84,7 @@ func main() {
 			return nil
 		},
 	}
-	flags := root.Flags()
+	flags := rootCommand.Flags()
 	flags.StringP("input-format", "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
 	flags.StringSlice("input-header", []string{}, "The input header if the stdin input has no header.")
 	flags.StringP("input-comment", "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
@@ -97,6 +97,28 @@ func main() {
 	flags.BoolP("output-pretty", "p", false, "print pretty output")
 	flags.BoolP("async", "a", false, "async processing")
 	flags.Bool("verbose", false, "Print debug info to stdout")
+
+
+	completionCommandLong := ""
+	if _, err := os.Stat("/etc/bash_completion.d/"); !os.IsNotExist(err) {
+		completionCommandLong = "To install completion scripts run:\ngss completion > /etc/bash_completion.d/gss"
+	} else {
+		if _, err := os.Stat("/usr/local/etc/bash_completion.d/"); !os.IsNotExist(err) {
+			completionCommandLong = "To install completion scripts run:\ngss completion > /usr/local/etc/bash_completion.d/gss"
+		} else {
+			completionCommandLong = "To install completion scripts run:\ngss completion > .../bash_completion.d/gss"
+		}
+	}
+
+	completionCommand := &cobra.Command{
+		Use:   "completion",
+		Short: "Generates bash completion scripts",
+		Long:  completionCommandLong,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return rootCommand.GenBashCompletion(os.Stdout)
+		},
+	}
+	rootCommand.AddCommand(completionCommand)
 
 	version := &cobra.Command{
 		Use:   "version",
@@ -116,9 +138,9 @@ func main() {
 		},
 	}
 
-	root.AddCommand(version)
+	rootCommand.AddCommand(version)
 
-	if err := root.Execute(); err != nil {
+	if err := rootCommand.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, err.Error()+"\n")
 		os.Exit(1)
 	}
