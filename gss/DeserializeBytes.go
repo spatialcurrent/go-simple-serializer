@@ -29,11 +29,11 @@ func unescapePropertyText(in string) string {
 	return out
 }
 
-func deserializeBSON(input_bytes []byte, outputType reflect.Type) (interface{}, error) {
+func deserializeBSON(inputBytes []byte, outputType reflect.Type) (interface{}, error) {
 	if outputType.Kind() == reflect.Map {
 		ptr := reflect.New(outputType)
 		ptr.Elem().Set(reflect.MakeMap(outputType))
-		err := bson.Unmarshal(input_bytes, ptr.Interface())
+		err := bson.Unmarshal(inputBytes, ptr.Interface())
 		if err != nil {
 			return nil, errors.Wrap(err, "error unmarshalling bytes into BSON")
 		}
@@ -41,7 +41,7 @@ func deserializeBSON(input_bytes []byte, outputType reflect.Type) (interface{}, 
 	} else if outputType.Kind() == reflect.Slice {
 		ptr := reflect.New(outputType)
 		ptr.Elem().Set(reflect.MakeSlice(outputType, 0, 0))
-		err := bson.Unmarshal(input_bytes, ptr.Interface())
+		err := bson.Unmarshal(inputBytes, ptr.Interface())
 		if err != nil {
 			return nil, errors.Wrap(err, "error unmarshalling bytes into BSON")
 		}
@@ -55,7 +55,7 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 
 	switch input.Format {
 	case "csv", "tsv":
-		return DeserializeCSV(bytes.NewReader(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
+		return DeserializeSV(bytes.NewReader(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
 	case "properties":
 		return DeserializeProperties(string(input.Bytes), input.Comment, input.Type)
 	case "bson":

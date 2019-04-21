@@ -8,7 +8,6 @@
 package gssjs
 
 import (
-	"fmt"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-simple-serializer/gss"
@@ -28,15 +27,7 @@ func Serialize(inputObject interface{}, outputFormat string, options *js.Object)
 	outputPretty := false
 
 	if v, ok := m["outputHeader"]; ok {
-		switch v.(type) {
-		case []string:
-			outputHeader = v.([]string)
-		case []interface{}:
-			outputHeader = make([]string, 0, len(v.([]interface{})))
-			for _, h := range v.([]interface{}) {
-				outputHeader = append(outputHeader, fmt.Sprint(h))
-			}
-		}
+		outputHeader = toStringSlice(v)
 	}
 
 	if v, ok := m["outputLimit"]; ok {
@@ -47,9 +38,11 @@ func Serialize(inputObject interface{}, outputFormat string, options *js.Object)
 	}
 
 	if v, ok := m["outputPretty"]; ok {
-		switch v := v.(type) {
+		switch vv := v.(type) {
 		case bool:
-			outputPretty = v
+			outputPretty = vv
+		case int:
+			outputPretty = vv > 0
 		}
 	}
 

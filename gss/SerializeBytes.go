@@ -9,7 +9,6 @@ package gss
 
 import (
 	"bytes"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -25,6 +24,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+import (
+	stringify "github.com/spatialcurrent/go-stringify"
+)
+
 var jsonPrefix = ""
 var jsonIndent = "  "
 
@@ -35,11 +38,11 @@ func escapePropertyText(in string) string {
 	return out
 }
 
-func marshalJson(object interface{}, pretty bool) ([]byte, error) {
+func marshalJSON(object interface{}, pretty bool) ([]byte, error) {
 	if pretty {
-		return json.MarshalIndent(StringifyMapKeys(object), jsonPrefix, jsonIndent)
+		return json.MarshalIndent(stringify.StringifyMapKeys(object), jsonPrefix, jsonIndent)
 	}
-	return json.Marshal(StringifyMapKeys(object))
+	return json.Marshal(stringify.StringifyMapKeys(object))
 }
 
 func unknownKeys(obj reflect.Value, knownKeys map[string]struct{}) []string {
@@ -106,101 +109,129 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 		}
 
 		s := reflect.ValueOf(object)
-		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
+		if s.Kind() != reflect.Map && s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
 			return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}
 		}
-		if s.Len() > 0 {
-			first := reflect.TypeOf(s.Index(0).Interface())
-			if first.Kind() == reflect.Ptr {
-				first = first.Elem()
+
+		switch s.Kind() {
+		case reflect.Map:
+			mapKeys := reflect.ValueOf(s.Interface()).MapKeys()
+			if len(header) == 0 {
+				header = make([]string, 0, len(mapKeys))
+				for _, key := range mapKeys {
+					header = append(header, fmt.Sprint(key))
+				}
+				sort.Strings(header)
 			}
 			rows := make([][]string, 0)
-			switch first.Kind() {
-			case reflect.Map:
-				mapKeys := reflect.ValueOf(s.Index(0).Interface()).MapKeys()
-				if len(header) == 0 {
-					header = make([]string, 0, len(mapKeys))
-					for _, key := range mapKeys {
-						header = append(header, fmt.Sprint(key))
-					}
-					sort.Strings(header)
+			if wildcard {
+				newHeader, _, row, err := serializeRow(header, knownKeys, s.Interface())
+				if err != nil {
+					return make([]byte, 0), errors.Wrap(err, "error serializing row")
 				}
-				if wildcard {
-					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-						newHeader, newKnownKeys, row, err := serializeRow(header, knownKeys, s.Index(i).Interface())
-						if err != nil {
-							return make([]byte, 0), errors.Wrap(err, "error serializing row")
-						}
-						header = newHeader
-						knownKeys = newKnownKeys
-						rows = append(rows, row)
-					}
-				} else {
-					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-						m := reflect.ValueOf(s.Index(i).Interface())
-						if m.Kind() != reflect.Map {
-							return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
-						}
-						row := make([]string, len(header))
-						for j, key := range header {
-							if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
-								row[j] = fmt.Sprint(v.Interface())
-							} else {
-								row[j] = ""
-							}
-						}
-						rows = append(rows, row)
+				header = newHeader
+				rows = append(rows, row)
+			} else {
+				m := reflect.ValueOf(s.Interface())
+				if m.Kind() != reflect.Map {
+					return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
+				}
+				row := make([]string, len(header))
+				for j, key := range header {
+					if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
+						row[j] = fmt.Sprint(v.Interface())
+					} else {
+						row[j] = ""
 					}
 				}
-			case reflect.Struct:
-				if len(header) == 0 {
-					header = make([]string, first.NumField())
-					for i := 0; i < first.NumField(); i++ {
-						if tag := first.Field(i).Tag.Get(format); len(tag) > 0 {
-							header[i] = tag
-						} else {
-							header[i] = first.Field(i).Name
-						}
-					}
-					sort.Strings(header)
-				}
-				for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-					rows = append(rows, make([]string, first.NumField()))
-					for j := 0; j < len(header); j++ {
-						f, ok := first.FieldByName(header[j])
-						if ok {
-							switch f.Type {
-							case reflect.TypeOf(""):
-								rows[i][j] = s.Index(i).Elem().FieldByName(header[j]).String()
-							case reflect.TypeOf([]string{}):
-								slice_as_strings := s.Index(i).Elem().FieldByName(header[j]).Interface().([]string)
-								rows[i][j] = strings.Join(slice_as_strings, ",")
-							default:
-								rows[i][j] = ""
-							}
-						} else {
-							rows[i][j] = ""
-						}
-					}
-				}
+				rows = append(rows, row)
 			}
 			buf := new(bytes.Buffer)
-			w := csv.NewWriter(buf)
-			if format == "tsv" {
-				w.Comma = '\t'
-			}
-			newHeader := make([]string, 0)
-			for _, k := range header {
-				if k != "*" {
-					newHeader = append(newHeader, k)
+			err := WriteSV(buf, format, header, rows)
+			return buf.Bytes(), err
+		case reflect.Array, reflect.Slice:
+			if s.Len() > 0 {
+				first := reflect.TypeOf(s.Index(0).Interface())
+				if first.Kind() == reflect.Ptr {
+					first = first.Elem()
 				}
+				rows := make([][]string, 0)
+				switch first.Kind() {
+				case reflect.Map:
+					mapKeys := reflect.ValueOf(s.Index(0).Interface()).MapKeys()
+					if len(header) == 0 {
+						header = make([]string, 0, len(mapKeys))
+						for _, key := range mapKeys {
+							header = append(header, fmt.Sprint(key))
+						}
+						sort.Strings(header)
+					}
+					if wildcard {
+						for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
+							newHeader, newKnownKeys, row, err := serializeRow(header, knownKeys, s.Index(i).Interface())
+							if err != nil {
+								return make([]byte, 0), errors.Wrap(err, "error serializing row")
+							}
+							header = newHeader
+							knownKeys = newKnownKeys
+							rows = append(rows, row)
+						}
+					} else {
+						for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
+							m := reflect.ValueOf(s.Index(i).Interface())
+							if m.Kind() != reflect.Map {
+								return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
+							}
+							row := make([]string, len(header))
+							for j, key := range header {
+								if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
+									row[j] = fmt.Sprint(v.Interface())
+								} else {
+									row[j] = ""
+								}
+							}
+							rows = append(rows, row)
+						}
+					}
+				case reflect.Struct:
+					if len(header) == 0 {
+						header = make([]string, first.NumField())
+						for i := 0; i < first.NumField(); i++ {
+							if tag := first.Field(i).Tag.Get(format); len(tag) > 0 {
+								header[i] = tag
+							} else {
+								header[i] = first.Field(i).Name
+							}
+						}
+						sort.Strings(header)
+					}
+					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
+						rows = append(rows, make([]string, first.NumField()))
+						for j := 0; j < len(header); j++ {
+							f, ok := first.FieldByName(header[j])
+							if ok {
+								switch f.Type {
+								case reflect.TypeOf(""):
+									rows[i][j] = s.Index(i).Elem().FieldByName(header[j]).String()
+								case reflect.TypeOf([]string{}):
+									rows[i][j] = strings.Join(s.Index(i).Elem().FieldByName(header[j]).Interface().([]string), ",")
+								default:
+									rows[i][j] = ""
+								}
+							} else {
+								rows[i][j] = ""
+							}
+						}
+					}
+				}
+				buf := new(bytes.Buffer)
+				err := WriteSV(buf, format, header, rows)
+				return buf.Bytes(), err
 			}
-			w.Write(newHeader) // nolint: gosec
-			w.WriteAll(rows)   // nolint: gosec
-			return buf.Bytes(), nil
+			// If there are no records then just return an empty string
+			return []byte(""), nil
 		}
-		// If there are no records then just return an empty string
-		return []byte(""), nil
+		return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Map, reflect.Array, reflect.Slice}}
 	} else if format == "properties" || format == "text" {
 		t := reflect.TypeOf(object)
 		if t.Kind() == reflect.Map {
@@ -234,19 +265,19 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			}
 			return []byte(output), nil
 		}
-		switch object.(type) {
+		switch obj := object.(type) {
 		case string:
-			return []byte(object.(string)), nil
+			return []byte(obj), nil
 		case int:
-			return []byte(strconv.Itoa(object.(int))), nil
+			return []byte(strconv.Itoa(obj)), nil
 		case float64:
-			return []byte(strconv.FormatFloat(object.(float64), 'f', -1, 64)), nil
+			return []byte(strconv.FormatFloat(obj, 'f', -1, 64)), nil
 		}
 		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "object is not valid")
 	} else if format == "bson" {
-		return bson.Marshal(StringifyMapKeys(object))
+		return bson.Marshal(stringify.StringifyMapKeys(object))
 	} else if format == "json" {
-		return marshalJson(object, input.Pretty)
+		return marshalJSON(object, input.Pretty)
 	} else if format == "jsonl" {
 		s := reflect.ValueOf(object)
 		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
@@ -254,7 +285,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 		}
 		output := make([]byte, 0)
 		for i := 0; i < s.Len() && (limit < 0 || i < limit); i++ {
-			b, err := marshalJson(s.Index(i).Interface(), input.Pretty)
+			b, err := marshalJSON(s.Index(i).Interface(), input.Pretty)
 			if err != nil {
 				return output, err
 			}

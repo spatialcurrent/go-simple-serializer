@@ -8,7 +8,6 @@
 package gssjs
 
 import (
-	"fmt"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-simple-serializer/gss"
@@ -16,7 +15,7 @@ import (
 )
 
 // Deserialize is a function provided to gss.js that wraps gss.Deserialize to support JavaScript.
-func Deserialize(input_string string, input_format string, options *js.Object) interface{} {
+func Deserialize(inputString string, inputFormat string, options *js.Object) interface{} {
 
 	m := map[string]interface{}{}
 	for _, key := range js.Keys(options) {
@@ -31,21 +30,12 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 	async := false
 
 	if v, ok := m["header"]; ok {
-		switch v.(type) {
-		case []string:
-			inputHeader = v.([]string)
-		case []interface{}:
-			inputHeader = make([]string, 0, len(v.([]interface{})))
-			for _, h := range v.([]interface{}) {
-				inputHeader = append(inputHeader, fmt.Sprint(h))
-			}
-		}
+		inputHeader = toStringSlice(v)
 	}
 
 	if v, ok := m["inputComment"]; ok {
-		switch v := v.(type) {
-		case string:
-			inputComment = v
+		if vv, ok := v.(string); ok {
+			inputComment = vv
 		}
 	}
 
@@ -59,9 +49,8 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 	}
 
 	if v, ok := m["inputLimit"]; ok {
-		switch v := v.(type) {
-		case int:
-			inputLimit = v
+		if vv, ok := v.(int); ok {
+			inputLimit = vv
 		}
 	}
 
@@ -72,13 +61,13 @@ func Deserialize(input_string string, input_format string, options *js.Object) i
 		}
 	}
 
-	input_type, err := gss.GetType([]byte(input_string), input_format)
+	inputType, err := gss.GetType([]byte(inputString), inputFormat)
 	if err != nil {
-		console.Error(errors.Wrap(err, "error creating new object for format "+input_format))
+		console.Error(errors.Wrap(err, "error creating new object for format "+inputFormat))
 		return ""
 	}
 
-	outputObject, err := gss.DeserializeString(input_string, input_format, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, input_type, async, false)
+	outputObject, err := gss.DeserializeString(inputString, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error deserializing input into object").Error())
 		return ""

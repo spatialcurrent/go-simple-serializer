@@ -23,13 +23,24 @@ jobs:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
       - run:
-          name: Install gometalinter
-          command: |
-            go get -u github.com/alecthomas/gometalinter
-            gometalinter --install
+          name: Get shadow
+          command: go get golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
       - run:
-          name: Test
-          command: bash scripts/test.sh
+          name: Install shadow
+          command: go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
+      - run:
+          name: Download and install errcheck
+          command: go get -u github.com/kisielk/errcheck
+      - run:
+          name: Download and install misspell
+          command: go get -u github.com/client9/misspell/cmd/misspell
+      - run:
+          name: Download and install ineffassign
+          command: go get -u github.com/gordonklaus/ineffassign
+      - run:
+          name: Download and install staticheck
+          command: go get -u honnef.co/go/tools/cmd/staticcheck
+      - run: bash scripts/test.sh
   validate:
     executor: base
     steps:

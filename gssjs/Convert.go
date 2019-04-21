@@ -8,7 +8,6 @@
 package gssjs
 
 import (
-	"fmt"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-simple-serializer/gss"
@@ -26,23 +25,12 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 	}
 
 	if v, ok := m["inputHeader"]; ok {
-		inputHeader := make([]string, 0)
-		switch v.(type) {
-		case []string:
-			inputHeader = v.([]string)
-		case []interface{}:
-			inputHeader = make([]string, 0, len(v.([]interface{})))
-			for _, h := range v.([]interface{}) {
-				inputHeader = append(inputHeader, fmt.Sprint(h))
-			}
-		}
-		convertInput.InputHeader = inputHeader
+		convertInput.InputHeader = toStringSlice(v)
 	}
 
 	if v, ok := m["inputComment"]; ok {
-		switch v := v.(type) {
-		case string:
-			convertInput.InputComment = v
+		if vv, ok := v.(string); ok {
+			convertInput.InputComment = vv
 		}
 	}
 
@@ -56,44 +44,36 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 	}
 
 	if v, ok := m["inputLimit"]; ok {
-		switch v := v.(type) {
-		case int:
-			convertInput.InputLimit = v
+		if vv, ok := v.(int); ok {
+			convertInput.InputLimit = vv
 		}
 	}
 
 	if v, ok := m["outputHeader"]; ok {
-		outputHeader := make([]string, 0)
-		switch v.(type) {
-		case []string:
-			outputHeader = v.([]string)
-		case []interface{}:
-			outputHeader = make([]string, 0, len(v.([]interface{})))
-			for _, h := range v.([]interface{}) {
-				outputHeader = append(outputHeader, fmt.Sprint(h))
-			}
-		}
-		convertInput.OutputHeader = outputHeader
+		convertInput.OutputHeader = toStringSlice(v)
 	}
 
 	if v, ok := m["outputLimit"]; ok {
-		switch v := v.(type) {
-		case int:
-			convertInput.OutputLimit = v
+		if vv, ok := v.(int); ok {
+			convertInput.OutputLimit = vv
 		}
 	}
 
 	if v, ok := m["async"]; ok {
-		switch v := v.(type) {
+		switch vv := v.(type) {
 		case bool:
-			convertInput.Async = v
+			convertInput.Async = vv
+		case int:
+			convertInput.Async = vv > 0
 		}
 	}
 
 	if v, ok := m["outputPretty"]; ok {
-		switch v := v.(type) {
+		switch vv := v.(type) {
 		case bool:
-			convertInput.OutputPretty = v
+			convertInput.OutputPretty = vv
+		case int:
+			convertInput.OutputPretty = vv > 0
 		}
 	}
 

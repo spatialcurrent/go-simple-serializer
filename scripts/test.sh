@@ -2,19 +2,25 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 set -eu
 cd $DIR/..
-pkgs=$(go list ./... )
+pkgs=$(go list ./... | grep -v /vendor/ | tr "\n" " ")
 echo "******************"
-echo "Running unit tests for: "
-for pkg in "${pkgs[@]}"; do
-   go test -p 1 -count 1 -short $pkgs
-done
+echo "Running unit tests"
+go test -p 1 -count 1 -short $pkgs
 echo "******************"
-echo "Using gometalinter with misspell, vet, ineffassign, and gosec"
-gometalinter \
---misspell-locale=US \
---disable-all \
---enable=misspell \
---enable=vet \
---enable=ineffassign \
---enable=gosec \
-./...
+echo "Running go vet"
+go vet $pkgs
+echo "******************"
+echo "Running go vet with shadow"
+go vet -vettool=$(which shadow) $pkgs
+echo "******************"
+echo "Running errcheck"
+errcheck ${pkgs}
+echo "******************"
+echo "Running ineffassign"
+find . -name '*.go' | xargs ineffassign
+echo "******************"
+echo "Running staticcheck"
+staticcheck -checks all ${pkgs}
+echo "******************"
+echo "Running misspell"
+misspell -locale US -error *.md *.go

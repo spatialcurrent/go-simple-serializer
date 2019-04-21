@@ -14,19 +14,19 @@ import (
 	"reflect"
 )
 
-// DeserializeCSV deserializes a CSV or TSV string into a Go instance.
+// DeserializeSV deserializes a CSV or TSV string into a Go instance.
 //  - https://golang.org/pkg/encoding/csv/
-func DeserializeCSV(input io.Reader, format string, input_header []string, input_comment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, output_type reflect.Type) (interface{}, error) {
+func DeserializeSV(input io.Reader, format string, inputHeader []string, inputComment string, inputLazyQuotes bool, inputSkipLines int, inputLimit int, outputType reflect.Type) (interface{}, error) {
 
-	if output_type.Kind() == reflect.Map {
+	if outputType.Kind() == reflect.Map {
 		if inputLimit != 1 {
-			return nil, errors.Wrap(&ErrInvalidLimit{Value: inputLimit}, "DeserializeCSV expects input limit of 1 when output type is of kind map.")
+			return nil, errors.Wrap(&ErrInvalidLimit{Value: inputLimit}, "DeserializeSV expects input limit of 1 when output type is of kind map.")
 		}
-		if len(input_header) == 0 {
-			return nil, errors.New("deserializeCSV when returning a map type expects a input header")
+		if len(inputHeader) == 0 {
+			return nil, errors.New("deserializeSV when returning a map type expects a input header")
 		}
-	} else if !(output_type.Kind() == reflect.Array || output_type.Kind() == reflect.Slice) {
-		return nil, &ErrInvalidKind{Value: output_type.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice, reflect.Map}}
+	} else if !(outputType.Kind() == reflect.Array || outputType.Kind() == reflect.Slice) {
+		return nil, &ErrInvalidKind{Value: outputType.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice, reflect.Map}}
 	}
 
 	reader := csv.NewReader(input)
@@ -36,13 +36,13 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 	reader.LazyQuotes = inputLazyQuotes
 	reader.FieldsPerRecord = -1 // records may have a variable number of fields
 
-	if len(input_comment) > 1 {
+	if len(inputComment) > 1 {
 		return nil, errors.New("go's encoding/csv package only supports single character comment characters")
-	} else if len(input_comment) == 1 {
-		reader.Comment = []rune(input_comment)[0]
+	} else if len(inputComment) == 1 {
+		reader.Comment = []rune(inputComment)[0]
 	}
 
-	if output_type.Kind() == reflect.Map {
+	if outputType.Kind() == reflect.Map {
 		inRow, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
@@ -53,8 +53,8 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 		if len(inRow) == 0 {
 			return nil, &ErrEmptyRow{}
 		}
-		m := reflect.MakeMap(output_type)
-		for i, h := range input_header {
+		m := reflect.MakeMap(outputType)
+		for i, h := range inputHeader {
 			// if the number of columns in the header is greater than in the row,
 			// then break and return data for the columns that are there
 			if i >= len(inRow) {
@@ -65,17 +65,17 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 		return m.Interface(), nil
 	}
 
-	if len(input_header) == 0 {
+	if len(inputHeader) == 0 {
 		h, err := reader.Read()
 		if err != nil {
 			if err != io.EOF {
 				return nil, errors.Wrap(err, "Error reading header from input with format csv")
 			}
 		}
-		input_header = h
+		inputHeader = h
 	}
 
-	output := reflect.MakeSlice(output_type, 0, 0)
+	output := reflect.MakeSlice(outputType, 0, 0)
 	for {
 		inRow, err := reader.Read()
 		if err != nil {
@@ -85,8 +85,8 @@ func DeserializeCSV(input io.Reader, format string, input_header []string, input
 				return nil, errors.Wrap(err, "error reading row into slice from input with format csv")
 			}
 		}
-		m := reflect.MakeMap(output_type.Elem())
-		for i, h := range input_header {
+		m := reflect.MakeMap(outputType.Elem())
+		for i, h := range inputHeader {
 			if i < len(inRow) {
 				m.SetMapIndex(reflect.ValueOf(h), reflect.ValueOf(inRow[i]))
 			}

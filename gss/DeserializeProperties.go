@@ -17,17 +17,17 @@ import (
 
 // DeserializeProperties deserializes a properties string into a Go instance.
 //  - https://en.wikipedia.org/wiki/.properties
-func DeserializeProperties(input string, input_comment string, output_type reflect.Type) (interface{}, error) {
-	m := reflect.MakeMap(output_type)
-	if len(input_comment) == 0 {
-		input_comment = "#"
+func DeserializeProperties(input string, inputComment string, outputType reflect.Type) (interface{}, error) {
+	m := reflect.MakeMap(outputType)
+	if len(inputComment) == 0 {
+		inputComment = "#"
 	}
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	scanner.Split(bufio.ScanLines)
 	property := ""
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(line) > 0 && !strings.HasPrefix(line, input_comment) {
+		if len(line) > 0 && !strings.HasPrefix(line, inputComment) {
 			if line[len(line)-1] == '\\' {
 				property += strings.TrimLeftFunc(line[0:len(line)-1], unicode.IsSpace)
 			} else {
