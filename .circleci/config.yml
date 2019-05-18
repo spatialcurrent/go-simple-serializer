@@ -2,14 +2,14 @@ version: 2.1
 executors:
   base:
     docker:
-      - image: circleci/golang:1.12.1
+      - image: circleci/golang:1.12
     working_directory: /go/src/github.com/spatialcurrent/go-simple-serializer
 jobs:
   pre_deps_golang:
     executor: base
     steps:
       - checkout
-      - run: go get -d ./...
+      - run: make deps
       - run: sudo chown -R circleci /go/src
       - save_cache:
           key: v1-go-src-{{ .Branch }}-{{ .Revision }}
@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Download and install staticheck
           command: go get -u honnef.co/go/tools/cmd/staticcheck
-      - run: bash scripts/test.sh
+      - run: make test
   validate:
     executor: base
     steps:
@@ -68,7 +68,7 @@ jobs:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
       - run: go get github.com/inconshreveable/mousetrap # for windows CLI builds
-      - run: bash scripts/build_cli.sh
+      - run: make build_cli
       - store_artifacts:
           path: bin
           destination: /
@@ -82,7 +82,7 @@ jobs:
       - run:
           name: Install GopherJS
           command: go get -u github.com/gopherjs/gopherjs
-      - run: bash scripts/build_javascript.sh
+      - run: make build_javascript
       - store_artifacts:
           path: bin
           destination: /
@@ -93,7 +93,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: bash scripts/build_so.sh
+      - run: make build_so
       - store_artifacts:
           path: bin
           destination: /

@@ -53,6 +53,7 @@ func Convert(input *ConvertInput) (string, error) {
 				Header: input.OutputHeader,
 				Limit:  input.OutputLimit,
 				Pretty: input.OutputPretty,
+				Sorted: input.OutputSorted,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
@@ -81,11 +82,13 @@ func Convert(input *ConvertInput) (string, error) {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
 			outputString, err := SerializeString(&SerializeInput{
-				Object: object,
-				Format: input.OutputFormat,
-				Header: input.OutputHeader,
-				Limit:  input.OutputLimit,
-				Pretty: input.OutputPretty,
+				Object:          object,
+				Format:          input.OutputFormat,
+				Header:          input.OutputHeader,
+				Limit:           input.OutputLimit,
+				Pretty:          input.OutputPretty,
+				Sorted:          input.OutputSorted,
+				ValueSerializer: input.OutputValueSerializer,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
