@@ -28,6 +28,10 @@ import (
 	stringify "github.com/spatialcurrent/go-stringify"
 )
 
+import (
+	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+)
+
 var jsonPrefix = ""
 var jsonIndent = "  "
 
@@ -95,16 +99,31 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	object := input.Object
 	format := input.Format
 	limit := input.Limit
+	valueSerializer := input.ValueSerializer
+	if valueSerializer == nil {
+		valueSerializer = sv.DefaultValueSerializer("")
+	}
 
 	if format == "csv" || format == "tsv" {
+
+		separator, err := sv.FormatToSeparator(format)
+		if err != nil {
+			return make([]byte, 0), err
+		}
+
 		header := input.Header
 		wildcard := false
 		knownKeys := map[string]struct{}{}
-		for _, k := range header {
-			if k == "*" {
-				wildcard = true
-			} else {
-				knownKeys[k] = struct{}{}
+		if len(header) > 0 {
+			for _, k := range header {
+				if k == "*" {
+					wildcard = true
+				} else {
+					knownKeys[k] = struct{}{}
+				}
+			}
+			if input.Sorted {
+				sort.Strings(header)
 			}
 		}
 
@@ -115,39 +134,40 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 
 		switch s.Kind() {
 		case reflect.Map:
-			mapKeys := reflect.ValueOf(s.Interface()).MapKeys()
-			if len(header) == 0 {
-				header = make([]string, 0, len(mapKeys))
-				for _, key := range mapKeys {
-					header = append(header, fmt.Sprint(key))
-				}
-				sort.Strings(header)
-			}
+
 			rows := make([][]string, 0)
-			if wildcard {
-				newHeader, _, row, err := serializeRow(header, knownKeys, s.Interface())
+			if len(header) > 0 {
+				if wildcard {
+					newHeader, _, row, err := serializeRow(header, knownKeys, s.Interface())
+					if err != nil {
+						return make([]byte, 0), errors.Wrap(err, "error serializing row")
+					}
+					header = newHeader
+					rows = append(rows, row)
+				} else {
+					row, err := ToRowS(header, s, valueSerializer)
+					if err != nil {
+						return make([]byte, 0), errors.Wrap(err, "error serializing row")
+					}
+					rows = append(rows, row)
+				}
+			} else {
+				keys := GetKeysFromValue(s, input.Sorted)
+				header = ToStringSlice(keys) // string representations of keys
+				row, err := ToRowI(keys, s, valueSerializer)
 				if err != nil {
 					return make([]byte, 0), errors.Wrap(err, "error serializing row")
 				}
-				header = newHeader
-				rows = append(rows, row)
-			} else {
-				m := reflect.ValueOf(s.Interface())
-				if m.Kind() != reflect.Map {
-					return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
-				}
-				row := make([]string, len(header))
-				for j, key := range header {
-					if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
-						row[j] = fmt.Sprint(v.Interface())
-					} else {
-						row[j] = ""
-					}
-				}
 				rows = append(rows, row)
 			}
+
 			buf := new(bytes.Buffer)
-			err := WriteSV(buf, format, header, rows)
+			err := sv.Write(&sv.WriteInput{
+				Writer:    buf,
+				Separator: separator,
+				Header:    header,
+				Rows:      rows,
+			})
 			return buf.Bytes(), err
 		case reflect.Array, reflect.Slice:
 			if s.Len() > 0 {
@@ -185,9 +205,17 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 							row := make([]string, len(header))
 							for j, key := range header {
 								if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
-									row[j] = fmt.Sprint(v.Interface())
+									str, err := valueSerializer(v.Interface())
+									if err != nil {
+										return make([]byte, 0), errors.Wrap(err, "error serializing value")
+									}
+									row[j] = str
 								} else {
-									row[j] = ""
+									str, err := valueSerializer(nil)
+									if err != nil {
+										return make([]byte, 0), errors.Wrap(err, "error serializing value")
+									}
+									row[j] = str
 								}
 							}
 							rows = append(rows, row)
@@ -225,7 +253,12 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 					}
 				}
 				buf := new(bytes.Buffer)
-				err := WriteSV(buf, format, header, rows)
+				err := sv.Write(&sv.WriteInput{
+					Writer:    buf,
+					Separator: separator,
+					Header:    header,
+					Rows:      rows,
+				})
 				return buf.Bytes(), err
 			}
 			// If there are no records then just return an empty string
@@ -239,24 +272,28 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 				return nil, errors.Wrap(&ErrInvalidKind{Value: k, Valid: []reflect.Kind{reflect.String}}, "can only serialize a map with string keys")
 			}
 			m := reflect.ValueOf(object)
-			keys := make([]string, m.Len())
-			for i, key := range m.MapKeys() {
-				keys[i] = key.Interface().(string)
-			}
-			sort.Strings(keys)
+			keys := GetKeys(object, input.Sorted)
 			output := ""
 			for i, key := range keys {
 				if format == "properties" {
-					output += escapePropertyText(key) + "=" + escapePropertyText(fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface()))
+					value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
+					if err != nil {
+						return nil, errors.Wrap(err, "error serializing value")
+					}
+					output += escapePropertyText(fmt.Sprint(key)) + "=" + escapePropertyText(value)
 					if i < m.Len()-1 {
 						output += "\n"
 					}
 				} else if format == "text" {
-					value := strings.Replace(fmt.Sprint(m.MapIndex(reflect.ValueOf(key)).Interface()), "\"", "\\\"", -1)
+					value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
+					if err != nil {
+						return nil, errors.Wrap(err, "error serializing value")
+					}
+					value = strings.Replace(value, "\"", "\\\"", -1)
 					if strings.Contains(value, " ") {
 						value = "\"" + value + "\""
 					}
-					output += key + "=" + value
+					output += fmt.Sprint(key) + "=" + value
 					if i < m.Len()-1 {
 						output += " "
 					}

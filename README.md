@@ -14,23 +14,38 @@ Using cross compilers, this library can also be called by other languages.  This
 
 **CLI**
 
-You can use the command line tool to convert between formats.
+You can use the command line tool to convert between serialization formats.
 
 ```
-Usage: gss -i INPUT_FORMAT -o OUTPUT_FORMAT [-h HEADER] [-c COMMENT]
-Options:
-  -c string
-    	The input comment character, e.g., #.  Commented lines are not sent to output.
-  -h string
-    	The input header if the stdin input has no header.
-  -help
-    	Print help.
-  -i string
-    	The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-  -o string
-    	The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-  -version
-    	Prints version to stdout.
+gss is a simple program for serializing/deserializing data.
+
+Usage:
+  gss [flags]
+  gss [command]
+
+Available Commands:
+  completion  Generates bash completion scripts
+  help        Help about any command
+  version     print version information to stdout
+
+Flags:
+  -a, --async                   async processing
+  -h, --help                    help for gss
+  -c, --input-comment string    The input comment character, e.g., #.  Commented lines are not sent to output.
+  -i, --input-format string     The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
+      --input-header strings    The input header if the stdin input has no header.
+      --input-lazy-quotes       allows lazy quotes for CSV and TSV
+  -l, --input-limit int         The input limit (default -1)
+      --input-skip-lines int    The number of lines to skip before processing
+  -t, --input-trim              trim input lines
+  -o, --output-format string    The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
+      --output-header strings   The output header if the stdout output has no header.
+  -n, --output-limit int        the output limit (default -1)
+  -p, --output-pretty           print pretty output
+  -s, --output-sorted           sort output
+      --verbose                 Print debug info to stdout
+
+Use "gss [command] --help" for more information about a command.
 ```
 
 **Go**
@@ -131,23 +146,23 @@ language=$(cat .travis.yml | ./gss_linux_amd64 -i yaml -o json -c '#' | jq .lang
 
 **CLI**
 
-The `build_cli.sh` script is used to build executables for Linux and Windows.
+The `make build_cli` script is used to build executables for Linux and Windows.
 
 **JavaScript**
 
-You can compile GSS to pure JavaScript with the `scripts/build_javascript.sh` script.
+You can compile GSS to pure JavaScript with the `make build_javascript` script.
 
 **Android**
 
-The `build_android.sh` script is used to build an [Android Archive](https://developer.android.com/studio/projects/android-library) (AAR) file and associated Javadocs.
+The `make build_android` script is used to build an [Android Archive](https://developer.android.com/studio/projects/android-library) (AAR) file and associated Javadocs.
 
 **Shared Object**
 
-The `build_so.sh` script is used to build a Shared Object (`*.go`), which can be called by `C`, `C++`, and `Python` on Linux machines.
+The `make build_so` script is used to build a Shared Object (`*.go`), which can be called by `C`, `C++`, and `Python` on Linux machines.
 
 **Changing Destination**
 
-The default destination for build artifacts is `go-simple-serializer/bin`, but you can change the destination with a CLI argument.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `bash scripts/build_cli.sh /usr/local/go/bin`
+The default destination for build artifacts is `go-simple-serializer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
 # Contributing
 

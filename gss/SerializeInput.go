@@ -9,9 +9,11 @@ package gss
 
 // SerializeInput provides the input for the SerializeString and SerializeBytes function.
 type SerializeInput struct {
-	Object interface{}
-	Format string
-	Header []string
-	Limit  int
-	Pretty bool
+	Object          interface{}
+	Format          string
+	Header          []string
+	Limit           int
+	Pretty          bool
+	Sorted          bool
+	ValueSerializer func(object interface{}) (string, error)
 }
