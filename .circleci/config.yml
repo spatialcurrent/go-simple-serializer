@@ -2,64 +2,54 @@ version: 2.1
 executors:
   base:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.12-node
     working_directory: /go/src/github.com/spatialcurrent/go-simple-serializer
 jobs:
   pre_deps_golang:
     executor: base
     steps:
       - checkout
-      - run: make deps
+      - run: make deps_go
       - run: sudo chown -R circleci /go/src
       - save_cache:
           key: v1-go-src-{{ .Branch }}-{{ .Revision }}
           paths:
             - /go/src
-  test:
+  test_go:
     executor: base
     steps:
       - run: sudo chown -R circleci /go/src
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Get shadow
-          command: go get golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
-      - run:
-          name: Install shadow
-          command: go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
-      - run:
-          name: Download and install errcheck
-          command: go get -u github.com/kisielk/errcheck
-      - run:
-          name: Download and install misspell
-          command: go get -u github.com/client9/misspell/cmd/misspell
-      - run:
-          name: Download and install ineffassign
-          command: go get -u github.com/gordonklaus/ineffassign
-      - run:
-          name: Download and install staticheck
-          command: go get -u honnef.co/go/tools/cmd/staticcheck
-      - run: make test
-  validate:
+      - run: make deps_go_test
+      - run: make test_go
+      - run: make imports
+      - run: git diff --exit-code
+  test_javascript:
     executor: base
     steps:
       - run: sudo chown -R circleci /go/src
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Install Dig
-          command: sudo apt update && sudo apt install dnsutils
-      - run:
-          name: "Update ~/.ssh/known_hosts"
-          command: |
-            mkdir ~/.ssh/
-            touch ~/.ssh/known_hosts
-            for ip in $(dig @8.8.8.8 github.com +short); do ssh-keyscan github.com,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts
-      - run: go get github.com/spatialcurrent/go-header/...
-      - run: go install github.com/spatialcurrent/go-header/cmd/goheader
-      - run: goheader fix --fix-year 2019 --exit-code-on-changes 1 --verbose
+      - run: make deps_gopherjs
+      - run: make deps_javascript
+      - run: npm run test:clean
+  examples:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: make deps_gopherjs
+      - run: make deps_javascript
+      - run: npm run test:clean
+      - run: make run_example_c
+      - run: make run_example_cpp
+      - run: make run_example_javascript
+      - run: make run_example_python
   build_cli:
     executor: base
     steps:
@@ -79,12 +69,10 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Install GopherJS
-          command: go get -u github.com/gopherjs/gopherjs
+      - run: make deps_gopherjs
       - run: make build_javascript
       - store_artifacts:
-          path: bin
+          path: dist
           destination: /
   build_so:
     executor: base
@@ -93,6 +81,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: sudo make deps_arm
       - run: make build_so
       - store_artifacts:
           path: bin
@@ -101,10 +90,13 @@ workflows:
   main:
     jobs:
       - pre_deps_golang
-      - test:
+      - test_go:
           requires:
             - pre_deps_golang
-      - validate:
+      - test_javascript:
+          requires:
+            - pre_deps_golang
+      - examples:
           requires:
             - pre_deps_golang
       - build_cli:

@@ -4,96 +4,87 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.
+**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple serialization formats in their applications.
 
-GSS supports `bson`, `csv`, `tsv`, `hcl`, `hcl2`, `json`, `jsonl`, `properties`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+Using cross compilers, this library can also be called by other languages, including `C`, `C++`, `Python`, and `JavaScript`.  This library is cross compiled into a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs), which can be called by [Node.js](https://nodejs.org) and loaded in the browser.  See the examples folder for patterns that you can use.
 
-Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
+**Formats**
+
+GSS supports the following formats.
+
+| Format | Description |
+| ---- | ------ |
+| bson | Binary JSON |
+| csv | Comma-Separated Values
+| hcl | HashiCorp Configuration Language |
+| hcl2 | HashiCorp Configuration Language (version 2.x) |
+| json | JSON |
+| jsonl | JSON Lines |
+| properties | Properties |
+| tags | single-line key=value tags |
+| toml | TOML |
+| tsv | Tab-Separated Values |
+| yaml | YAML |
+
+`hcl` and `hcl2` implementation is fragile and very much in `alpha`.  The other formats are well-supported.
+
+**Packages**
+
+The main public api for GSS is in the `gss` package.  However, this library does ship with lower-level packages that can be imported directly as well.
+
+| Package | Purpose |
+| ---- | ------ |
+| bson | Binary JSON |
+| escaper | Escape/unescape strings |
+| gss | The main public API |
+| inspector | Reusable functions for inspecting objects |
+| iterator | Wrapper for iterable formats |
+| json | JSON |
+| jsonl | JSON Lines |
+| properties | Properties Files |
+| scanner | Scanning through a stream of bytes |
+| splitter | Creating custom bufio.SplitFunc |
+| sv | Separated-Values formats, i.e., CSV and TSV. |
+| toml | TOML |
+| yaml | YAML |
 
 # Usage
 
 **CLI**
 
-You can use the command line tool to convert between serialization formats.
+The command line tool, `gss`, can be used to easily covert data between formats.  We currently support the following platforms.
 
-```
-gss is a simple program for serializing/deserializing data.
+| GOOS | GOARCH |
+| ---- | ------ |
+| darwin | amd64 |
+| linux | amd64 |
+| windows | amd64 |
+| linux | arm64 |
 
-Usage:
-  gss [flags]
-  gss [command]
-
-Available Commands:
-  completion  Generates bash completion scripts
-  help        Help about any command
-  version     print version information to stdout
-
-Flags:
-  -a, --async                   async processing
-  -h, --help                    help for gss
-  -c, --input-comment string    The input comment character, e.g., #.  Commented lines are not sent to output.
-  -i, --input-format string     The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-      --input-header strings    The input header if the stdin input has no header.
-      --input-lazy-quotes       allows lazy quotes for CSV and TSV
-  -l, --input-limit int         The input limit (default -1)
-      --input-skip-lines int    The number of lines to skip before processing
-  -t, --input-trim              trim input lines
-  -o, --output-format string    The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-      --output-header strings   The output header if the stdout output has no header.
-  -n, --output-limit int        the output limit (default -1)
-  -p, --output-pretty           print pretty output
-  -s, --output-sorted           sort output
-      --verbose                 Print debug info to stdout
-
-Use "gss [command] --help" for more information about a command.
-```
+Pull requests to support other platforms are welcome!  See the [examples](#examples) section below for usage.
 
 **Go**
 
-You can import **go-simple-serializer** as a library with:
+You can install the go-simple-serializer packages with.
 
-```go
-import (
-  "github.com/spatialcurrent/go-simple-serializer/gss"
-)
+
+```shell
+go get -u -d github.com/spatialcurrent/go-simple-serializer/...
 ```
 
-The `Convert`, `Deserialize`, and `Serialize` functions are the core functions to use.
+You can then import the main public API with `import "github.com/spatialcurrent/go-simple-serializer/pkg/gss"` or one of the underlying packages, e.g., `import "github.com/spatialcurrent/go-simple-serializer/pkg/tags"`.
 
-```go
-...
-  output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format, verbose)
-...
-  input_type, err := GetType(input_string, input_format)
-	if err != nil {
-		return "", errors.Wrap(err, "error creating new object for format "+input_format)
-	}
-  output, err := gss.Deserialize(input, format, input_header, input_comment, input_type, verbose)
-...
-  output_string, err := gss.Serialize(input, format)
-...
+See [go-simple-serializer](https://godoc.org/github.com/spatialcurrent/go-simple-serializer) in GoDoc for API documentation and examples.
+
+**Node**
+
+GSS is built as a module.  In modern JavaScript, the module can be imported using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
+
+```javascript
+const { serialize, deserialize, convert, formats } = require('./dist/gss.global.min.js');
 ```
 
-See [gss](https://godoc.org/github.com/spatialcurrent/go-simple-serializer/gss) in GoDoc for information on how to use Go API.
-
-**JavaScript**
-
-```html
-<html>
-  <head>
-    <script src="https://...gss.js"></script>
-  </head>
-  <body>
-    <script>
-      var input = "{\"a\":1}";
-      var output = gss.convert(input, "json", "yaml", )
-      ...
-      // You can also pass the input header for a csv/tsv that has none
-      var output = gss.convert(input, "csv", "json", {"header": ["a","b"]})
-    </script>
-  </body>
-</html>
-```
+In legacy JavaScript, you can use the `gss.main.js` file that simply adds `gss` to the global scope.
 
 **Android**
 
@@ -108,21 +99,7 @@ import com.spatialcurrent.gss.Gss;
 
 **C**
 
-A variant of the `Convert` function is exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For example:
-
-```
-char *input_string = "<YOUR INPUT>";
-char *output_string;
-err = Convert(input_string, input_format, input_header_csv, input_comment, output_format, &output_string);
-```
-
-The Go function definition defined in `plugins/gss/main.go` uses `*C.char` for all input except `output_string` which uses a double pointer (`**C.char`) to write to the output.
-
-```
-func Convert(input_string *C.char, input_format *C.char, input_header *C.char, input_comment *C.char, output_format *C.char, output_string **C.char) *C.char
-```
-
-For complete patterns for `C`, `C++`, and `Python`, see the `go-simpler-serializer/examples` folder.
+A variant of the `Convert` function is exported in a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` programs on Linux machines.  For complete patterns for `C`, `C++`, and `Python`, see the `examples` folder in this repo.
 
 # Releases
 
@@ -130,17 +107,45 @@ For complete patterns for `C`, `C++`, and `Python`, see the `go-simpler-serializ
 
 # Examples
 
+**CLI**
+
 `.gitignore` file to jsonl
 
-```
-cat .gitignore | ./gss -i csv -h pattern -o jsonl
+```shell
+cat .gitignore | gss -i csv --input-header path -o json
 ```
 
-Get language from `.travis.yml` and set to variable
+Get language from [CircleCI](https://circleci.com/) config.
 
+```shell
+cat .circleci/config.yml | gss -i yaml -o json -c '#' | jq -r .version
 ```
-language=$(cat .travis.yml | ./gss_linux_amd64 -i yaml -o json -c '#' | jq .language -r)
+
+Convert list of files to JSON Lines
+
+```shell
+find . -name '*.go' | gss -i csv --input-header path -o jsonl
 ```
+
+**Go**
+
+See the examples in [GoDoc](https://godoc.org/github.com/spatialcurrent/go-simple-serializer).
+
+**C**
+
+See the `examples/c/main.c` file.  You can run the example with `make run_example_c`.
+
+**C++**
+
+See the `examples/cpp/main.cpp` file.  You can run the example with `make run_example_cpp`.
+
+**Python**
+
+See the `examples/python/test.py` file.  You can run the example with `make run_example_python`.
+
+**JavaScript**
+
+See the `examples/js/index.js` file.  You can run the example with `make run_example_javascript`.
 
 # Building
 
@@ -163,6 +168,16 @@ The `make build_so` script is used to build a Shared Object (`*.go`), which can 
 **Changing Destination**
 
 The default destination for build artifacts is `go-simple-serializer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
+
+# Testing
+
+**Go**
+
+To run Go tests use `make test_go` (or `bash scripts/test.sh`), which runs unit tests, `go vet`, `go vet with shadow`, [errcheck](https://github.com/kisielk/errcheck), [ineffassign](https://github.com/gordonklaus/ineffassign), [staticcheck](https://staticcheck.io/), and [misspell](https://github.com/client9/misspell).
+
+**JavaScript**
+
+To run JavaScript tests, first install [Jest](https://jestjs.io/) using `make deps_javascript`, use [Yarn](https://yarnpkg.com/en/), or another method.  Then, build the JavaScript module with `make build_javascript`.  To run tests, use `make test_javascript`.  You can also use the scripts in the `package.json`.
 
 # Contributing
 

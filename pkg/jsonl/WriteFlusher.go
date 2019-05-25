@@ -7,7 +7,12 @@
 
 package jsonl
 
-type WriterFlusher interface {
-	Write(data []byte) (n int, err error)
-	Flush() error
+import (
+	"io"
+)
+
+// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
+type WriteFlusher interface {
+	io.Writer
+	Flusher
 }
