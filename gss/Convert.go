@@ -33,27 +33,33 @@ func Convert(input *ConvertInput) (string, error) {
 		switch input.OutputFormat {
 		case "bson", "json", "jsonl", "hcl", "hcl2", "properties", "toml", "yaml":
 			object, err := DeserializeBytes(&DeserializeInput{
-				Bytes:      input.InputBytes,
-				Format:     input.InputFormat,
-				Header:     input.InputHeader,
-				Comment:    input.InputComment,
-				LazyQuotes: input.InputLazyQuotes,
-				SkipLines:  input.InputSkipLines,
-				Limit:      input.InputLimit,
-				Type:       inputType,
-				Async:      input.Async,
-				Verbose:    input.Verbose,
+				Bytes:         input.InputBytes,
+				Format:        input.InputFormat,
+				Header:        input.InputHeader,
+				Comment:       input.InputComment,
+				LazyQuotes:    input.InputLazyQuotes,
+				SkipLines:     input.InputSkipLines,
+				Limit:         input.InputLimit,
+				LineSeparator: input.InputLineSeparator,
+				DropCR:        input.InputDropCR,
+				Type:          inputType,
+				Async:         input.Async,
+				Verbose:       input.Verbose,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
 			outputString, err := SerializeString(&SerializeInput{
-				Object: object,
-				Format: input.OutputFormat,
-				Header: input.OutputHeader,
-				Limit:  input.OutputLimit,
-				Pretty: input.OutputPretty,
-				Sorted: input.OutputSorted,
+				Object:            object,
+				Format:            input.OutputFormat,
+				Header:            input.OutputHeader,
+				Limit:             input.OutputLimit,
+				Pretty:            input.OutputPretty,
+				Sorted:            input.OutputSorted,
+				LineSeparator:     input.OutputLineSeparator,
+				KeyValueSeparator: input.OutputKeyValueSeparator,
+				ValueSerializer:   input.OutputValueSerializer,
+				EscapePrefix:      input.OutputEscapePrefix,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
@@ -67,28 +73,33 @@ func Convert(input *ConvertInput) (string, error) {
 		switch input.OutputFormat {
 		case "bson", "json", "hcl", "hcl2", "toml", "yaml", "jsonl", "csv", "tsv":
 			object, err := DeserializeBytes(&DeserializeInput{
-				Bytes:      input.InputBytes,
-				Format:     input.InputFormat,
-				Header:     input.InputHeader,
-				Comment:    input.InputComment,
-				LazyQuotes: input.InputLazyQuotes,
-				SkipLines:  input.InputSkipLines,
-				Limit:      input.InputLimit,
-				Type:       inputType,
-				Async:      input.Async,
-				Verbose:    input.Verbose,
+				Bytes:         input.InputBytes,
+				Format:        input.InputFormat,
+				Header:        input.InputHeader,
+				Comment:       input.InputComment,
+				LazyQuotes:    input.InputLazyQuotes,
+				SkipLines:     input.InputSkipLines,
+				Limit:         input.InputLimit,
+				LineSeparator: input.InputLineSeparator,
+				DropCR:        input.InputDropCR,
+				Type:          inputType,
+				Async:         input.Async,
+				Verbose:       input.Verbose,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error deserializing input")
 			}
 			outputString, err := SerializeString(&SerializeInput{
-				Object:          object,
-				Format:          input.OutputFormat,
-				Header:          input.OutputHeader,
-				Limit:           input.OutputLimit,
-				Pretty:          input.OutputPretty,
-				Sorted:          input.OutputSorted,
-				ValueSerializer: input.OutputValueSerializer,
+				Object:            object,
+				Format:            input.OutputFormat,
+				Header:            input.OutputHeader,
+				Limit:             input.OutputLimit,
+				Pretty:            input.OutputPretty,
+				Sorted:            input.OutputSorted,
+				LineSeparator:     input.OutputLineSeparator,
+				KeyValueSeparator: input.OutputKeyValueSeparator,
+				ValueSerializer:   input.OutputValueSerializer,
+				EscapePrefix:      input.OutputEscapePrefix,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")

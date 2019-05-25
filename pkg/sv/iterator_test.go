@@ -9,6 +9,7 @@ package sv
 
 import (
 	"io"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -26,6 +27,7 @@ joe,XYZ,79
 
 	it, err := NewIterator(&NewIteratorInput{
 		Reader:     strings.NewReader(text),
+		Type:       reflect.TypeOf(map[string]string{}),
 		Separator:  ',',
 		Comment:    "",
 		SkipLines:  0,
@@ -63,6 +65,7 @@ joe,XYZ,79
 
 	it, err := NewIterator(&NewIteratorInput{
 		Reader:     strings.NewReader(text),
+		Type:       reflect.TypeOf(map[string]string{}),
 		Separator:  ',',
 		Comment:    "",
 		SkipLines:  1, // skip the first line: a,b,c

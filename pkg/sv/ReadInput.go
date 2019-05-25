@@ -5,14 +5,21 @@
 //
 // =================================================================
 
-package jsonl
+package sv
 
 import (
 	"io"
+	"reflect"
 )
 
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
-type WriteFlusher interface {
-	io.Writer
-	Flusher
+// ReadInput provides the input for the Read function.
+type ReadInput struct {
+	Type       reflect.Type // the output type
+	Reader     io.Reader
+	Separator  rune // the values separator
+	Header     []string
+	SkipLines  int
+	Comment    string
+	LazyQuotes bool
+	Limit      int
 }

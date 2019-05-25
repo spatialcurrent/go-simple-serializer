@@ -17,31 +17,36 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
 type Writer struct {
-	writer  io.Writer
-	newline byte
+	writer    io.Writer // writer for the underlying stream
+	separator byte      // the separator byte to use, e.g, null byte or \n.
 }
 
-// WriteSV writes the given rows as separated values.
-func NewWriter(w io.Writer) *Writer {
+// NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
+func NewWriter(w io.Writer, separator byte) *Writer {
 	return &Writer{
-		writer:  w,
-		newline: []byte("\n")[0],
+		writer:    w,
+		separator: separator,
 	}
 }
 
+// WriteObject formats and writes a single object to the underlying writer as JSON
+// and appends the writer's line separator.
 func (w *Writer) WriteObject(obj interface{}) error {
 	b, err := json.Marshal(obj)
 	if err != nil {
 		return errors.Wrap(err, "error marshaling object")
 	}
-	_, err = w.writer.Write(append(b, w.newline))
+	_, err = w.writer.Write(append(b, w.separator))
 	if err != nil {
 		return errors.Wrap(err, "error writing to underlying writer")
 	}
 	return nil
 }
 
+// WriteObjects formats and writes the given objets to the underlying writer as JSON lines
+// and separates the objects using the writer's line separator.
 func (w *Writer) WriteObjects(objects interface{}) error {
 	value := reflect.ValueOf(objects)
 	k := value.Type().Kind()
@@ -60,6 +65,8 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 	return nil
 }
 
+// Flush flushes the underlying writer, if it has a Flush method.
+// This writer itself does no buffering.
 func (w *Writer) Flush() error {
 	if flusher, ok := w.writer.(Flusher); ok {
 		err := flusher.Flush()

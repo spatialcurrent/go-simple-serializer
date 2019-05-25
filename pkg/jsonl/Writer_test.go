@@ -9,14 +9,14 @@ package jsonl
 
 import (
 	"bytes"
-	//"io"
-	//"strings"
 	"testing"
 )
 
 import (
 	"github.com/stretchr/testify/assert"
 )
+
+var newline byte = []byte("\n")[0]
 
 func TestWriteObject(t *testing.T) {
 	object := map[string]interface{}{
@@ -27,7 +27,7 @@ func TestWriteObject(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf)
+	w := NewWriter(buf, newline)
 	assert.NotNil(t, w)
 
 	err := w.WriteObject(object)
@@ -57,7 +57,7 @@ func TestWriterObjects(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf)
+	w := NewWriter(buf, newline)
 	assert.NotNil(t, w)
 
 	err := w.WriteObjects(objects)

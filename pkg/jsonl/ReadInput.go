@@ -5,27 +5,23 @@
 //
 // =================================================================
 
-package gss
+package jsonl
 
 import (
+	"io"
 	"reflect"
 )
 
-// DeserializeInput provides the input for the DeserializeBytes function.
-type DeserializeInput struct {
-	Bytes         []byte
-	Format        string
-	Header        []string
-	Comment       string
-	LazyQuotes    bool
+// ReadInput provides the input for the Read function.
+type ReadInput struct {
+	Type          reflect.Type // the output type
+	Reader        io.Reader    // the underlying reader
 	SkipLines     int
 	SkipBlanks    bool
 	SkipComments  bool
-	Trim          bool
+	Comment       string // the comment prefix
+	Trim          bool   // trim lines
+	LineSeparator byte   // the newline byte
+	DropCR        bool   // drop carriage return
 	Limit         int
-	LineSeparator string
-	DropCR        bool
-	Type          reflect.Type
-	Async         bool
-	Verbose       bool
 }

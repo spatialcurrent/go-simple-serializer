@@ -29,12 +29,14 @@ func TestIterator(t *testing.T) {
   `
 
 	it := NewIterator(&NewIteratorInput{
-		Reader:       strings.NewReader(text),
-		SkipLines:    0,
-		Comment:      "",
-		Trim:         true,
-		SkipBlanks:   false,
-		SkipComments: false,
+		Reader:        strings.NewReader(text),
+		SkipLines:     0,
+		Comment:       "",
+		Trim:          true,
+		SkipBlanks:    false,
+		SkipComments:  false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Empty Line
@@ -101,11 +103,13 @@ func TestIteratorComment(t *testing.T) {
   `
 
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(text),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: false,
+		Reader:        strings.NewReader(text),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Empty Line
@@ -141,11 +145,13 @@ func TestIteratorComment(t *testing.T) {
 
 func TestIteratorEmpty(t *testing.T) {
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(""),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: false,
+		Reader:        strings.NewReader(""),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Should return io.EOF to indicate the reader is finished
@@ -156,11 +162,13 @@ func TestIteratorEmpty(t *testing.T) {
 
 func TestIteratorBlanks(t *testing.T) {
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(strings.Repeat("\n", 5)),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: true,
+		Reader:        strings.NewReader(strings.Repeat("\n", 5)),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    true,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Should return io.EOF to indicate the reader is finished

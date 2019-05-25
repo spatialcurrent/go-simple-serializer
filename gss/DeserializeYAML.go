@@ -18,7 +18,7 @@ import (
 )
 
 import (
-	stringify "github.com/spatialcurrent/go-stringify"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // DeserializeYAML deserializes the YAML input bytes into a Go object

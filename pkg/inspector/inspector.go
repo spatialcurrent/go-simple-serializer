@@ -5,14 +5,5 @@
 //
 // =================================================================
 
-package jsonl
-
-import (
-	"io"
-)
-
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
-type WriteFlusher interface {
-	io.Writer
-	Flusher
-}
+// Package inspector is a package of utility functions for inspecting field names and keys from objects.
+package inspector

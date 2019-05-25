@@ -5,5 +5,6 @@
 //
 // =================================================================
 
-// Package jsonl includes iterators for reading from JSON Lines files and writers for writing JSON Lines.
+// Package jsonl provides a simple API for reading and writing to JSON Lines (aka jsonl).
+// jsonl also supports iterators for efficiently reading through a stream.
 package jsonl

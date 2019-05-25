@@ -5,14 +5,9 @@
 //
 // =================================================================
 
-package jsonl
-
-import (
-	"io"
-)
-
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
-type WriteFlusher interface {
-	io.Writer
-	Flusher
-}
+// Package properties includes functions for reading and writing from properties files.
+//
+// Reference:
+//  - https://en.wikipedia.org/wiki/.properties
+//
+package properties

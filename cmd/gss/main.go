@@ -20,15 +20,54 @@ import (
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+)
+
+import (
 	"github.com/spatialcurrent/go-simple-serializer/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+)
+
+const (
+	flagInputUri              string = "input-uri"
+	flagInputCompression      string = "input-compression"
+	flagInputFormat           string = "input-format"
+	flagInputHeader           string = "input-header"
+	flagInputLimit            string = "input-limit"
+	flagInputComment          string = "input-comment"
+	flagInputLazyQuotes       string = "input-lazy-quotes"
+	flagInputTrim             string = "input-trim"
+	flagInputReaderBufferSize string = "input-reader-buffer-size"
+	flagInputSkipLines        string = "input-skip-lines"
+)
+
+const (
+	flagOutputUri               string = "output-uri"
+	flagOutputCompression       string = "output-compression"
+	flagOutputFormat            string = "output-format"
+	flagOutputPretty            string = "output-pretty"
+	flagOutputHeader            string = "output-header"
+	flagOutputLimit             string = "output-limit"
+	flagOutputAppend            string = "output-append"
+	flagOutputOverwrite         string = "output-overwrite"
+	flagOutputBufferMemory      string = "output-buffer-memory"
+	flagOutputMkdirs            string = "output-mkdirs"
+	flagOutputPassphrase        string = "output-passphrase"
+	flagOutputSalt              string = "output-salt"
+	flagOutputDecimal           string = "output-decimal"
+	flagOutputNoDataValue       string = "output-no-data-value"
+	flagOutputLineSeparator     string = "output-line-separator"
+	flagOutputKeyValueSeparator string = "output-key-value-separator"
+	flagOutputEscapePrefix      string = "output-escape-prefix"
+	flagOutputSorted            string = "output-sorted"
 )
 
 var gitTag string
@@ -37,12 +76,12 @@ var gitCommit string
 
 func buildValueSerializer(decimal bool, noDataValue string) func(object interface{}) (string, error) {
 	if decimal {
-		return sv.DecimalValueSerializer(noDataValue)
+		return stringify.DecimalValueStringer(noDataValue)
 	}
-	return sv.DefaultValueSerializer(noDataValue)
+	return stringify.DefaultValueStringer(noDataValue)
 }
 
-func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error)) (pipe.Writer, error) {
+func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error), outputLineSeparator byte) (pipe.Writer, error) {
 	if outputFormat == "csv" || outputFormat == "tsv" {
 		separator, err := sv.FormatToSeparator(outputFormat)
 		if err != nil {
@@ -50,7 +89,7 @@ func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []int
 		}
 		return sv.NewWriter(outputWriter, separator, outputHeader, outputValueSerializer), nil
 	} else if outputFormat == "jsonl" {
-		return jsonl.NewWriter(outputWriter), nil
+		return jsonl.NewWriter(outputWriter, outputLineSeparator), nil
 	}
 	return nil, fmt.Errorf("invalid format %q", outputFormat)
 }
@@ -70,6 +109,52 @@ func canStream(inputFormat string, outputFormat string, outputSorted bool) bool 
 	return false
 }
 
+func initInputFlags(flag *pflag.FlagSet) {
+	flag.StringP(flagInputFormat, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
+	flag.StringSlice(flagInputHeader, gss.NoHeader, "The input header if the stdin input has no header.")
+	flag.StringP(flagInputComment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
+	flag.Bool(flagInputLazyQuotes, false, "allows lazy quotes for CSV and TSV")
+	flag.Int(flagInputSkipLines, gss.NoSkip, "The number of lines to skip before processing")
+	flag.IntP(flagInputLimit, "l", gss.NoLimit, "The input limit")
+	flag.BoolP(flagInputTrim, "t", false, "trim input lines")
+
+}
+
+func initOutputFlags(flag *pflag.FlagSet) {
+	flag.StringP(flagOutputFormat, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
+	flag.StringSlice(flagOutputHeader, gss.NoHeader, "The output header if the stdout output has no header.")
+	flag.IntP(flagOutputLimit, "n", gss.NoLimit, "the output limit")
+	flag.BoolP(flagOutputPretty, "p", false, "print pretty output")
+	flag.BoolP(flagOutputSorted, "s", false, "sort output")
+	flag.BoolP(flagOutputDecimal, "d", false, "when converting floats to strings use decimals rather than scientific notation")
+	flag.StringP(flagOutputNoDataValue, "0", "", "no data value, e.g., used for missing values when converting JSON to CSV")
+	flag.String(flagOutputLineSeparator, "\n", "override line separator.  Used with properties and JSONL formats.")
+	flag.String(flagOutputKeyValueSeparator, "=", "override key value separator.  Used with properties format.")
+	flag.String(flagOutputEscapePrefix, "\\", "override escape prefix.  Used with properties format.")
+}
+
+func initFlags(flag *pflag.FlagSet) {
+	initInputFlags(flag)
+	initOutputFlags(flag)
+
+	flag.BoolP("async", "a", false, "async processing")
+	flag.Bool("verbose", false, "Print debug info to stdout")
+}
+
+func CheckOutput(v *viper.Viper) error {
+	if lineSepartor := v.GetString(flagOutputLineSeparator); len(lineSepartor) != 1 {
+		return errors.New("line separator must be 1 character")
+	}
+	return nil
+}
+
+func CheckConfig(v *viper.Viper) error {
+	if err := CheckOutput(v); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	rootCommand := &cobra.Command{
 		Use:   "gss",
@@ -78,12 +163,16 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
-			err := v.BindPFlags(cmd.Flags())
-			if err != nil {
-				return err
+
+			if errorBind := v.BindPFlags(cmd.Flags()); errorBind != nil {
+				return errorBind
 			}
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv()
+
+			if errorConfig := CheckConfig(v); errorConfig != nil {
+				return errorConfig
+			}
 
 			inputFormat := v.GetString("input-format")
 
@@ -100,6 +189,8 @@ func main() {
 			outputHeader := v.GetStringSlice("output-header")
 
 			outputSorted := v.GetBool("output-sorted")
+
+			outputNewLine := []byte(v.GetString(flagOutputLineSeparator))[0]
 
 			outputValueSerializer := buildValueSerializer(v.GetBool("output-decimal"), v.GetString("output-no-data-value"))
 
@@ -137,7 +228,8 @@ func main() {
 					os.Stdout,
 					outputFormat,
 					outputColumns,
-					outputValueSerializer)
+					outputValueSerializer,
+					outputNewLine)
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")
 				}
@@ -162,17 +254,18 @@ func main() {
 			outputString, err := gss.Convert(&gss.ConvertInput{
 				InputBytes:            inputBytes,
 				InputFormat:           inputFormat,
-				InputHeader:           v.GetStringSlice("input-header"),
-				InputComment:          v.GetString("input-comment"),
-				InputLazyQuotes:       v.GetBool("input-lazy-quotes"),
-				InputSkipLines:        v.GetInt("input-skip-lines"),
-				InputLimit:            v.GetInt("input-limit"),
+				InputHeader:           v.GetStringSlice(flagInputHeader),
+				InputComment:          v.GetString(flagInputComment),
+				InputLazyQuotes:       v.GetBool(flagInputLazyQuotes),
+				InputSkipLines:        v.GetInt(flagInputSkipLines),
+				InputLimit:            v.GetInt(flagInputLimit),
 				OutputFormat:          outputFormat,
-				OutputHeader:          v.GetStringSlice("output-header"),
-				OutputLimit:           v.GetInt("output-limit"),
-				OutputPretty:          v.GetBool("output-pretty"),
-				OutputSorted:          v.GetBool("output-sorted"),
+				OutputHeader:          v.GetStringSlice(flagOutputHeader),
+				OutputLimit:           v.GetInt(flagOutputLimit),
+				OutputPretty:          v.GetBool(flagOutputPretty),
+				OutputSorted:          v.GetBool(flagOutputSorted),
 				OutputValueSerializer: outputValueSerializer,
+				OutputLineSeparator:   v.GetString(flagOutputLineSeparator),
 				Async:                 v.GetBool("async"),
 				Verbose:               v.GetBool("verbose"),
 			})
@@ -183,23 +276,7 @@ func main() {
 			return nil
 		},
 	}
-	flags := rootCommand.Flags()
-	flags.StringP("input-format", "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
-	flags.StringSlice("input-header", []string{}, "The input header if the stdin input has no header.")
-	flags.StringP("input-comment", "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
-	flags.Bool("input-lazy-quotes", false, "allows lazy quotes for CSV and TSV")
-	flags.Int("input-skip-lines", gss.NoSkip, "The number of lines to skip before processing")
-	flags.IntP("input-limit", "l", gss.NoLimit, "The input limit")
-	flags.BoolP("input-trim", "t", false, "trim input lines")
-	flags.StringP("output-format", "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
-	flags.StringSlice("output-header", []string{}, "The output header if the stdout output has no header.")
-	flags.IntP("output-limit", "n", gss.NoLimit, "the output limit")
-	flags.BoolP("output-pretty", "p", false, "print pretty output")
-	flags.BoolP("output-sorted", "s", false, "sort output")
-	flags.BoolP("output-decimal", "d", false, "when converting floats to strings use decimals rather than scientific notation")
-	flags.StringP("output-no-data-value", "0", "", "no data value, e.g., used for missing values when converting JSON to CSV")
-	flags.BoolP("async", "a", false, "async processing")
-	flags.Bool("verbose", false, "Print debug info to stdout")
+	initFlags(rootCommand.Flags())
 
 	completionCommandLong := ""
 	if _, err := os.Stat("/etc/bash_completion.d/"); !os.IsNotExist(err) {

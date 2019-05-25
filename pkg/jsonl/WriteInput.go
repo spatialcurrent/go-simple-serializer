@@ -11,8 +11,9 @@ import (
 	"io"
 )
 
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
-type WriteFlusher interface {
-	io.Writer
-	Flusher
+// WriteInput provides the input for the Write function.
+type WriteInput struct {
+	Writer        io.Writer   // the underlying writer
+	LineSeparator byte        // the newline byte
+	Object        interface{} // the object to write
 }

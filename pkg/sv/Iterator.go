@@ -10,6 +10,7 @@ package sv
 import (
 	"encoding/csv"
 	"io"
+	"reflect"
 )
 
 import (
@@ -18,6 +19,7 @@ import (
 
 type Iterator struct {
 	Reader *csv.Reader
+	Type   reflect.Type
 	header []string
 	limit  int
 	count  int
@@ -26,6 +28,7 @@ type Iterator struct {
 // Input for NewIterator function.
 type NewIteratorInput struct {
 	Reader     io.Reader
+	Type       reflect.Type
 	Separator  rune // the values separator
 	Header     []string
 	SkipLines  int
@@ -35,6 +38,10 @@ type NewIteratorInput struct {
 }
 
 func NewIterator(input *NewIteratorInput) (*Iterator, error) {
+
+	if input.Type == nil || input.Type.Kind() != reflect.Map {
+		return nil, errors.New("input type must be of kind map")
+	}
 
 	reader := csv.NewReader(input.Reader)
 	reader.Comma = input.Separator
@@ -68,7 +75,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 		header = h
 	}
 
-	return &Iterator{Reader: reader, header: header, limit: input.Limit, count: 0}, nil
+	return &Iterator{Reader: reader, Type: input.Type, header: header, limit: input.Limit, count: 0}, nil
 }
 
 // Next reads from the underlying reader and returns the next object and error, if any.
@@ -89,13 +96,13 @@ func (it *Iterator) Next() (interface{}, error) {
 		}
 		return nil, errors.Wrap(err, "error reading next line")
 	}
-	m := map[string]string{}
+	m := reflect.MakeMap(it.Type)
 	for i, h := range it.header {
 		if i < len(row) {
-			m[h] = row[i]
+			m.SetMapIndex(reflect.ValueOf(h), reflect.ValueOf(row[i]))
 		}
 	}
-	return m, nil
+	return m.Interface(), nil
 }
 
 func (it *Iterator) Header() []string {

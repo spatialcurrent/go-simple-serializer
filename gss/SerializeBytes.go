@@ -25,22 +25,18 @@ import (
 )
 
 import (
-	stringify "github.com/spatialcurrent/go-stringify"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
+	jsonl "github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	properties "github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 )
 
 var jsonPrefix = ""
 var jsonIndent = "  "
-
-func escapePropertyText(in string) string {
-	out := in
-	out = strings.Replace(fmt.Sprint(out), "\\", "\\\\", -1)
-	out = strings.Replace(fmt.Sprint(out), " ", "\\ ", -1)
-	return out
-}
 
 func marshalJSON(object interface{}, pretty bool) ([]byte, error) {
 	if pretty {
@@ -101,7 +97,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	limit := input.Limit
 	valueSerializer := input.ValueSerializer
 	if valueSerializer == nil {
-		valueSerializer = sv.DefaultValueSerializer("")
+		valueSerializer = stringify.DefaultValueStringer("")
 	}
 
 	if format == "csv" || format == "tsv" {
@@ -152,7 +148,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 					rows = append(rows, row)
 				}
 			} else {
-				keys := GetKeysFromValue(s, input.Sorted)
+				keys := inspector.GetKeysFromValue(s, input.Sorted)
 				header = ToStringSlice(keys) // string representations of keys
 				row, err := ToRowI(keys, s, valueSerializer)
 				if err != nil {
@@ -265,40 +261,47 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			return []byte(""), nil
 		}
 		return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Map, reflect.Array, reflect.Slice}}
-	} else if format == "properties" || format == "text" {
+	} else if format == "properties" {
+		buf := new(bytes.Buffer)
+		err := properties.Write(&properties.WriteInput{
+			Writer:            buf,
+			LineSeparator:     input.LineSeparator,
+			KeyValueSeparator: input.KeyValueSeparator,
+			Object:            object,
+			ValueSerializer:   valueSerializer,
+			Sorted:            input.Sorted,
+			EscapePrefix:      input.EscapePrefix,
+			EscapeSpace:       false,
+			EscapeEqual:       false,
+			EscapeColon:       false,
+			EscapeNewLine:     false,
+		})
+		if err != nil {
+			return make([]byte, 0), errors.Wrap(err, "error writing properties")
+		}
+		return buf.Bytes(), err
+	} else if format == "text" {
 		t := reflect.TypeOf(object)
 		if t.Kind() == reflect.Map {
 			if k := t.Key().Kind(); k != reflect.String {
 				return nil, errors.Wrap(&ErrInvalidKind{Value: k, Valid: []reflect.Kind{reflect.String}}, "can only serialize a map with string keys")
 			}
 			m := reflect.ValueOf(object)
-			keys := GetKeys(object, input.Sorted)
+			keys := inspector.GetKeys(object, input.Sorted)
 			output := ""
 			for i, key := range keys {
-				if format == "properties" {
-					value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
-					if err != nil {
-						return nil, errors.Wrap(err, "error serializing value")
-					}
-					output += escapePropertyText(fmt.Sprint(key)) + "=" + escapePropertyText(value)
-					if i < m.Len()-1 {
-						output += "\n"
-					}
-				} else if format == "text" {
-					value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
-					if err != nil {
-						return nil, errors.Wrap(err, "error serializing value")
-					}
-					value = strings.Replace(value, "\"", "\\\"", -1)
-					if strings.Contains(value, " ") {
-						value = "\"" + value + "\""
-					}
-					output += fmt.Sprint(key) + "=" + value
-					if i < m.Len()-1 {
-						output += " "
-					}
+				value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
+				if err != nil {
+					return nil, errors.Wrap(err, "error serializing value")
 				}
-
+				value = strings.Replace(value, "\"", "\\\"", -1)
+				if strings.Contains(value, " ") {
+					value = "\"" + value + "\""
+				}
+				output += fmt.Sprint(key) + "=" + value
+				if i < m.Len()-1 {
+					output += " "
+				}
 			}
 			return []byte(output), nil
 		}
@@ -316,22 +319,16 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	} else if format == "json" {
 		return marshalJSON(object, input.Pretty)
 	} else if format == "jsonl" {
-		s := reflect.ValueOf(object)
-		if s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
-			return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}, "object is not valid")
+		buf := new(bytes.Buffer)
+		errorWrite := jsonl.Write(&jsonl.WriteInput{
+			Writer:        buf,
+			LineSeparator: []byte(input.LineSeparator)[0],
+			Object:        object,
+		})
+		if errorWrite != nil {
+			return nil, errors.Wrap(errorWrite, "error writing json lines")
 		}
-		output := make([]byte, 0)
-		for i := 0; i < s.Len() && (limit < 0 || i < limit); i++ {
-			b, err := marshalJSON(s.Index(i).Interface(), input.Pretty)
-			if err != nil {
-				return output, err
-			}
-			output = append(output, b...)
-			if i < s.Len()-1 {
-				output = append(output, []byte("\n")[0])
-			}
-		}
-		return output, nil
+		return buf.Bytes(), nil
 	} else if format == "hcl" {
 		return make([]byte, 0), errors.New("Error cannot serialize to HCL")
 	} else if format == "hcl2" {

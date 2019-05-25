@@ -11,7 +11,6 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 import (
@@ -22,12 +21,14 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func unescapePropertyText(in string) string {
-	out := in
-	out = strings.Replace(fmt.Sprint(out), "\\ ", " ", -1)
-	out = strings.Replace(fmt.Sprint(out), "\\\\", "\\", -1)
-	return out
-}
+import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
+)
+
+import (
+	"github.com/spatialcurrent/go-pipe/pkg/pipe"
+)
 
 func deserializeBSON(inputBytes []byte, outputType reflect.Type) (interface{}, error) {
 	if outputType.Kind() == reflect.Map {
@@ -54,16 +55,46 @@ func deserializeBSON(inputBytes []byte, outputType reflect.Type) (interface{}, e
 func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv":
-		return DeserializeSV(bytes.NewReader(input.Bytes), input.Format, input.Header, input.Comment, input.LazyQuotes, input.SkipLines, input.Limit, input.Type)
+	case "csv", "tsv", "jsonl":
+		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
+			Reader:        bytes.NewReader(input.Bytes),
+			Format:        input.Format,
+			Comment:       input.Comment,
+			SkipLines:     input.SkipLines,
+			SkipBlanks:    input.SkipBlanks,
+			SkipComments:  input.SkipComments,
+			LazyQuotes:    input.LazyQuotes,
+			Trim:          input.Trim,
+			Limit:         input.Limit,
+			LineSeparator: []byte(input.LineSeparator)[0],
+			DropCR:        input.DropCR,
+		})
+		if errorIterator != nil {
+			return nil, errors.Wrap(errorIterator, "error creating iterator")
+		}
+		w := pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
+		errorRun := pipe.NewBuilder().Input(it).Output(w).Run()
+		if errorRun != nil {
+			return w.Values(), errors.Wrap(errorRun, "error deserializing")
+		}
+		return w.Values(), nil
 	case "properties":
-		return DeserializeProperties(string(input.Bytes), input.Comment, input.Type)
+		return properties.Read(&properties.ReadInput{
+			Type:            input.Type,
+			Reader:          bytes.NewReader(input.Bytes),
+			LineSeparator:   []byte(input.LineSeparator)[0],
+			DropCR:          input.DropCR,
+			Comment:         input.Comment,
+			Trim:            input.Trim,
+			UnescapeSpace:   true,
+			UnescapeEqual:   true,
+			UnescapeColon:   true,
+			UnescapeNewLine: true,
+		})
 	case "bson":
 		return deserializeBSON(input.Bytes, input.Type)
 	case "json":
 		return DeserializeJSON(input.Bytes, input.Type)
-	case "jsonl":
-		return DeserializeJSONL(bytes.NewReader(input.Bytes), input.Comment, input.SkipLines, input.Limit, input.Type, input.Async)
 	case "hcl":
 		ptr := reflect.New(input.Type)
 		ptr.Elem().Set(reflect.MakeMap(input.Type))

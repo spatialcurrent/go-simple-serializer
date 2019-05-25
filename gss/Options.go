@@ -13,15 +13,18 @@ import (
 
 // Options is a struct that includes option values used during iterative processing.
 type Options struct {
-	Format     string       // one of gss.Formats
-	Header     []string     // if formt as csv or tsv, the column names
-	Comment    string       // the line comment prefix
-	LazyQuotes bool         // if format is csv or tsv, allow LazyQuotes.
-	SkipLines  int          // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
-	Limit      int          // if format is a csv, tsv, or jsonl, then limit the number of items processed.
-	Type       reflect.Type // the type of the output object
-	Async      bool         // async processing
-	Pretty     bool         // pretty output
+	Format          string       // one of gss.Formats
+	Header          []string     // if formt as csv or tsv, the column names
+	Comment         string       // the line comment prefix
+	LazyQuotes      bool         // if format is csv or tsv, allow LazyQuotes.
+	SkipLines       int          // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
+	Limit           int          // if format is a csv, tsv, or jsonl, then limit the number of items processed.
+	Type            reflect.Type // the type of the output object
+	Async           bool         // async processing
+	Pretty          bool         // pretty output
+	LineSeparator   string       // new line character, used by properties and jsonl
+	Sorted          bool         // sort output
+	ValueSerializer func(object interface{}) (string, error)
 }
 
 // Deserialize the input bytes using the values in the options object.
@@ -47,10 +50,13 @@ func (o Options) DeserializeString(content string, verbose bool) (interface{}, e
 
 func (o Options) SerializeString(object interface{}) (string, error) {
 	return SerializeString(&SerializeInput{
-		Object: object,
-		Format: o.Format,
-		Header: o.Header,
-		Limit:  o.Limit,
-		Pretty: o.Pretty,
+		Object:          object,
+		Format:          o.Format,
+		Header:          o.Header,
+		Limit:           o.Limit,
+		Pretty:          o.Pretty,
+		Sorted:          o.Sorted,
+		LineSeparator:   o.LineSeparator,
+		ValueSerializer: o.ValueSerializer,
 	})
 }

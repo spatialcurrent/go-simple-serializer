@@ -5,14 +5,8 @@
 //
 // =================================================================
 
-package jsonl
-
-import (
-	"io"
-)
-
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
-type WriteFlusher interface {
-	io.Writer
-	Flusher
-}
+// Package splitter provides a wrapper for creating a custom bufio.SplitFunc.
+//
+// Reference:
+//  - https://godoc.org/bufio#SplitFunc
+package splitter
