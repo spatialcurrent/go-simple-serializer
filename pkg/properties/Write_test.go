@@ -43,7 +43,7 @@ func TestWrite(t *testing.T) {
 		EscapeColon:       false,
 		EscapeNewLine:     false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	out := buf.String()
 	assert.Equal(t, "1=hello\\ world\na=1\nb=1.234567890123e+09\nc=\nfoo=bar", out)
 }
@@ -71,7 +71,7 @@ func TestWriteDecimalValueStringer(t *testing.T) {
 		EscapeColon:       false,
 		EscapeNewLine:     false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	out := buf.String()
 	assert.Equal(t, "1=10\na=1\nb=1234567890.123000\nc=\nfoo=bar", out)
 }
@@ -98,7 +98,7 @@ func TestWriteStruct(t *testing.T) {
 		EscapeColon:       false,
 		EscapeNewLine:     false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	out := buf.String()
 	assert.Equal(t, "A=foo\nB=1", out)
 }

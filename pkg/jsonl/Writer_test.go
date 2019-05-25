@@ -27,14 +27,14 @@ func TestWriteObject(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf, newline)
+	w := NewWriter(buf, newline, false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObject(object)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = w.Flush()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	text := buf.String()
 	assert.NotNil(t, text)
@@ -57,14 +57,14 @@ func TestWriterObjects(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf, newline)
+	w := NewWriter(buf, newline, false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObjects(objects)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = w.Flush()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	text := buf.String()
 	assert.NotNil(t, text)

@@ -5,7 +5,18 @@
 //
 // =================================================================
 
-package gss
+package bson
 
-// Formats is the formats supported by go-simple-serializer (GSS).
-var Formats = []string{"bson", "csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
+import (
+	"fmt"
+	"reflect"
+)
+
+type ErrInvalidKind struct {
+	Value    reflect.Type
+	Expected []reflect.Kind
+}
+
+func (e ErrInvalidKind) Error() string {
+	return fmt.Sprintf("type %q is of invalid kind, expecting one of %q", e.Value, e.Expected)
+}

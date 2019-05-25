@@ -66,7 +66,16 @@
 //
 package gss
 
-var NoSkip = 0
-var NoLimit = -1
-var NoHeader = []string{}
-var NoComment = ""
+const (
+	NoSkip    = 0  // used as SkipLines parameter to indicate no skipping when reading
+	NoLimit   = -1 // used to indicate that there is no limit on reading or writing, depending on context.
+	NoComment = "" // used to indicate that there is no comment prefix to consider.
+)
+
+var (
+	// NoHeader is used to indicate that no defined header is given.
+	// Derive the header from the input data.
+	NoHeader = []string{}
+	// Formats is a list of all the formats supported by GSS
+	Formats = []string{"bson", "csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
+)

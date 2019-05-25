@@ -51,8 +51,3 @@ func Convert(inputString *C.char, inputFormat *C.char, inputHeader *C.char, inpu
 
 	return nil
 }
-
-//export Version
-func Version() *C.char {
-	return C.CString(gss.Version)
-}

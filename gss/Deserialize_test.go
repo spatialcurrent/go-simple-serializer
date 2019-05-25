@@ -17,7 +17,17 @@ func TestDeserialize(t *testing.T) {
 
 	for _, testCase := range deserializeTestCases {
 
-		got, err := DeserializeString(testCase.String, testCase.Format, testCase.Header, testCase.Comment, testCase.LazyQuotes, testCase.SkipLines, testCase.Limit, testCase.Type, false, false)
+		got, err := DeserializeString(
+			testCase.String,
+			testCase.Format,
+			testCase.Header,
+			testCase.Comment,
+			testCase.LazyQuotes,
+			testCase.SkipLines,
+			testCase.Limit,
+			testCase.Type,
+			false,
+			false)
 		if err != nil {
 			t.Errorf(errors.Wrap(err, "error running test").Error())
 		} else if !reflect.DeepEqual(got, testCase.Object) {

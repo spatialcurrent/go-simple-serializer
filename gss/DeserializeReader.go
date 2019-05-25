@@ -8,7 +8,8 @@
 package gss
 
 import (
-	"bytes"
+	"io"
+	"io/ioutil"
 	"reflect"
 )
 
@@ -32,13 +33,32 @@ import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
-// DeserializeBytes reads in an object as string bytes and returns the representative Go instance.
-func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
+// DeserializeReaderInput provides the input for the DeserializeReader function.
+type DeserializeReaderInput struct {
+	Reader        io.Reader
+	Format        string
+	Header        []string
+	Comment       string
+	LazyQuotes    bool
+	SkipLines     int
+	SkipBlanks    bool
+	SkipComments  bool
+	Trim          bool
+	Limit         int
+	LineSeparator string
+	DropCR        bool
+	Type          reflect.Type
+	Async         bool
+	Verbose       bool
+}
+
+// DeserializeReader reads the serialized object from an io.Reader and returns the representative Go instance.
+func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
 	case "csv", "tsv", "jsonl":
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
-			Reader:        bytes.NewReader(input.Bytes),
+			Reader:        input.Reader,
 			Format:        input.Format,
 			Comment:       input.Comment,
 			SkipLines:     input.SkipLines,
@@ -62,7 +82,7 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 	case "properties":
 		return properties.Read(&properties.ReadInput{
 			Type:            input.Type,
-			Reader:          bytes.NewReader(input.Bytes),
+			Reader:          input.Reader,
 			LineSeparator:   []byte(input.LineSeparator)[0],
 			DropCR:          input.DropCR,
 			Comment:         input.Comment,
@@ -72,31 +92,41 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 			UnescapeColon:   true,
 			UnescapeNewLine: true,
 		})
-	case "bson":
-		return bson.UnmarshalType(input.Bytes, input.Type)
-	case "json":
-		return json.UnmarshalType(input.Bytes, input.Type)
-	case "hcl":
-		ptr := reflect.New(input.Type)
-		ptr.Elem().Set(reflect.MakeMap(input.Type))
-		obj, err := hcl.Parse(string(input.Bytes))
+	case "bson", "hcl", "hcl2", "json", "toml", "yaml":
+		b, err := ioutil.ReadAll(input.Reader)
 		if err != nil {
-			return nil, errors.Wrap(err, "Error parsing hcl")
+			if err == io.EOF {
+				return nil, io.EOF
+			}
+			return nil, errors.Wrap(err, "error reading bytes from reader")
 		}
-		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-			return nil, errors.Wrap(err, "Error decoding hcl")
+		switch input.Format {
+		case "bson":
+			return bson.UnmarshalType(b, input.Type)
+		case "hcl":
+			ptr := reflect.New(input.Type)
+			ptr.Elem().Set(reflect.MakeMap(input.Type))
+			obj, err := hcl.Parse(string(b))
+			if err != nil {
+				return nil, errors.Wrap(err, "Error parsing hcl")
+			}
+			if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
+				return nil, errors.Wrap(err, "Error decoding hcl")
+			}
+			return ptr.Elem().Interface(), nil
+		case "hcl2":
+			file, diags := hclsyntax.ParseConfig(b, "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
+			if diags.HasErrors() {
+				return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
+			}
+			return &file.Body, nil
+		case "json":
+			return json.UnmarshalType(b, input.Type)
+		case "toml":
+			return toml.UnmarshalType(b, input.Type)
+		case "yaml":
+			return yaml.UnmarshalType(b, input.Type)
 		}
-		return ptr.Elem().Interface(), nil
-	case "hcl2":
-		file, diags := hclsyntax.ParseConfig([]byte(input.Bytes), "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
-		if diags.HasErrors() {
-			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
-		}
-		return &file.Body, nil
-	case "toml":
-		return toml.UnmarshalType(input.Bytes, input.Type)
-	case "yaml":
-		return yaml.UnmarshalType(input.Bytes, input.Type)
 	}
 
 	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")

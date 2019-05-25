@@ -33,16 +33,16 @@ joe,XYZ,79
 		SkipLines:  0,
 		LazyQuotes: false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// First Object
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"a": "mary", "b": "RST", "c": "46"}, obj)
 
 	// Second Object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"a": "joe", "b": "XYZ", "c": "79"}, obj)
 
 	// Should return io.EOF to indicate the reader is finished
@@ -72,16 +72,16 @@ joe,XYZ,79
 		LazyQuotes: false,
 		Header:     []string{"name", "type", "age"},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	// First Object
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"name": "mary", "type": "RST", "age": "46"}, obj)
 
 	// Second Object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"name": "joe", "type": "XYZ", "age": "79"}, obj)
 
 	// Should return io.EOF to indicate the reader is finished

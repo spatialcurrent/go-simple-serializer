@@ -5,7 +5,18 @@
 //
 // =================================================================
 
-package gss
+package json
 
-// Version is the version of this package and updated during a release.
-var Version = "0.0.7"
+import (
+	"fmt"
+	"reflect"
+)
+
+type ErrInvalidKind struct {
+	Value    reflect.Type
+	Expected []reflect.Kind
+}
+
+func (e ErrInvalidKind) Error() string {
+	return fmt.Sprintf("type %q is of invalid kind, expecting one of %q", e.Value, e.Expected)
+}

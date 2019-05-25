@@ -9,7 +9,6 @@ package gss
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
@@ -18,10 +17,8 @@ import (
 )
 
 import (
-	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/yaml.v2"
 )
 
 import (
@@ -30,20 +27,13 @@ import (
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
+	json "github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	jsonl "github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	properties "github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+	toml "github.com/spatialcurrent/go-simple-serializer/pkg/toml"
+	yaml "github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
-
-var jsonPrefix = ""
-var jsonIndent = "  "
-
-func marshalJSON(object interface{}, pretty bool) ([]byte, error) {
-	if pretty {
-		return json.MarshalIndent(stringify.StringifyMapKeys(object), jsonPrefix, jsonIndent)
-	}
-	return json.Marshal(stringify.StringifyMapKeys(object))
-}
 
 func unknownKeys(obj reflect.Value, knownKeys map[string]struct{}) []string {
 	unknownKeys := make([]string, 0)
@@ -317,7 +307,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	} else if format == "bson" {
 		return bson.Marshal(stringify.StringifyMapKeys(object))
 	} else if format == "json" {
-		return marshalJSON(object, input.Pretty)
+		return json.Marshal(object, input.Pretty)
 	} else if format == "jsonl" {
 		buf := new(bytes.Buffer)
 		errorWrite := jsonl.Write(&jsonl.WriteInput{
@@ -334,11 +324,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	} else if format == "hcl2" {
 		return make([]byte, 0), errors.New("Error cannot serialize to HCL2")
 	} else if format == "toml" {
-		buf := new(bytes.Buffer)
-		if err := toml.NewEncoder(buf).Encode(object); err != nil {
-			return make([]byte, 0), errors.Wrap(err, "Error encoding TOML")
-		}
-		return buf.Bytes(), nil
+		return toml.Marshal(object)
 	} else if format == "yaml" {
 		return yaml.Marshal(object)
 	} else if format == "golang" || format == "go" {

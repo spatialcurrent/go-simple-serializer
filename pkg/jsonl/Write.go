@@ -44,7 +44,7 @@ func Write(input *WriteInput) error {
 		}
 		p = p.Input(it)
 	}
-	errorRun := p.Output(NewWriter(input.Writer, input.LineSeparator)).Run()
+	errorRun := p.Output(NewWriter(input.Writer, input.LineSeparator, input.Pretty)).Run()
 	if errorRun != nil {
 		return errors.Wrap(errorRun, "error serializing jsonl")
 	}

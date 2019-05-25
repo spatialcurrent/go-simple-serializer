@@ -5,16 +5,17 @@
 //
 // =================================================================
 
-package jsonl
+package bson
 
 import (
-	"io"
+	"fmt"
+	"reflect"
 )
 
-// WriteInput provides the input for the Write function.
-type WriteInput struct {
-	Writer        io.Writer   // the underlying writer
-	LineSeparator byte        // the newline byte
-	Object        interface{} // the object to write
-	Pretty        bool        // pretty output
+type ErrInvalidKeys struct {
+	Value reflect.Type
+}
+
+func (e ErrInvalidKeys) Error() string {
+	return fmt.Sprintf("keys are of type %q, expecting string", e.Value)
 }

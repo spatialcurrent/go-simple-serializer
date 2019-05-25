@@ -37,6 +37,6 @@ func TestRead(t *testing.T) {
 		UnescapeColon:   false,
 		UnescapeNewLine: false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"a": "1", "b": "2", "c": "true", "d": "nil", "e": ""}, out)
 }

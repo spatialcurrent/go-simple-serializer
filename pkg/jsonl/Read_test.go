@@ -49,7 +49,7 @@ func TestRead(t *testing.T) {
 		Comment:       "",
 		Trim:          true,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, out)
 }
 
@@ -87,6 +87,6 @@ func TestReadBlanks(t *testing.T) {
 		Comment:       "",
 		Trim:          true,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, out)
 }

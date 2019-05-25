@@ -5,15 +5,18 @@
 //
 // =================================================================
 
-package gss
+package yaml
 
-// SerializeJSON serializes an object to its JSON representation.
-func SerializeJSON(obj interface{}, pretty bool) (string, error) {
-	return SerializeString(&SerializeInput{
-		Object: obj,
-		Format: "json",
-		Header: []string{},
-		Limit:  NoLimit,
-		Pretty: pretty,
-	})
+import (
+	"fmt"
+	"reflect"
+)
+
+type ErrInvalidKind struct {
+	Value    reflect.Type
+	Expected []reflect.Kind
+}
+
+func (e ErrInvalidKind) Error() string {
+	return fmt.Sprintf("type %q is of invalid kind, expecting one of %q", e.Value, e.Expected)
 }

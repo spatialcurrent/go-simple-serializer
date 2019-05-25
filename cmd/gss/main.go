@@ -70,7 +70,6 @@ const (
 	flagOutputSorted            string = "output-sorted"
 )
 
-var gitTag string
 var gitBranch string
 var gitCommit string
 
@@ -81,7 +80,7 @@ func buildValueSerializer(decimal bool, noDataValue string) func(object interfac
 	return stringify.DefaultValueStringer(noDataValue)
 }
 
-func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error), outputLineSeparator byte) (pipe.Writer, error) {
+func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error), outputLineSeparator byte, outputPretty bool) (pipe.Writer, error) {
 	if outputFormat == "csv" || outputFormat == "tsv" {
 		separator, err := sv.FormatToSeparator(outputFormat)
 		if err != nil {
@@ -89,7 +88,7 @@ func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []int
 		}
 		return sv.NewWriter(outputWriter, separator, outputHeader, outputValueSerializer), nil
 	} else if outputFormat == "jsonl" {
-		return jsonl.NewWriter(outputWriter, outputLineSeparator), nil
+		return jsonl.NewWriter(outputWriter, outputLineSeparator, outputPretty), nil
 	}
 	return nil, fmt.Errorf("invalid format %q", outputFormat)
 }
@@ -194,6 +193,8 @@ func main() {
 
 			outputValueSerializer := buildValueSerializer(v.GetBool("output-decimal"), v.GetString("output-no-data-value"))
 
+			outputPretty := v.GetBool("output-pretty")
+
 			if canStream(inputFormat, outputFormat, outputSorted) {
 
 				p := pipe.NewBuilder()
@@ -229,7 +230,8 @@ func main() {
 					outputFormat,
 					outputColumns,
 					outputValueSerializer,
-					outputNewLine)
+					outputNewLine,
+					outputPretty)
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")
 				}
@@ -304,9 +306,6 @@ func main() {
 		Short: "print version information to stdout",
 		Long:  "print version information to stdout",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(gitTag) > 0 {
-				fmt.Println("Tag: " + gitTag)
-			}
 			if len(gitBranch) > 0 {
 				fmt.Println("Branch: " + gitBranch)
 			}

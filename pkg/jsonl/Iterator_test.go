@@ -41,47 +41,47 @@ func TestIterator(t *testing.T) {
 
 	// Empty Line
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"a": "b"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"c": "d"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"e": "f"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, false, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, true, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, "foo", obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, "bar", obj)
 
 	// Empty line returns nil object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	// Should return io.EOF to indicate the reader is finished
@@ -114,27 +114,27 @@ func TestIteratorComment(t *testing.T) {
 
 	// Empty Line
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"a": "b"}, obj)
 
 	// Commented line returns nil object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"e": "f"}, obj)
 
 	// Empty Line
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	// Should return io.EOF to indicate the reader is finished

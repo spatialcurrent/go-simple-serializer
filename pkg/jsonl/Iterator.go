@@ -8,8 +8,6 @@
 package jsonl
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -19,6 +17,7 @@ import (
 )
 
 import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
 
@@ -98,44 +97,11 @@ func (it *Iterator) Next() (interface{}, error) {
 			}
 			return nil, nil
 		}
-		switch line {
-		case "true":
-			return true, nil
-		case "false":
-			return false, nil
-		case "null":
-			return nil, nil
+		obj, err := json.Unmarshal([]byte(line))
+		if err != nil {
+			return obj, errors.Wrap(err, "eror unmarshaling next JSON object")
 		}
-		switch line[0] {
-		case '[':
-			obj := make([]interface{}, 0)
-			err := json.Unmarshal([]byte(line), &obj)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON line %q", line))
-			}
-			return obj, nil
-		case '{':
-			obj := map[string]interface{}{}
-			err := json.Unmarshal([]byte(line), &obj)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON line %q", line))
-			}
-			return obj, nil
-		case '"':
-			obj := ""
-			err := json.Unmarshal([]byte(line), &obj)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON line %q", line))
-			}
-			return obj, nil
-		default:
-			obj := 0.0
-			err := json.Unmarshal([]byte(line), &obj)
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON line %q", line))
-			}
-			return obj, nil
-		}
+		return obj, nil
 	}
 	return nil, io.EOF
 }

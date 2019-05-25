@@ -45,7 +45,7 @@ joe,XYZ,79
 		SkipLines:  0,
 		LazyQuotes: false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, out)
 }
 
@@ -77,6 +77,6 @@ joe,XYZ,79
 		SkipLines:  0,
 		LazyQuotes: false,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, out)
 }

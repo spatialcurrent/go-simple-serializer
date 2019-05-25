@@ -8,9 +8,12 @@
 package jsonl
 
 import (
-	"encoding/json"
 	"io"
 	"reflect"
+)
+
+import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 )
 
 import (
@@ -21,20 +24,22 @@ import (
 type Writer struct {
 	writer    io.Writer // writer for the underlying stream
 	separator byte      // the separator byte to use, e.g, null byte or \n.
+	pretty    bool      // write pretty output
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
-func NewWriter(w io.Writer, separator byte) *Writer {
+func NewWriter(w io.Writer, separator byte, pretty bool) *Writer {
 	return &Writer{
 		writer:    w,
 		separator: separator,
+		pretty:    pretty,
 	}
 }
 
 // WriteObject formats and writes a single object to the underlying writer as JSON
 // and appends the writer's line separator.
 func (w *Writer) WriteObject(obj interface{}) error {
-	b, err := json.Marshal(obj)
+	b, err := json.Marshal(obj, w.pretty)
 	if err != nil {
 		return errors.Wrap(err, "error marshaling object")
 	}
