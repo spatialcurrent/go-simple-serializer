@@ -55,7 +55,7 @@ bin/gss.min.js:
 
 # Build Android Archive Library
 bin/gss.aar:
-	gomobile bind -target android -javapkg=com.spatialcurrent -o $(DEST)/gss.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-simple-serializer/gss
+	gomobile bind -target android -javapkg=com.spatialcurrent -o $(DEST)/gss.aar -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-simple-serializer/pkg/gss
 
 build_cli: bin/gss_darwin_amd64 bin/gss_linux_amd64 bin/gss_windows_amd64.exe bin/gss_linux_arm64
 

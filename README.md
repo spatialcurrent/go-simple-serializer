@@ -4,13 +4,30 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.  GSS supports `bson`, `csv`, `tsv`, `hcl`, `hcl2`, `json`, `jsonl`, `properties`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple formats in their applications.
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
 
+**Formats**
+
+GSS supports the following formats.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+
+| Format | Description |
+| ---- | ------ |
+| bson | Binary JSON |
+| csv | Comma-Separated Values |
+| tsv | Tab-Separated Values |
+| hcl | HashiCorp Configuration Language |
+| hcl2 | HashiCorp Configuration Language (verison 2.x) |
+| json | JSON |
+| jsonl | JSON Lines |
+| properties | Properties |
+| toml | TOML |
+| yaml | YAML |
+
 **Packages**
 
-The main public api for GSS is the `gss` package.  However, the library does ship with lower-level packages that can be imported directly as well.
+The main public api for GSS is in the `gss` package.  However, this library does ship with lower-level packages that can be imported directly as well.
 
 | Package | Purpose |
 | ---- | ------ |
@@ -27,7 +44,6 @@ The main public api for GSS is the `gss` package.  However, the library does shi
 | sv | Separated-Values formats, i.e., CSV and TSV. |
 | toml | TOML |
 | yaml | YAML |
-
 
 # Usage
 
@@ -48,52 +64,45 @@ Available Commands:
   version     print version information to stdout
 
 Flags:
-  -a, --async                   async processing
-  -h, --help                    help for gss
-  -c, --input-comment string    The input comment character, e.g., #.  Commented lines are not sent to output.
-  -i, --input-format string     The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-      --input-header strings    The input header if the stdin input has no header.
-      --input-lazy-quotes       allows lazy quotes for CSV and TSV
-  -l, --input-limit int         The input limit (default -1)
-      --input-skip-lines int    The number of lines to skip before processing
-  -t, --input-trim              trim input lines
-  -o, --output-format string    The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
-      --output-header strings   The output header if the stdout output has no header.
-  -n, --output-limit int        the output limit (default -1)
-  -p, --output-pretty           print pretty output
-  -s, --output-sorted           sort output
-      --verbose                 Print debug info to stdout
+  -a, --async                               async processing
+  -h, --help                                help for gss
+  -c, --input-comment string                The input comment character, e.g., #.  Commented lines are not sent to output.
+  -i, --input-format string                 The input format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
+      --input-header strings                The input header if the stdin input has no header.
+      --input-lazy-quotes                   allows lazy quotes for CSV and TSV
+  -l, --input-limit int                     The input limit (default -1)
+      --input-line-separator string         override line separator.  Used with properties and JSONL formats. (default "\n")
+      --input-skip-lines int                The number of lines to skip before processing
+  -t, --input-trim                          trim input lines
+  -d, --output-decimal                      when converting floats to strings use decimals rather than scientific notation
+      --output-escape-equal                 Escape equal characters in output.  Used with properties format.
+      --output-escape-new-line              Escape new line characters in output.  Used with properties format.
+      --output-escape-prefix string         override escape prefix.  Used with properties format.
+      --output-escape-space                 Escape space characters in output.  Used with properties format.
+  -o, --output-format string                The output format: bson, csv, tsv, hcl, hcl2, json, jsonl, properties, toml, yaml
+      --output-header strings               The output header if the stdout output has no header.
+      --output-key-value-separator string   override key value separator.  Used with properties format. (default "=")
+  -n, --output-limit int                    the output limit (default -1)
+      --output-line-separator string        override line separator.  Used with properties and JSONL formats. (default "\n")
+  -0, --output-no-data-value string         no data value, e.g., used for missing values when converting JSON to CSV
+  -p, --output-pretty                       print pretty output
+  -s, --output-sorted                       sort output
+      --verbose                             Print debug info to stdout
 
 Use "gss [command] --help" for more information about a command.
 ```
 
 **Go**
 
-You can import **go-simple-serializer** as a library with:
+You can  import **go-simple-serializer** as a library with:
 
 ```go
 import (
-  "github.com/spatialcurrent/go-simple-serializer/gss"
+  "github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 ```
 
-The `Convert`, `Deserialize`, and `Serialize` functions are the core functions to use.
-
-```go
-...
-  output_string, err := gss.Convert(input_string, input_format, input_header, input_comment, output_format, verbose)
-...
-  input_type, err := GetType(input_string, input_format)
-	if err != nil {
-		return "", errors.Wrap(err, "error creating new object for format "+input_format)
-	}
-  output, err := gss.Deserialize(input, format, input_header, input_comment, input_type, verbose)
-...
-  output_string, err := gss.Serialize(input, format)
-...
-```
-
-See [gss](https://godoc.org/github.com/spatialcurrent/go-simple-serializer/gss) in GoDoc for information on how to use Go API.
+See [gss](https://godoc.org/github.com/spatialcurrent/go-simple-serializer/gss) in GoDoc for API documentation and examples.
 
 **JavaScript**
 
