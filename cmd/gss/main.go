@@ -14,6 +14,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -219,7 +220,9 @@ func main() {
 
 				it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 					Reader:       os.Stdin,
+					Type:         reflect.TypeOf([]map[string]interface{}{}),
 					Format:       inputFormat,
+					Header:       v.GetStringSlice("input-header"),
 					SkipLines:    v.GetInt("input-skip-lines"),
 					SkipBlanks:   true,
 					SkipComments: true,

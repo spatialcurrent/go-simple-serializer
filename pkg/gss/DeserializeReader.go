@@ -59,7 +59,9 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 	case "csv", "tsv", "jsonl":
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        input.Reader,
+			Type:          input.Type,
 			Format:        input.Format,
+			Header:        input.Header,
 			Comment:       input.Comment,
 			SkipLines:     input.SkipLines,
 			SkipBlanks:    input.SkipBlanks,

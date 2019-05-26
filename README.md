@@ -161,13 +161,13 @@ For complete patterns for `C`, `C++`, and `Python`, see the `go-simpler-serializ
 `.gitignore` file to jsonl
 
 ```
-cat .gitignore | ./gss -i csv -h pattern -o jsonl
+cat .gitignore | gss -i csv --input-header path -o json
 ```
 
-Get language from `.travis.yml` and set to variable
+Get language from [CircleCI](https://circleci.com/) config.
 
 ```
-language=$(cat .travis.yml | ./gss_linux_amd64 -i yaml -o json -c '#' | jq .language -r)
+cat .circleci/config.yml | gss -i yaml -o json -c '#' | jq -r .version
 ```
 
 # Building
