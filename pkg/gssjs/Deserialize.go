@@ -26,6 +26,7 @@ func Deserialize(inputString string, inputFormat string, options *js.Object) int
 	inputComment := gss.NoComment
 	inputLazyQuotes := false
 	inputSkipLines := gss.NoSkip
+	inputLineSeparator := "\n"
 	inputLimit := gss.NoLimit
 	async := false
 
@@ -36,6 +37,12 @@ func Deserialize(inputString string, inputFormat string, options *js.Object) int
 	if v, ok := m["inputComment"]; ok {
 		if vv, ok := v.(string); ok {
 			inputComment = vv
+		}
+	}
+
+	if v, ok := m["inputLineSeparator"]; ok {
+		if vv, ok := v.(string); ok {
+			inputLineSeparator = vv
 		}
 	}
 
@@ -67,7 +74,18 @@ func Deserialize(inputString string, inputFormat string, options *js.Object) int
 		return ""
 	}
 
-	outputObject, err := gss.DeserializeString(inputString, inputFormat, inputHeader, inputComment, inputLazyQuotes, inputSkipLines, inputLimit, inputType, async, false)
+	outputObject, err := gss.DeserializeString(
+		inputString,
+		inputFormat,
+		inputHeader,
+		inputComment,
+		inputLazyQuotes,
+		inputSkipLines,
+		inputLineSeparator,
+		inputLimit,
+		inputType,
+		async,
+		false)
 	if err != nil {
 		console.Error(errors.Wrap(err, "error deserializing input into object").Error())
 		return ""

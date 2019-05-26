@@ -20,12 +20,7 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
 
 import (
@@ -36,7 +31,7 @@ import (
 func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl":
+	case "csv", "tsv":
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        bytes.NewReader(input.Bytes),
 			Type:          input.Type,
@@ -61,23 +56,27 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}
 		return w.Values(), nil
-	case "properties":
-		return properties.Read(&properties.ReadInput{
-			Type:            input.Type,
-			Reader:          bytes.NewReader(input.Bytes),
-			LineSeparator:   []byte(input.LineSeparator)[0],
-			DropCR:          input.DropCR,
-			Comment:         input.Comment,
-			Trim:            input.Trim,
-			UnescapeSpace:   true,
-			UnescapeEqual:   true,
-			UnescapeColon:   true,
-			UnescapeNewLine: true,
-		})
-	case "bson":
-		return bson.UnmarshalType(input.Bytes, input.Type)
-	case "json":
-		return json.UnmarshalType(input.Bytes, input.Type)
+	case "bson", "json", "jsonl", "properties", "toml", "yaml":
+		s := NewSerializer(input.Format).Type(input.Type)
+		if input.Format == "jsonl" {
+			s = s.Limit(input.Limit)
+		}
+		if input.Format == "jsonl" || input.Format == "properties" {
+			s = s.
+				LineSeparator(input.LineSeparator).
+				Comment(input.Comment).
+				Trim(input.Trim)
+		}
+		if input.Format == "properties" {
+			s = s.
+				DropCR(input.DropCR).
+				EscapePrefix(input.EscapePrefix).
+				UnescapeSpace(input.UnescapeSpace).
+				UnescapeColon(input.UnescapeColon).
+				UnescapeNewLine(input.UnescapeNewLine).
+				UnescapeEqual(input.UnescapeEqual)
+		}
+		return s.Deserialize(input.Bytes)
 	case "hcl":
 		ptr := reflect.New(input.Type)
 		ptr.Elem().Set(reflect.MakeMap(input.Type))
@@ -95,10 +94,6 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
 		}
 		return &file.Body, nil
-	case "toml":
-		return toml.UnmarshalType(input.Bytes, input.Type)
-	case "yaml":
-		return yaml.UnmarshalType(input.Bytes, input.Type)
 	}
 
 	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")

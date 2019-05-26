@@ -18,7 +18,6 @@ import (
 
 import (
 	"github.com/pkg/errors"
-	"gopkg.in/mgo.v2/bson"
 )
 
 import (
@@ -27,12 +26,7 @@ import (
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
-	json "github.com/spatialcurrent/go-simple-serializer/pkg/json"
-	jsonl "github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
-	properties "github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
-	toml "github.com/spatialcurrent/go-simple-serializer/pkg/toml"
-	yaml "github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
 
 func unknownKeys(obj reflect.Value, knownKeys map[string]struct{}) []string {
@@ -88,6 +82,32 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	valueSerializer := input.ValueSerializer
 	if valueSerializer == nil {
 		valueSerializer = stringify.DefaultValueStringer("")
+	}
+
+	switch format {
+	case "bson", "json", "jsonl", "properties", "go", "toml", "yaml":
+		s := NewSerializer(format)
+		if format == "json" || format == "jsonl" {
+			s = s.Pretty(input.Pretty)
+		}
+		if format == "jsonl" || format == "properties" {
+			s = s.LineSeparator(input.LineSeparator)
+		}
+		if format == "properties" {
+			s = s.
+				Sorted(input.Sorted).
+				KeyValueSeparator(input.KeyValueSeparator).
+				LineSeparator(input.LineSeparator).
+				ValueSerializer(valueSerializer).
+				EscapePrefix(input.EscapePrefix).
+				EscapeSpace(input.EscapeSpace).
+				EscapeColon(input.EscapeColon).
+				EscapeNewLine(input.EscapeNewLine).
+				EscapeEqual(input.EscapeEqual)
+		}
+		return s.Serialize(object)
+	case "hcl", "hcl2":
+		return make([]byte, 0), fmt.Errorf("cannot serialize to format %q", format)
 	}
 
 	if format == "csv" || format == "tsv" {
@@ -251,25 +271,6 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			return []byte(""), nil
 		}
 		return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Map, reflect.Array, reflect.Slice}}
-	} else if format == "properties" {
-		buf := new(bytes.Buffer)
-		err := properties.Write(&properties.WriteInput{
-			Writer:            buf,
-			LineSeparator:     input.LineSeparator,
-			KeyValueSeparator: input.KeyValueSeparator,
-			Object:            object,
-			ValueSerializer:   valueSerializer,
-			Sorted:            input.Sorted,
-			EscapePrefix:      input.EscapePrefix,
-			EscapeSpace:       input.EscapeSpace,
-			EscapeColon:       false,
-			EscapeNewLine:     input.EscapeNewLine,
-			EscapeEqual:       input.EscapeEqual,
-		})
-		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing properties")
-		}
-		return buf.Bytes(), err
 	} else if format == "text" {
 		t := reflect.TypeOf(object)
 		if t.Kind() == reflect.Map {
@@ -304,31 +305,6 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			return []byte(strconv.FormatFloat(obj, 'f', -1, 64)), nil
 		}
 		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "object is not valid")
-	} else if format == "bson" {
-		return bson.Marshal(stringify.StringifyMapKeys(object))
-	} else if format == "json" {
-		return json.Marshal(object, input.Pretty)
-	} else if format == "jsonl" {
-		buf := new(bytes.Buffer)
-		errorWrite := jsonl.Write(&jsonl.WriteInput{
-			Writer:        buf,
-			LineSeparator: []byte(input.LineSeparator)[0],
-			Object:        object,
-		})
-		if errorWrite != nil {
-			return nil, errors.Wrap(errorWrite, "error writing json lines")
-		}
-		return buf.Bytes(), nil
-	} else if format == "hcl" {
-		return make([]byte, 0), errors.New("Error cannot serialize to HCL")
-	} else if format == "hcl2" {
-		return make([]byte, 0), errors.New("Error cannot serialize to HCL2")
-	} else if format == "toml" {
-		return toml.Marshal(object)
-	} else if format == "yaml" {
-		return yaml.Marshal(object)
-	} else if format == "golang" || format == "go" {
-		return []byte(fmt.Sprint(object)), nil
 	}
 	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: format}, "could not serialize object")
 }

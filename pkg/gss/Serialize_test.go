@@ -19,10 +19,11 @@ func TestSerialize(t *testing.T) {
 	for _, testCase := range serializeTestCases {
 
 		got, err := SerializeString(&SerializeInput{
-			Object: testCase.Object,
-			Format: testCase.Format,
-			Header: testCase.Header,
-			Limit:  testCase.Limit,
+			Object:        testCase.Object,
+			Format:        testCase.Format,
+			Header:        testCase.Header,
+			Limit:         testCase.Limit,
+			LineSeparator: "\n",
 		})
 		if err != nil {
 			t.Errorf(errors.Wrap(err, "error running test").Error())

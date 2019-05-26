@@ -16,8 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var newline byte = []byte("\n")[0]
-
 func TestWriteObject(t *testing.T) {
 	object := map[string]interface{}{
 		"a": "1",
@@ -27,7 +25,7 @@ func TestWriteObject(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf, newline, false)
+	w := NewWriter(buf, "\n", false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObject(object)
@@ -57,7 +55,7 @@ func TestWriterObjects(t *testing.T) {
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 
-	w := NewWriter(buf, newline, false)
+	w := NewWriter(buf, "\n", false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObjects(objects)

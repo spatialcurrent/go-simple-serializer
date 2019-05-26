@@ -24,6 +24,7 @@ func TestDeserialize(t *testing.T) {
 			testCase.Comment,
 			testCase.LazyQuotes,
 			testCase.SkipLines,
+			"\n",
 			testCase.Limit,
 			testCase.Type,
 			false,

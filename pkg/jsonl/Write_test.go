@@ -33,7 +33,7 @@ func TestWrite(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
 		Writer:        buf,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		Object:        in,
 		Pretty:        false,
 	})
@@ -59,7 +59,7 @@ func TestWritePretty(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
 		Writer:        buf,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		Object:        in,
 		Pretty:        true,
 	})

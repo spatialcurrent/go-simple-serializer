@@ -23,12 +23,12 @@ import (
 // Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
 type Writer struct {
 	writer    io.Writer // writer for the underlying stream
-	separator byte      // the separator byte to use, e.g, null byte or \n.
+	separator string    // the separator stirng to use, e.g, null byte or \n.
 	pretty    bool      // write pretty output
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
-func NewWriter(w io.Writer, separator byte, pretty bool) *Writer {
+func NewWriter(w io.Writer, separator string, pretty bool) *Writer {
 	return &Writer{
 		writer:    w,
 		separator: separator,
@@ -43,7 +43,10 @@ func (w *Writer) WriteObject(obj interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "error marshaling object")
 	}
-	_, err = w.writer.Write(append(b, w.separator))
+	if len(w.separator) > 0 {
+		b = append(b, []byte(w.separator)...)
+	}
+	_, err = w.writer.Write(b)
 	if err != nil {
 		return errors.Wrap(err, "error writing to underlying writer")
 	}

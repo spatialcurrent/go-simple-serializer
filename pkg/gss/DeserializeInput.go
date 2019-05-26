@@ -13,19 +13,24 @@ import (
 
 // DeserializeInput provides the input for the DeserializeBytes function.
 type DeserializeInput struct {
-	Bytes         []byte
-	Format        string
-	Header        []string
-	Comment       string
-	LazyQuotes    bool
-	SkipLines     int
-	SkipBlanks    bool
-	SkipComments  bool
-	Trim          bool
-	Limit         int
-	LineSeparator string
-	DropCR        bool
-	Type          reflect.Type
-	Async         bool
-	Verbose       bool
+	Bytes           []byte
+	Format          string
+	Header          []string
+	Comment         string
+	LazyQuotes      bool
+	SkipLines       int
+	SkipBlanks      bool
+	SkipComments    bool
+	Trim            bool
+	Limit           int
+	LineSeparator   string
+	DropCR          bool
+	Type            reflect.Type
+	Async           bool
+	Verbose         bool
+	EscapePrefix    string
+	UnescapeSpace   bool
+	UnescapeNewLine bool
+	UnescapeColon   bool
+	UnescapeEqual   bool
 }

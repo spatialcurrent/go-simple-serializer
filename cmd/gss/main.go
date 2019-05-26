@@ -85,7 +85,7 @@ func buildValueSerializer(decimal bool, noDataValue string) func(object interfac
 	return stringify.DefaultValueStringer(noDataValue)
 }
 
-func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error), outputLineSeparator byte, outputPretty bool) (pipe.Writer, error) {
+func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error), outputLineSeparator string, outputPretty bool) (pipe.Writer, error) {
 	if outputFormat == "csv" || outputFormat == "tsv" {
 		separator, err := sv.FormatToSeparator(outputFormat)
 		if err != nil {
@@ -166,7 +166,7 @@ func CheckOutput(v *viper.Viper) error {
 	return nil
 }
 
-func CheckConfig(v *viper.Viper) error {
+func checkConfig(v *viper.Viper) error {
 	if err := CheckOutput(v); err != nil {
 		return err
 	}
@@ -175,9 +175,10 @@ func CheckConfig(v *viper.Viper) error {
 
 func main() {
 	rootCommand := &cobra.Command{
-		Use:   "gss",
-		Short: "gss",
-		Long:  `gss is a simple program for serializing/deserializing data.`,
+		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT [--output-sorted]",
+		DisableFlagsInUseLine: true,
+		Short:                 "gss",
+		Long:                  `gss is a simple program for serializing/deserializing data.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
@@ -188,7 +189,7 @@ func main() {
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv()
 
-			if errorConfig := CheckConfig(v); errorConfig != nil {
+			if errorConfig := checkConfig(v); errorConfig != nil {
 				return errorConfig
 			}
 
@@ -208,7 +209,7 @@ func main() {
 
 			outputSorted := v.GetBool("output-sorted")
 
-			outputNewLine := []byte(v.GetString(flagOutputLineSeparator))[0]
+			outputLineSeparator := v.GetString(flagOutputLineSeparator)
 
 			outputValueSerializer := buildValueSerializer(v.GetBool("output-decimal"), v.GetString("output-no-data-value"))
 
@@ -251,7 +252,7 @@ func main() {
 					outputFormat,
 					outputColumns,
 					outputValueSerializer,
-					outputNewLine,
+					outputLineSeparator,
 					outputPretty)
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")

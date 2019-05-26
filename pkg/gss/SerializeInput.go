@@ -22,4 +22,5 @@ type SerializeInput struct {
 	EscapeSpace       bool
 	EscapeNewLine     bool
 	EscapeEqual       bool
+	EscapeColon       bool
 }

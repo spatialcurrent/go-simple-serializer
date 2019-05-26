@@ -21,12 +21,8 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
 
 import (
@@ -103,8 +99,8 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			return nil, errors.Wrap(err, "error reading bytes from reader")
 		}
 		switch input.Format {
-		case "bson":
-			return bson.UnmarshalType(b, input.Type)
+		case "bson", "json", "toml", "yaml":
+			return UnmarshalTypeFuncs[input.Format](b, input.Type)
 		case "hcl":
 			ptr := reflect.New(input.Type)
 			ptr.Elem().Set(reflect.MakeMap(input.Type))
@@ -122,12 +118,6 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 				return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
 			}
 			return &file.Body, nil
-		case "json":
-			return json.UnmarshalType(b, input.Type)
-		case "toml":
-			return toml.UnmarshalType(b, input.Type)
-		case "yaml":
-			return yaml.UnmarshalType(b, input.Type)
 		}
 	}
 

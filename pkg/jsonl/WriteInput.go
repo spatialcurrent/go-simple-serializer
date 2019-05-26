@@ -14,7 +14,7 @@ import (
 // WriteInput provides the input for the Write function.
 type WriteInput struct {
 	Writer        io.Writer   // the underlying writer
-	LineSeparator byte        // the newline byte
+	LineSeparator string      // the line separator
 	Object        interface{} // the object to write
 	Pretty        bool        // pretty output
 }

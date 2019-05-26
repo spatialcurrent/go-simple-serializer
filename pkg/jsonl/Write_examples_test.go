@@ -22,7 +22,7 @@ func ExampleWrite_map() {
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
 		Writer:        buf,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		Object:        obj,
 		Pretty:        false,
 	})
@@ -50,7 +50,7 @@ func ExampleWrite_slice() {
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
 		Writer:        buf,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		Object:        obj,
 		Pretty:        false,
 	})
@@ -79,7 +79,7 @@ func ExampleWrite_pretty() {
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
 		Writer:        buf,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		Object:        obj,
 		Pretty:        true,
 	})
