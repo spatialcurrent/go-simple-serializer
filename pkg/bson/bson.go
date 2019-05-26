@@ -5,7 +5,8 @@
 //
 // =================================================================
 
-// Package bson provides an API for JSON serialization that automatically infers types.
+// Package bson provides an API for BSON serialization.  This package wraps the mgo bson package.
+//	- https://godoc.org/gopkg.in/mgo.v2/bson
 package bson
 
 import (

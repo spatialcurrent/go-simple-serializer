@@ -6,6 +6,7 @@
 // =================================================================
 
 // Package escaper provides an easy API to escapae and unescape a string using a custom escape prefix.
+// See the examples below for usage.
 package escaper
 
 import (
@@ -37,15 +38,15 @@ func (e *Escaper) Clone() *Escaper {
 	}
 }
 
-// The escape prefix to use for escaping substrings.  The escaper will also escape the prefix itself.
+// The escape prefix to use for escaping substrings.
+// The escaper will also escape the prefix itself.
+// Any string can be used.
 func (e *Escaper) Prefix(prefix string) *Escaper {
 	e.prefix = prefix
 	return e
 }
 
 // Sub adds the given substrings to the Escaper to be escaped and unescaped.
-// Examples:
-// - NewEscaper().Sub("=",":"," ").Escape("Hello, World")
 func (e *Escaper) Sub(substrings ...string) *Escaper {
 	e.substrings = append(e.substrings, substrings...)
 	return e

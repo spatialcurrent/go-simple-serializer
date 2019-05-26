@@ -10,7 +10,7 @@ package gssjs
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-simple-serializer/gss"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"honnef.co/go/js/console"
 )
 

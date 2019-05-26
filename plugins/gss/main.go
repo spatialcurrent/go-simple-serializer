@@ -19,7 +19,7 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/gss"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 
 func main() {}

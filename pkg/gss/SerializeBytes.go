@@ -261,10 +261,10 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			ValueSerializer:   valueSerializer,
 			Sorted:            input.Sorted,
 			EscapePrefix:      input.EscapePrefix,
-			EscapeSpace:       false,
-			EscapeEqual:       false,
+			EscapeSpace:       input.EscapeSpace,
 			EscapeColon:       false,
-			EscapeNewLine:     false,
+			EscapeNewLine:     input.EscapeNewLine,
+			EscapeEqual:       input.EscapeEqual,
 		})
 		if err != nil {
 			return make([]byte, 0), errors.Wrap(err, "error writing properties")

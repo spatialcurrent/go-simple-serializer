@@ -27,6 +27,9 @@ type ConvertInput struct {
 	OutputLineSeparator     string
 	OutputKeyValueSeparator string
 	OutputEscapePrefix      string
+	OutputEscapeSpace       bool
+	OutputEscapeNewLine     bool
+	OutputEscapeEqual       bool
 	Async                   bool
 	Verbose                 bool
 }
@@ -51,6 +54,9 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 		OutputLineSeparator:     "\n",
 		OutputKeyValueSeparator: "=",
 		OutputEscapePrefix:      "\\",
+		OutputEscapeSpace:       false,
+		OutputEscapeNewLine:     false,
+		OutputEscapeEqual:       false,
 		Async:                   false,
 		Verbose:                 false,
 	}

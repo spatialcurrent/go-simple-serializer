@@ -5,7 +5,10 @@
 //
 // =================================================================
 
-// Package yaml provides an API for YAML serialization that automatically infers types.
+// Package yaml provides an API for YAML serialization that can automatically infers types.
+//
+//	- https://yaml.org/
+//	- https://en.wikipedia.org/wiki/YAML
 package yaml
 
 import (

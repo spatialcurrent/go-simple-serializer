@@ -25,6 +25,10 @@ import (
 // Write writes the given rows as separated values.
 func Write(input *WriteInput) error {
 
+	if len(input.KeyValueSeparator) == 0 {
+		return ErrMissingKeyValueSeparator
+	}
+
 	// Initialize Escaper
 	e := escaper.New()
 	if len(input.EscapePrefix) > 0 {

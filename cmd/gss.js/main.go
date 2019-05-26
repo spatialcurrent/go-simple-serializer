@@ -15,8 +15,8 @@ package main
 
 import (
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/spatialcurrent/go-simple-serializer/gss"
-	"github.com/spatialcurrent/go-simple-serializer/gssjs"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gssjs"
 )
 
 var gitBranch string

@@ -19,4 +19,7 @@ type SerializeInput struct {
 	KeyValueSeparator string
 	ValueSerializer   func(object interface{}) (string, error)
 	EscapePrefix      string
+	EscapeSpace       bool
+	EscapeNewLine     bool
+	EscapeEqual       bool
 }

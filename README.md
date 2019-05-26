@@ -4,11 +4,30 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.
-
-GSS supports `bson`, `csv`, `tsv`, `hcl`, `hcl2`, `json`, `jsonl`, `properties`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
+**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects.  GSS supports `bson`, `csv`, `tsv`, `hcl`, `hcl2`, `json`, `jsonl`, `properties`, `toml`, `yaml`.  `hcl` and `hcl2` implementation is fragile and very much in `alpha`.
 
 Using cross compilers, this library can also be called by other languages.  This library is cross compiled into a Shared Object file (`*.so`).  The Shared Object file can be called by `C`, `C++`, and `Python` on Linux machines.  See the examples folder for patterns that you can use.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs).
+
+**Packages**
+
+The main public api for GSS is the `gss` package.  However, the library does ship with lower-level packages that can be imported directly as well.
+
+| Package | Purpose |
+| ---- | ------ |
+| bson | Binary JSON |
+| escaper | Escape/unescape strings |
+| gss | The main public API |
+| inspector | Reusable functions for inspecting objects |
+| iterator | Wrapper for iterable formats |
+| json | JSON |
+| jsonl | JSON Lines |
+| properties | Properties Files |
+| scanner | Scanning through a stream of bytes |
+| splitter | Creating custom bufio.SplitFunc |
+| sv | Separated-Values formats, i.e., CSV and TSV. |
+| toml | TOML |
+| yaml | YAML |
+
 
 # Usage
 

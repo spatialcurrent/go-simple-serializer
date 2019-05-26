@@ -30,7 +30,7 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/gss"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
@@ -47,6 +47,7 @@ const (
 	flagInputTrim             string = "input-trim"
 	flagInputReaderBufferSize string = "input-reader-buffer-size"
 	flagInputSkipLines        string = "input-skip-lines"
+	flagInputLineSeparator    string = "input-line-separator"
 )
 
 const (
@@ -67,6 +68,9 @@ const (
 	flagOutputLineSeparator     string = "output-line-separator"
 	flagOutputKeyValueSeparator string = "output-key-value-separator"
 	flagOutputEscapePrefix      string = "output-escape-prefix"
+	flagOutputEscapeSpace       string = "output-escape-space"
+	flagOutputEscapeNewLine     string = "output-escape-new-line"
+	flagOutputEscapeEqual       string = "output-escape-equal"
 	flagOutputSorted            string = "output-sorted"
 )
 
@@ -116,7 +120,7 @@ func initInputFlags(flag *pflag.FlagSet) {
 	flag.Int(flagInputSkipLines, gss.NoSkip, "The number of lines to skip before processing")
 	flag.IntP(flagInputLimit, "l", gss.NoLimit, "The input limit")
 	flag.BoolP(flagInputTrim, "t", false, "trim input lines")
-
+	flag.String(flagInputLineSeparator, "\n", "override line separator.  Used with properties and JSONL formats.")
 }
 
 func initOutputFlags(flag *pflag.FlagSet) {
@@ -129,7 +133,10 @@ func initOutputFlags(flag *pflag.FlagSet) {
 	flag.StringP(flagOutputNoDataValue, "0", "", "no data value, e.g., used for missing values when converting JSON to CSV")
 	flag.String(flagOutputLineSeparator, "\n", "override line separator.  Used with properties and JSONL formats.")
 	flag.String(flagOutputKeyValueSeparator, "=", "override key value separator.  Used with properties format.")
-	flag.String(flagOutputEscapePrefix, "\\", "override escape prefix.  Used with properties format.")
+	flag.String(flagOutputEscapePrefix, "", "override escape prefix.  Used with properties format.")
+	flag.Bool(flagOutputEscapeSpace, false, "Escape space characters in output.  Used with properties format.")
+	flag.Bool(flagOutputEscapeNewLine, false, "Escape new line characters in output.  Used with properties format.")
+	flag.Bool(flagOutputEscapeEqual, false, "Escape equal characters in output.  Used with properties format.")
 }
 
 func initFlags(flag *pflag.FlagSet) {
@@ -143,6 +150,17 @@ func initFlags(flag *pflag.FlagSet) {
 func CheckOutput(v *viper.Viper) error {
 	if lineSepartor := v.GetString(flagOutputLineSeparator); len(lineSepartor) != 1 {
 		return errors.New("line separator must be 1 character")
+	}
+	if len(v.GetString(flagOutputEscapePrefix)) == 0 {
+		if v.GetBool(flagOutputEscapeSpace) {
+			return errors.New("escaping space in output, but escape prefix is not set")
+		}
+		if v.GetBool(flagOutputEscapeNewLine) {
+			return errors.New("escaping new line in output, but escape prefix is not set")
+		}
+		if v.GetBool(flagOutputEscapeEqual) {
+			return errors.New("escaping equal in output, but escape prefix is not set")
+		}
 	}
 	return nil
 }
@@ -254,22 +272,28 @@ func main() {
 			}
 
 			outputString, err := gss.Convert(&gss.ConvertInput{
-				InputBytes:            inputBytes,
-				InputFormat:           inputFormat,
-				InputHeader:           v.GetStringSlice(flagInputHeader),
-				InputComment:          v.GetString(flagInputComment),
-				InputLazyQuotes:       v.GetBool(flagInputLazyQuotes),
-				InputSkipLines:        v.GetInt(flagInputSkipLines),
-				InputLimit:            v.GetInt(flagInputLimit),
-				OutputFormat:          outputFormat,
-				OutputHeader:          v.GetStringSlice(flagOutputHeader),
-				OutputLimit:           v.GetInt(flagOutputLimit),
-				OutputPretty:          v.GetBool(flagOutputPretty),
-				OutputSorted:          v.GetBool(flagOutputSorted),
-				OutputValueSerializer: outputValueSerializer,
-				OutputLineSeparator:   v.GetString(flagOutputLineSeparator),
-				Async:                 v.GetBool("async"),
-				Verbose:               v.GetBool("verbose"),
+				InputBytes:              inputBytes,
+				InputFormat:             inputFormat,
+				InputHeader:             v.GetStringSlice(flagInputHeader),
+				InputComment:            v.GetString(flagInputComment),
+				InputLazyQuotes:         v.GetBool(flagInputLazyQuotes),
+				InputSkipLines:          v.GetInt(flagInputSkipLines),
+				InputLimit:              v.GetInt(flagInputLimit),
+				InputLineSeparator:      v.GetString(flagInputLineSeparator),
+				OutputFormat:            outputFormat,
+				OutputHeader:            v.GetStringSlice(flagOutputHeader),
+				OutputLimit:             v.GetInt(flagOutputLimit),
+				OutputPretty:            v.GetBool(flagOutputPretty),
+				OutputSorted:            v.GetBool(flagOutputSorted),
+				OutputValueSerializer:   outputValueSerializer,
+				OutputLineSeparator:     v.GetString(flagOutputLineSeparator),
+				OutputKeyValueSeparator: v.GetString(flagOutputKeyValueSeparator),
+				OutputEscapePrefix:      v.GetString(flagOutputEscapePrefix),
+				OutputEscapeSpace:       v.GetBool(flagOutputEscapeSpace),
+				OutputEscapeNewLine:     v.GetBool(flagOutputEscapeNewLine),
+				OutputEscapeEqual:       v.GetBool(flagOutputEscapeEqual),
+				Async:                   v.GetBool("async"),
+				Verbose:                 v.GetBool("verbose"),
 			})
 			if err != nil {
 				return errors.Wrap(err, "error converting")

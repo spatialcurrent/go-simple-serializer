@@ -60,6 +60,9 @@ func Convert(input *ConvertInput) (string, error) {
 				KeyValueSeparator: input.OutputKeyValueSeparator,
 				ValueSerializer:   input.OutputValueSerializer,
 				EscapePrefix:      input.OutputEscapePrefix,
+				EscapeSpace:       input.OutputEscapeSpace,
+				EscapeNewLine:     input.OutputEscapeNewLine,
+				EscapeEqual:       input.OutputEscapeEqual,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")
@@ -100,6 +103,9 @@ func Convert(input *ConvertInput) (string, error) {
 				KeyValueSeparator: input.OutputKeyValueSeparator,
 				ValueSerializer:   input.OutputValueSerializer,
 				EscapePrefix:      input.OutputEscapePrefix,
+				EscapeSpace:       input.OutputEscapeSpace,
+				EscapeNewLine:     input.OutputEscapeNewLine,
+				EscapeEqual:       input.OutputEscapeEqual,
 			})
 			if err != nil {
 				return "", errors.Wrap(err, "Error serializing output")

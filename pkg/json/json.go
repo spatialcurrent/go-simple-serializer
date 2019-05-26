@@ -6,6 +6,7 @@
 // =================================================================
 
 // Package json provides an API for JSON serialization that automatically infers types.
+// See the examples below for usage.
 package json
 
 import (
