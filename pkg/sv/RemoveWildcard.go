@@ -5,9 +5,14 @@
 //
 // =================================================================
 
-// Package sv includes iterators for reading from separated-values sources and writing using separated-values formats, such as CSV and TSV.
 package sv
 
-const (
-	Wildcard = "*"
-)
+func RemoveWildcard(header []interface{}) []interface{} {
+	newHeader := make([]interface{}, 0)
+	for _, x := range header {
+		if str, ok := x.(string); !ok || str != Wildcard {
+			newHeader = append(newHeader, x)
+		}
+	}
+	return newHeader
+}

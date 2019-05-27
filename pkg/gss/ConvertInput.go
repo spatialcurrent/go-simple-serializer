@@ -11,7 +11,7 @@ package gss
 type ConvertInput struct {
 	InputBytes              []byte
 	InputFormat             string
-	InputHeader             []string
+	InputHeader             []interface{}
 	InputComment            string
 	InputLazyQuotes         bool
 	InputSkipLines          int
@@ -19,7 +19,7 @@ type ConvertInput struct {
 	InputLineSeparator      string
 	InputDropCR             bool
 	OutputFormat            string
-	OutputHeader            []string
+	OutputHeader            []interface{}
 	OutputLimit             int
 	OutputPretty            bool
 	OutputSorted            bool

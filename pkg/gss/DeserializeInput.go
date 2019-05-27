@@ -15,7 +15,7 @@ import (
 type DeserializeInput struct {
 	Bytes           []byte
 	Format          string
-	Header          []string
+	Header          []interface{}
 	Comment         string
 	LazyQuotes      bool
 	SkipLines       int

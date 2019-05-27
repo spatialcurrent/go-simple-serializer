@@ -70,7 +70,7 @@ joe,XYZ,79
 		Comment:    "",
 		SkipLines:  1, // skip the first line: a,b,c
 		LazyQuotes: false,
-		Header:     []string{"name", "type", "age"},
+		Header:     []interface{}{"name", "type", "age"},
 	})
 	assert.NoError(t, err)
 

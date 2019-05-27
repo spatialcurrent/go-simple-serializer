@@ -5,9 +5,22 @@
 //
 // =================================================================
 
-// Package sv includes iterators for reading from separated-values sources and writing using separated-values formats, such as CSV and TSV.
-package sv
+package inspector
 
-const (
-	Wildcard = "*"
+import (
+	"testing"
 )
+
+import (
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetKeys(t *testing.T) {
+	in := map[string]interface{}{
+		"a": "x",
+		"b": "y",
+		"c": "z",
+	}
+	keys := GetKeys(in, true)
+	assert.Equal(t, []interface{}{"a", "b", "c"}, keys)
+}

@@ -5,9 +5,12 @@
 //
 // =================================================================
 
-// Package sv includes iterators for reading from separated-values sources and writing using separated-values formats, such as CSV and TSV.
 package sv
 
-const (
-	Wildcard = "*"
+import (
+	"reflect"
 )
+
+func CreateHeaderAndKnownKeys(object interface{}, sorted bool) ([]interface{}, map[interface{}]struct{}) {
+	return CreateHeaderAndKnownKeysFromValue(reflect.ValueOf(object), sorted)
+}

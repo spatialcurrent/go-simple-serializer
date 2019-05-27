@@ -11,7 +11,7 @@ package gss
 type SerializeInput struct {
 	Object            interface{}
 	Format            string
-	Header            []string
+	Header            []interface{}
 	Limit             int
 	Pretty            bool
 	Sorted            bool

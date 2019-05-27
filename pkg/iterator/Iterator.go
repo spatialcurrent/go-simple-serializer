@@ -30,7 +30,7 @@ type Iterator interface {
 type NewIteratorInput struct {
 	Reader        io.Reader    // the underlying reader
 	Format        string       // the format
-	Header        []string     // for csv and tsv, the header.  If not given, then reads first line of stream as header.
+	Header        []interface{}     // for csv and tsv, the header.  If not given, then reads first line of stream as header.
 	SkipLines     int          // Skip a given number of lines at the beginning of the stream.
 	SkipBlanks    bool         // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
 	SkipComments  bool         // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.

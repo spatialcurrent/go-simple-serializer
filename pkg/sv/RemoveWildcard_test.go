@@ -5,9 +5,22 @@
 //
 // =================================================================
 
-// Package sv includes iterators for reading from separated-values sources and writing using separated-values formats, such as CSV and TSV.
 package sv
 
-const (
-	Wildcard = "*"
+import (
+	"testing"
 )
+
+import (
+	"github.com/stretchr/testify/assert"
+)
+
+func TestRemoveWildcard(t *testing.T) {
+	in := []interface{}{
+		"a",
+		"*",
+		"c",
+	}
+	out := RemoveWildcard(in)
+	assert.Equal(t, []interface{}{"a", "c"}, out)
+}

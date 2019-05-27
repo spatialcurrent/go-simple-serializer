@@ -20,7 +20,7 @@ import (
 type Iterator struct {
 	Reader *csv.Reader
 	Type   reflect.Type
-	header []string
+	header []interface{}
 	limit  int
 	count  int
 }
@@ -30,7 +30,7 @@ type NewIteratorInput struct {
 	Reader     io.Reader
 	Type       reflect.Type
 	Separator  rune // the values separator
-	Header     []string
+	Header     []interface{}
 	SkipLines  int
 	Comment    string
 	LazyQuotes bool
@@ -72,7 +72,10 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 			}
 			return nil, errors.Wrap(err, "error reading header")
 		}
-		header = h
+		header = make([]interface{}, 0, len(h))
+		for _, str := range h {
+			header = append(header, str)
+		}
 	}
 
 	return &Iterator{Reader: reader, Type: input.Type, header: header, limit: input.Limit, count: 0}, nil
@@ -105,6 +108,6 @@ func (it *Iterator) Next() (interface{}, error) {
 	return m.Interface(), nil
 }
 
-func (it *Iterator) Header() []string {
+func (it *Iterator) Header() []interface{} {
 	return it.header
 }

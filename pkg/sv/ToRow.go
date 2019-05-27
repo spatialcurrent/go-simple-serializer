@@ -5,14 +5,13 @@
 //
 // =================================================================
 
-package inspector
+package sv
 
 import (
 	"reflect"
 )
 
-// GetFieldNames returns the field names of a struct as []string.
-// If you want the field names to be sorted in alphabetical order, pass sorted equal to true.
-func GetFieldNames(object interface{}, sorted bool) []string {
-	return GetFieldNamesFromValue(reflect.ValueOf(object), sorted)
+// ToRow converts an object into a row of strings and returns an error, if any.
+func ToRow(object interface{}, columns []interface{}, valueSerializer func(object interface{}) (string, error)) ([]string, error) {
+	return ToRowFromValue(reflect.ValueOf(object), columns, valueSerializer)
 }

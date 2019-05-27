@@ -16,7 +16,7 @@ type TestCase struct {
 	String     string       // the object in serialized form
 	Object     interface{}  // the object as a go object
 	Format     string       // the serialization format
-	Header     []string     // if format is a csv or tsv, the names of the columns
+	Header     []interface{}     // if format is a csv or tsv, the names of the columns
 	Comment    string       // the line comment prefix
 	LazyQuotes bool         // if format is csv or tsv, allow LazyQuotes.
 	SkipLines  int          // if format is csv, tsv, or jsonl, then the number of lines to skip before processing.

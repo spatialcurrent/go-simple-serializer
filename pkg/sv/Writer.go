@@ -9,10 +9,8 @@ package sv
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"reflect"
-	"strings"
 )
 
 import (
@@ -72,53 +70,7 @@ func (w *Writer) WriteHeader() error {
 }
 
 func (w *Writer) ToRow(obj interface{}) ([]string, error) {
-	objectValue := reflect.ValueOf(obj)
-	objectType := objectValue.Type()
-	objectKind := objectType.Kind()
-	if objectKind == reflect.Ptr {
-		objectValue = objectValue.Elem()
-		objectType = objectValue.Type()
-		objectKind = objectType.Kind()
-	}
-
-	row := make([]string, len(w.columns))
-	switch objectKind {
-	case reflect.Map:
-		for j, key := range w.columns {
-			if v := objectValue.MapIndex(reflect.ValueOf(key)); v.IsValid() && (v.Type().Kind() == reflect.String || !v.IsNil()) {
-				str, err := w.valueSerializer(v.Interface())
-				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
-				}
-				row[j] = str
-			} else {
-				str, err := w.valueSerializer(nil)
-				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
-				}
-				row[j] = str
-			}
-		}
-	case reflect.Struct:
-		for j, column := range w.columns {
-			columnLowerCase := strings.ToLower(fmt.Sprint(column))
-			if f := objectValue.FieldByNameFunc(func(match string) bool { return strings.ToLower(match) == columnLowerCase }); f.IsValid() && (f.Type().Kind() == reflect.String || !f.IsNil()) {
-				str, err := w.valueSerializer(f.Interface())
-				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
-				}
-				row[j] = str
-			} else {
-				str, err := w.valueSerializer(nil)
-				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
-				}
-				row[j] = str
-			}
-		}
-	}
-
-	return row, nil
+	return ToRow(obj, w.columns, w.valueSerializer)
 }
 
 func (w *Writer) WriteObject(obj interface{}) error {

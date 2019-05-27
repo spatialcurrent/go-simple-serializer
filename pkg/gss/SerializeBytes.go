@@ -26,40 +26,19 @@ import (
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 )
 
-func unknownKeys(obj reflect.Value, knownKeys map[string]struct{}) []string {
-	unknownKeys := make([]string, 0)
-	for _, k := range obj.MapKeys() {
-		str := fmt.Sprint(k.Interface())
-		if _, exists := knownKeys[str]; !exists {
-			unknownKeys = append(unknownKeys, str)
-		}
-	}
-	return unknownKeys
-}
-
-func serializeRow(header []string, knownKeys map[string]struct{}, obj interface{}) ([]string, map[string]struct{}, []string, error) {
+/*
+func serializeRow(header []interface{}, knownKeys map[string]struct{}, obj interface{}) ([]string, map[string]struct{}, []string, error) {
 	m := reflect.ValueOf(obj)
 	if m.Kind() != reflect.Map {
 		return header, knownKeys, make([]string, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
 	}
 
-	newHeader := make([]string, 0, len(header))
-	newKnownKeys := map[string]struct{}{}
-	for _, k := range header {
-		if k == "*" {
-			for _, unknownKey := range unknownKeys(m, knownKeys) {
-				newHeader = append(newHeader, unknownKey)
-				newKnownKeys[unknownKey] = struct{}{}
-			}
-			newHeader = append(newHeader, k)
-		} else {
-			newHeader = append(newHeader, k)
-			newKnownKeys[k] = struct{}{}
-		}
-	}
+	newHeader, newKnownKeys := sv.ExpandHeader(header, knownKeys, m, false)
+  row := sv.ToRow(obj, newHeader, valueSerializer)
 
 	row := make([]string, len(newHeader))
 	for j, key := range newHeader {
@@ -72,6 +51,7 @@ func serializeRow(header []string, knownKeys map[string]struct{}, obj interface{
 
 	return newHeader, newKnownKeys, row, nil
 }
+*/
 
 // SerializeBytes serializes an object to its representation given by format.
 func SerializeBytes(input *SerializeInput) ([]byte, error) {
@@ -86,7 +66,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 
 	switch format {
 	case "bson", "json", "jsonl", "properties", "go", "toml", "yaml":
-		s := NewSerializer(format)
+		s := serializer.New(format)
 		if format == "json" || format == "jsonl" {
 			s = s.Pretty(input.Pretty)
 		}
@@ -119,7 +99,7 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 
 		header := input.Header
 		wildcard := false
-		knownKeys := map[string]struct{}{}
+		knownKeys := map[interface{}]struct{}{}
 		if len(header) > 0 {
 			for _, k := range header {
 				if k == "*" {
@@ -129,148 +109,61 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 				}
 			}
 			if input.Sorted {
-				sort.Strings(header)
+				sort.Slice(header, func(i, j int) bool {
+					return fmt.Sprint(header[i]) < fmt.Sprint(header[j])
+				})
 			}
 		}
+
+		rows := make([][]string, 0)
 
 		s := reflect.ValueOf(object)
-		if s.Kind() != reflect.Map && s.Kind() != reflect.Array && s.Kind() != reflect.Slice {
-			return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Array, reflect.Slice}}
-		}
-
-		switch s.Kind() {
-		case reflect.Map:
-
-			rows := make([][]string, 0)
-			if len(header) > 0 {
-				if wildcard {
-					newHeader, _, row, err := serializeRow(header, knownKeys, s.Interface())
-					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error serializing row")
-					}
-					header = newHeader
-					rows = append(rows, row)
-				} else {
-					row, err := ToRowS(header, s, valueSerializer)
-					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error serializing row")
-					}
-					rows = append(rows, row)
-				}
-			} else {
-				keys := inspector.GetKeysFromValue(s, input.Sorted)
-				header = ToStringSlice(keys) // string representations of keys
-				row, err := ToRowI(keys, s, valueSerializer)
-				if err != nil {
-					return make([]byte, 0), errors.Wrap(err, "error serializing row")
-				}
-				rows = append(rows, row)
+		switch s.Type().Kind() {
+		case reflect.Map, reflect.Struct:
+			if len(header) == 0 {
+				header, knownKeys = sv.CreateHeaderAndKnownKeys(s, input.Sorted)
+			} else if wildcard {
+				newHeader, newKnownKeys := sv.ExpandHeader(header, knownKeys, s, input.Sorted)
+				header = newHeader
+				knownKeys = newKnownKeys
 			}
-
-			buf := new(bytes.Buffer)
-			err := sv.Write(&sv.WriteInput{
-				Writer:    buf,
-				Separator: separator,
-				Header:    header,
-				Rows:      rows,
-			})
-			return buf.Bytes(), err
+			row, err := sv.ToRowFromValue(s, header, valueSerializer)
+			if err != nil {
+				return make([]byte, 0), errors.Wrap(err, "error serializing object to row")
+			}
+			rows = append(rows, row)
 		case reflect.Array, reflect.Slice:
 			if s.Len() > 0 {
-				first := reflect.TypeOf(s.Index(0).Interface())
-				if first.Kind() == reflect.Ptr {
-					first = first.Elem()
+				if len(header) == 0 {
+					header, knownKeys = sv.CreateHeaderAndKnownKeys(s.Index(0), input.Sorted)
 				}
-				rows := make([][]string, 0)
-				switch first.Kind() {
-				case reflect.Map:
-					mapKeys := reflect.ValueOf(s.Index(0).Interface()).MapKeys()
-					if len(header) == 0 {
-						header = make([]string, 0, len(mapKeys))
-						for _, key := range mapKeys {
-							header = append(header, fmt.Sprint(key))
-						}
-						sort.Strings(header)
-					}
+				for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
 					if wildcard {
-						for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-							newHeader, newKnownKeys, row, err := serializeRow(header, knownKeys, s.Index(i).Interface())
-							if err != nil {
-								return make([]byte, 0), errors.Wrap(err, "error serializing row")
-							}
-							header = newHeader
-							knownKeys = newKnownKeys
-							rows = append(rows, row)
-						}
-					} else {
-						for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-							m := reflect.ValueOf(s.Index(i).Interface())
-							if m.Kind() != reflect.Map {
-								return make([]byte, 0), &ErrInvalidKind{Value: m.Kind(), Valid: []reflect.Kind{reflect.Map}}
-							}
-							row := make([]string, len(header))
-							for j, key := range header {
-								if v := m.MapIndex(reflect.ValueOf(key)); v.IsValid() && !v.IsNil() {
-									str, err := valueSerializer(v.Interface())
-									if err != nil {
-										return make([]byte, 0), errors.Wrap(err, "error serializing value")
-									}
-									row[j] = str
-								} else {
-									str, err := valueSerializer(nil)
-									if err != nil {
-										return make([]byte, 0), errors.Wrap(err, "error serializing value")
-									}
-									row[j] = str
-								}
-							}
-							rows = append(rows, row)
-						}
+						header, knownKeys = sv.ExpandHeader(header, knownKeys, s.Index(i), input.Sorted)
 					}
-				case reflect.Struct:
-					if len(header) == 0 {
-						header = make([]string, first.NumField())
-						for i := 0; i < first.NumField(); i++ {
-							if tag := first.Field(i).Tag.Get(format); len(tag) > 0 {
-								header[i] = tag
-							} else {
-								header[i] = first.Field(i).Name
-							}
-						}
-						sort.Strings(header)
+					row, err := sv.ToRowFromValue(s.Index(i), header, valueSerializer)
+					if err != nil {
+						return make([]byte, 0), errors.Wrap(err, "error serializing object to row")
 					}
-					for i := 0; i < s.Len() && (limit < 0 || i <= limit); i++ {
-						rows = append(rows, make([]string, first.NumField()))
-						for j := 0; j < len(header); j++ {
-							f, ok := first.FieldByName(header[j])
-							if ok {
-								switch f.Type {
-								case reflect.TypeOf(""):
-									rows[i][j] = s.Index(i).Elem().FieldByName(header[j]).String()
-								case reflect.TypeOf([]string{}):
-									rows[i][j] = strings.Join(s.Index(i).Elem().FieldByName(header[j]).Interface().([]string), ",")
-								default:
-									rows[i][j] = ""
-								}
-							} else {
-								rows[i][j] = ""
-							}
-						}
-					}
+					rows = append(rows, row)
 				}
-				buf := new(bytes.Buffer)
-				err := sv.Write(&sv.WriteInput{
-					Writer:    buf,
-					Separator: separator,
-					Header:    header,
-					Rows:      rows,
-				})
-				return buf.Bytes(), err
 			}
 			// If there are no records then just return an empty string
 			return []byte(""), nil
 		}
-		return make([]byte, 0), &ErrInvalidKind{Value: s.Kind(), Valid: []reflect.Kind{reflect.Map, reflect.Array, reflect.Slice}}
+		// Write header and rows
+		headerAsStrings := make([]string, 0, len(header))
+		for _, x := range header {
+			headerAsStrings = append(headerAsStrings, fmt.Sprint(x))
+		}
+		buf := new(bytes.Buffer)
+		err = sv.Write(&sv.WriteInput{
+			Writer:    buf,
+			Separator: separator,
+			Header:    headerAsStrings,
+			Rows:      rows,
+		})
+		return buf.Bytes(), err
 	} else if format == "text" {
 		t := reflect.TypeOf(object)
 		if t.Kind() == reflect.Map {

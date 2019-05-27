@@ -12,8 +12,8 @@ import (
 	"sort"
 )
 
-// GetKeysFromValue returns the keys for a map as an []interface{}.
-// If you want the keys to be sorted in alphabetical order, pass sorted equal to true.
+// GetFieldNamesFromValue returns the field names of a struct as []string.
+// If you want the field names to be sorted in alphabetical order, pass sorted equal to true.
 func GetFieldNamesFromValue(value reflect.Value, sorted bool) []string {
 	fieldNames := make([]string, 0, value.NumField())
 	t := value.Type()

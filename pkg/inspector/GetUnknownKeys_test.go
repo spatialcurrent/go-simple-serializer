@@ -8,11 +8,19 @@
 package inspector
 
 import (
-	"reflect"
+	"testing"
 )
 
-// GetFieldNames returns the field names of a struct as []string.
-// If you want the field names to be sorted in alphabetical order, pass sorted equal to true.
-func GetFieldNames(object interface{}, sorted bool) []string {
-	return GetFieldNamesFromValue(reflect.ValueOf(object), sorted)
+import (
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetUnknownKeys(t *testing.T) {
+	in := map[string]interface{}{
+		"a": "x",
+		"b": "y",
+		"c": "z",
+	}
+	keys := GetUnknownKeys(in, map[interface{}]struct{}{"b": struct{}{}}, true)
+	assert.Equal(t, []interface{}{"a", "c"}, keys)
 }

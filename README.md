@@ -94,7 +94,7 @@ Use "gss [command] --help" for more information about a command.
 
 **Go**
 
-You can  import **go-simple-serializer** as a library with:
+You can  import the `gss` package with:`
 
 ```go
 import (

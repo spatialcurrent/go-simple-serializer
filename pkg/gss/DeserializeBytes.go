@@ -21,6 +21,7 @@ import (
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
 import (
@@ -57,7 +58,7 @@ func DeserializeBytes(input *DeserializeInput) (interface{}, error) {
 		}
 		return w.Values(), nil
 	case "bson", "json", "jsonl", "properties", "toml", "yaml":
-		s := NewSerializer(input.Format).Type(input.Type)
+		s := serializer.New(input.Format).Type(input.Type)
 		if input.Format == "jsonl" {
 			s = s.Limit(input.Limit)
 		}

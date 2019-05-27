@@ -5,10 +5,11 @@
 //
 // =================================================================
 
-package gss
+package serializer
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 )
 
@@ -25,9 +26,53 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
 
-// Serializer is a struct for serializing
+const (
+	FormatCSV        = "csv"
+	FormatTSV        = "tsv"
+	FormatJSON       = "json"
+	FormatJSONL      = "jsonl"
+	FormatProperties = "properties"
+)
+
+// UnmarshalTypeFunc is a function for unmarshaling bytes into an object of a given type.
+type UnmarshalTypeFunc func(b []byte, t reflect.Type) (interface{}, error)
+
+// UnmarshalFunc is a function for unmarshaling bytes into an object of a given type.
+type UnmarshalFunc func(b []byte) (interface{}, error)
+
+// MarshalFunc is a function for marshalling an object into bytes.
+type MarshalFunc func(object interface{}) ([]byte, error)
+
+var (
+	// UnmarshalFuncs contains a map of functions for unmarshaling formatted bytes into objects.
+	UnmarshalFuncs = map[string]UnmarshalFunc{
+		"bson": bson.Unmarshal,
+		"json": json.Unmarshal,
+		"toml": toml.Unmarshal,
+		"yaml": yaml.Unmarshal,
+	}
+	// UnmarshalTypeFuncs contains a map of functions for unmarshaling formatted bytes into objects.
+	UnmarshalTypeFuncs = map[string]UnmarshalTypeFunc{
+		"bson": bson.UnmarshalType,
+		"json": json.UnmarshalType,
+		"toml": toml.UnmarshalType,
+		"yaml": yaml.UnmarshalType,
+	}
+	// MarshalTypeFuncs contains a map of functions for marshaling objects into formatted bytes.
+	MarshalFuncs = map[string]MarshalFunc{
+		"go": func(object interface{}) ([]byte, error) {
+			return []byte(fmt.Sprint(object)), nil
+		},
+		"toml": toml.Marshal,
+		"yaml": yaml.Marshal,
+	}
+)
+
+// Serializer is a struct for serializing/deserializing objects.
 type Serializer struct {
 	format            string       // one of gss.Formats
 	header            []string     // if formt as csv or tsv, the column names
@@ -55,124 +100,150 @@ type Serializer struct {
 	dropCR            bool
 }
 
-func NewSerializer(format string) *Serializer {
+// New returns a new serializer with the given format.
+func New(format string) *Serializer {
 	return &Serializer{
 		format: format,
 	}
 }
+
+// Format sets the format of the serializer.
 func (s *Serializer) Format(format string) *Serializer {
 	s.format = format
 	return s
 }
 
+// Header sets the header of the serializer.
 func (s *Serializer) Header(header []string) *Serializer {
 	s.header = header
 	return s
 }
 
+// Comment sets the comment of the serializer.
 func (s *Serializer) Comment(comment string) *Serializer {
 	s.comment = comment
 	return s
 }
 
+// Limit seets the limit of the serializer.
 func (s *Serializer) Limit(limit int) *Serializer {
 	s.limit = limit
 	return s
 }
 
+// LineSeparator sets the line separator of the serializer.
 func (s *Serializer) LineSeparator(lineSeparator string) *Serializer {
 	s.lineSeparator = lineSeparator
 	return s
 }
 
+// KeyValueSeparator sets the key-value separator of the serializer.
 func (s *Serializer) KeyValueSeparator(keyValueSeparator string) *Serializer {
 	s.keyValueSeparator = keyValueSeparator
 	return s
 }
 
+// Pretty enables/disables pretty output.
 func (s *Serializer) Pretty(pretty bool) *Serializer {
 	s.pretty = pretty
 	return s
 }
 
+// Sorted enables/disables sorted output.
 func (s *Serializer) Sorted(sorted bool) *Serializer {
 	s.sorted = sorted
 	return s
 }
 
+// Type sets the optional type for deserialization.
+// If no type is given, then the type is inferred from the source.
 func (s *Serializer) Type(t reflect.Type) *Serializer {
 	s.objectType = t
 	return s
 }
 
+// EscapePrefix sets the prefix for escaping text.  Used with the properties format.
+// If the escape prefix is not set, then the serializer doesn't escape/unescape any text.
 func (s *Serializer) EscapePrefix(escapePrefix string) *Serializer {
 	s.escapePrefix = escapePrefix
 	return s
 }
 
+// EscapeSpace enables/disables escaping the whitespace character.
 func (s *Serializer) EscapeSpace(escapeSpace bool) *Serializer {
 	s.escapeSpace = escapeSpace
 	return s
 }
 
+// EscapeSpace enables/disables escaping the new line character.
 func (s *Serializer) EscapeNewLine(escapeNewLine bool) *Serializer {
 	s.escapeNewLine = escapeNewLine
 	return s
 }
 
+// EscapeSpace enables/disables escaping the equal character.
 func (s *Serializer) EscapeEqual(escapeEqual bool) *Serializer {
 	s.escapeEqual = escapeEqual
 	return s
 }
 
+// EscapeSpace enables/disables escaping the colon character.
 func (s *Serializer) EscapeColon(escapeColon bool) *Serializer {
 	s.escapeColon = escapeColon
 	return s
 }
 
+// UnescapeSpace enables/disables unescaping the whitespace character.
 func (s *Serializer) UnescapeSpace(unescapeSpace bool) *Serializer {
 	s.unescapeSpace = unescapeSpace
 	return s
 }
 
+// UnescapeNewLine enables/disables unescaping the new line character.
 func (s *Serializer) UnescapeNewLine(unescapeNewLine bool) *Serializer {
 	s.unescapeNewLine = unescapeNewLine
 	return s
 }
 
+// UnescapeEqual enables/disables unescpaing the equal character.
 func (s *Serializer) UnescapeEqual(unescapeEqual bool) *Serializer {
 	s.unescapeEqual = unescapeEqual
 	return s
 }
 
+// UnescapeColon enables/disables unescaping the colon character.
 func (s *Serializer) UnescapeColon(unescapeColon bool) *Serializer {
 	s.unescapeColon = unescapeColon
 	return s
 }
 
+// Trim enables/disables trimming whitespace from input lines.
 func (s *Serializer) Trim(trim bool) *Serializer {
 	s.trim = trim
 	return s
 }
 
+// DropCR enables/disables dropping the carriage return character if it terminates a line.
 func (s *Serializer) DropCR(dropCR bool) *Serializer {
 	s.dropCR = dropCR
 	return s
 }
 
+// ValueSerializer sets the function for serializing values as strings for the csv, tsv, and properties formats.
 func (s *Serializer) ValueSerializer(valueSerializer func(object interface{}) (string, error)) *Serializer {
 	s.valueSerializer = valueSerializer
 	return s
 }
 
+// Deserialize deserializes the input slice of bytes into an object and returns an error, if any.
 func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 	switch s.format {
-	case "bson", "json", "toml", "yaml":
+	case "bson", FormatJSON, "toml", "yaml":
 		if s.objectType != nil {
 			return UnmarshalTypeFuncs[s.format](b, s.objectType)
 		}
 		return UnmarshalFuncs[s.format](b)
-	case "properties":
+	case FormatProperties:
 		return properties.Read(&properties.ReadInput{
 			Type:            s.objectType,
 			Reader:          bytes.NewReader(b),
@@ -189,21 +260,22 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 	return nil, &ErrUnknownFormat{Name: s.format}
 }
 
+// Serialize serializes an object into a slice of byte and returns and error, if any.
 func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	switch s.format {
 	case "bson":
 		return bson.Marshal(stringify.StringifyMapKeys(object))
-	case "json":
+	case FormatCSV, FormatTSV:
+		return make([]byte, 0), errors.New("not implemented")
+	case FormatJSON:
 		return json.Marshal(object, s.pretty)
-	case "jsonl":
+	case FormatJSONL:
 		return jsonl.Marshal(object, s.lineSeparator, s.pretty)
-	case "properties":
-
+	case FormatProperties:
 		valueSerializer := s.valueSerializer
 		if valueSerializer == nil {
 			valueSerializer = stringify.DefaultValueStringer("")
 		}
-
 		buf := new(bytes.Buffer)
 		err := properties.Write(&properties.WriteInput{
 			Writer:            buf,

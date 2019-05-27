@@ -33,7 +33,7 @@ import (
 type DeserializeReaderInput struct {
 	Reader        io.Reader
 	Format        string
-	Header        []string
+	Header        []interface{}
 	Comment       string
 	LazyQuotes    bool
 	SkipLines     int
