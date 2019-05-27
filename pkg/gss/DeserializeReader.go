@@ -14,15 +14,12 @@ import (
 )
 
 import (
-	"github.com/hashicorp/hcl"
-	hcl2 "github.com/hashicorp/hcl2/hcl"
-	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/pkg/errors"
 )
 
 import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
 import (
@@ -52,7 +49,8 @@ type DeserializeReaderInput struct {
 func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl":
+	case "csv", "tsv", "jsonl", "tags":
+		// These formats can be streamed.
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        input.Reader,
 			Type:          input.Type,
@@ -77,20 +75,8 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}
 		return w.Values(), nil
-	case "properties":
-		return properties.Read(&properties.ReadInput{
-			Type:            input.Type,
-			Reader:          input.Reader,
-			LineSeparator:   []byte(input.LineSeparator)[0],
-			DropCR:          input.DropCR,
-			Comment:         input.Comment,
-			Trim:            input.Trim,
-			UnescapeSpace:   true,
-			UnescapeEqual:   true,
-			UnescapeColon:   true,
-			UnescapeNewLine: true,
-		})
-	case "bson", "hcl", "hcl2", "json", "toml", "yaml":
+	case "bson", "hcl", "hcl2", "json", "properties", "toml", "yaml":
+		// These formats do not support streaming.
 		b, err := ioutil.ReadAll(input.Reader)
 		if err != nil {
 			if err == io.EOF {
@@ -98,27 +84,29 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			}
 			return nil, errors.Wrap(err, "error reading bytes from reader")
 		}
-		switch input.Format {
-		case "bson", "json", "toml", "yaml":
-			return UnmarshalTypeFuncs[input.Format](b, input.Type)
-		case "hcl":
-			ptr := reflect.New(input.Type)
-			ptr.Elem().Set(reflect.MakeMap(input.Type))
-			obj, err := hcl.Parse(string(b))
-			if err != nil {
-				return nil, errors.Wrap(err, "Error parsing hcl")
-			}
-			if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-				return nil, errors.Wrap(err, "Error decoding hcl")
-			}
-			return ptr.Elem().Interface(), nil
-		case "hcl2":
-			file, diags := hclsyntax.ParseConfig(b, "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
-			if diags.HasErrors() {
-				return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
-			}
-			return &file.Body, nil
+
+		// Set up Serializer
+		s := serializer.New(input.Format).Type(input.Type)
+		if input.Format == "properties" || input.Format == "yaml" {
+			s = s.Comment(input.Comment)
 		}
+		if input.Format == "properties" {
+			s = s.
+				LineSeparator(input.LineSeparator).
+				DropCR(input.DropCR).
+				Trim(input.Trim).
+				UnescapeSpace(true).
+				UnescapeEqual(true).
+				UnescapeColon(true).
+				UnescapeNewLine(true)
+		}
+
+		// Deserialize bytes into object
+		obj, err := serializer.New(input.Format).Type(input.Type).Deserialize(b)
+		if err != nil {
+			return nil, errors.Wrap(err, "error deserializing object")
+		}
+		return obj, nil
 	}
 
 	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")

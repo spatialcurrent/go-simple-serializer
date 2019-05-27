@@ -115,7 +115,7 @@ func canStream(inputFormat string, outputFormat string, outputSorted bool) bool 
 
 func initInputFlags(flag *pflag.FlagSet) {
 	flag.StringP(flagInputFormat, "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
-	flag.StringSlice(flagInputHeader, gss.NoHeader, "The input header if the stdin input has no header.")
+	flag.StringSlice(flagInputHeader, []string{}, "The input header if the stdin input has no header.")
 	flag.StringP(flagInputComment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
 	flag.Bool(flagInputLazyQuotes, false, "allows lazy quotes for CSV and TSV")
 	flag.Int(flagInputSkipLines, gss.NoSkip, "The number of lines to skip before processing")
@@ -126,7 +126,7 @@ func initInputFlags(flag *pflag.FlagSet) {
 
 func initOutputFlags(flag *pflag.FlagSet) {
 	flag.StringP(flagOutputFormat, "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
-	flag.StringSlice(flagOutputHeader, gss.NoHeader, "The output header if the stdout output has no header.")
+	flag.StringSlice(flagOutputHeader, []string{}, "The output header if the stdout output has no header.")
 	flag.IntP(flagOutputLimit, "n", gss.NoLimit, "the output limit")
 	flag.BoolP(flagOutputPretty, "p", false, "print pretty output")
 	flag.BoolP(flagOutputSorted, "s", false, "sort output")
@@ -205,7 +205,7 @@ func main() {
 				return errors.New("output-format is required")
 			}
 
-			outputHeader := v.GetStringSlice("output-header")
+			outputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice("output-header"))
 
 			outputSorted := v.GetBool("output-sorted")
 
@@ -223,7 +223,7 @@ func main() {
 					Reader:       os.Stdin,
 					Type:         reflect.TypeOf([]map[string]interface{}{}),
 					Format:       inputFormat,
-					Header:       v.GetStringSlice("input-header"),
+					Header:       stringify.StringSliceToInterfaceSlice(v.GetStringSlice("input-header")),
 					SkipLines:    v.GetInt("input-skip-lines"),
 					SkipBlanks:   true,
 					SkipComments: true,
@@ -242,15 +242,10 @@ func main() {
 					p = p.InputLimit(inputLimit)
 				}
 
-				outputColumns := make([]interface{}, 0, len(outputHeader))
-				for _, str := range outputHeader {
-					outputColumns = append(outputColumns, str)
-				}
-
 				w, errorWriter := buildWriter(
 					os.Stdout,
 					outputFormat,
-					outputColumns,
+					outputHeader,
 					outputValueSerializer,
 					outputLineSeparator,
 					outputPretty)
@@ -278,14 +273,14 @@ func main() {
 			outputString, err := gss.Convert(&gss.ConvertInput{
 				InputBytes:              inputBytes,
 				InputFormat:             inputFormat,
-				InputHeader:             v.GetStringSlice(flagInputHeader),
+				InputHeader:             stringify.StringSliceToInterfaceSlice(v.GetStringSlice(flagInputHeader)),
 				InputComment:            v.GetString(flagInputComment),
 				InputLazyQuotes:         v.GetBool(flagInputLazyQuotes),
 				InputSkipLines:          v.GetInt(flagInputSkipLines),
 				InputLimit:              v.GetInt(flagInputLimit),
 				InputLineSeparator:      v.GetString(flagInputLineSeparator),
 				OutputFormat:            outputFormat,
-				OutputHeader:            v.GetStringSlice(flagOutputHeader),
+				OutputHeader:            outputHeader,
 				OutputLimit:             v.GetInt(flagOutputLimit),
 				OutputPretty:            v.GetBool(flagOutputPretty),
 				OutputSorted:            v.GetBool(flagOutputSorted),

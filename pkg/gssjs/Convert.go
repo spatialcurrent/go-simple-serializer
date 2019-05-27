@@ -10,8 +10,11 @@ package gssjs
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"honnef.co/go/js/console"
+)
+
+import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 
 // Convert is a function provided to gss.js that wraps gss.Convert to support JavaScript.
@@ -25,7 +28,7 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 	}
 
 	if v, ok := m["inputHeader"]; ok {
-		convertInput.InputHeader = toStringSlice(v)
+		convertInput.InputHeader = toInterfaceSlice(v)
 	}
 
 	if v, ok := m["inputComment"]; ok {
@@ -50,7 +53,7 @@ func Convert(inputString string, inputFormat string, outputFormat string, option
 	}
 
 	if v, ok := m["outputHeader"]; ok {
-		convertInput.OutputHeader = toStringSlice(v)
+		convertInput.OutputHeader = toInterfaceSlice(v)
 	}
 
 	if v, ok := m["outputLimit"]; ok {

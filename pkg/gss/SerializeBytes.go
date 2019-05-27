@@ -12,8 +12,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strconv"
-	"strings"
 )
 
 import (
@@ -25,7 +23,6 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	sv "github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 )
@@ -65,20 +62,23 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 	}
 
 	switch format {
-	case "bson", "json", "jsonl", "properties", "go", "toml", "yaml":
+	case "bson", "json", "jsonl", "properties", "go", "tags", "toml", "yaml":
 		s := serializer.New(format)
 		if format == "json" || format == "jsonl" {
 			s = s.Pretty(input.Pretty)
 		}
-		if format == "jsonl" || format == "properties" {
+		if format == "jsonl" || format == "properties" || format == "tags" {
 			s = s.LineSeparator(input.LineSeparator)
+		}
+		if format == "properties" || format == "tags" {
+			s = s.Sorted(input.Sorted) // sort
+		}
+		if format == "properties" || format == "tags" || format == "csv" || format == "tsv" {
+			s = s.ValueSerializer(valueSerializer)
 		}
 		if format == "properties" {
 			s = s.
-				Sorted(input.Sorted).
 				KeyValueSeparator(input.KeyValueSeparator).
-				LineSeparator(input.LineSeparator).
-				ValueSerializer(valueSerializer).
 				EscapePrefix(input.EscapePrefix).
 				EscapeSpace(input.EscapeSpace).
 				EscapeColon(input.EscapeColon).
@@ -151,53 +151,14 @@ func SerializeBytes(input *SerializeInput) ([]byte, error) {
 			// If there are no records then just return an empty string
 			return []byte(""), nil
 		}
-		// Write header and rows
-		headerAsStrings := make([]string, 0, len(header))
-		for _, x := range header {
-			headerAsStrings = append(headerAsStrings, fmt.Sprint(x))
-		}
 		buf := new(bytes.Buffer)
 		err = sv.Write(&sv.WriteInput{
 			Writer:    buf,
 			Separator: separator,
-			Header:    headerAsStrings,
+			Header:    stringify.InterfaceSliceToStringSlice(header),
 			Rows:      rows,
 		})
 		return buf.Bytes(), err
-	} else if format == "text" {
-		t := reflect.TypeOf(object)
-		if t.Kind() == reflect.Map {
-			if k := t.Key().Kind(); k != reflect.String {
-				return nil, errors.Wrap(&ErrInvalidKind{Value: k, Valid: []reflect.Kind{reflect.String}}, "can only serialize a map with string keys")
-			}
-			m := reflect.ValueOf(object)
-			keys := inspector.GetKeys(object, input.Sorted)
-			output := ""
-			for i, key := range keys {
-				value, err := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
-				if err != nil {
-					return nil, errors.Wrap(err, "error serializing value")
-				}
-				value = strings.Replace(value, "\"", "\\\"", -1)
-				if strings.Contains(value, " ") {
-					value = "\"" + value + "\""
-				}
-				output += fmt.Sprint(key) + "=" + value
-				if i < m.Len()-1 {
-					output += " "
-				}
-			}
-			return []byte(output), nil
-		}
-		switch obj := object.(type) {
-		case string:
-			return []byte(obj), nil
-		case int:
-			return []byte(strconv.Itoa(obj)), nil
-		case float64:
-			return []byte(strconv.FormatFloat(obj, 'f', -1, 64)), nil
-		}
-		return make([]byte, 0), errors.Wrap(&ErrInvalidKind{Value: reflect.TypeOf(object).Kind(), Valid: []reflect.Kind{reflect.Map, reflect.String, reflect.Int, reflect.Float64}}, "object is not valid")
 	}
 	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: format}, "could not serialize object")
 }

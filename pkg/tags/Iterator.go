@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package jsonl
+package tags
 
 import (
 	"io"
@@ -17,7 +17,6 @@ import (
 )
 
 import (
-	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
 
@@ -27,7 +26,6 @@ import (
 type Iterator struct {
 	Scanner      scanner.Scanner // the scanner that splits the underlying stream of bytes
 	Comment      string          // The comment line prefix.  Can be any string.
-	Trim         bool            // Trim each input line before parsing into an object.
 	SkipBlanks   bool            // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
 	SkipComments bool            // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
 	Limit        int             // Limit the number of objects to read and return from the underlying stream.
@@ -41,7 +39,6 @@ type NewIteratorInput struct {
 	SkipBlanks    bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
 	SkipComments  bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
 	Comment       string // The comment line prefix. Can be any string.
-	Trim          bool   // Trim each input line before parsing into an object.
 	Limit         int    // Limit the number of objects to read and return from the underlying stream.
 	LineSeparator byte   // The new line byte.
 	DropCR        bool   // Drop carriage returns at the end of lines.
@@ -58,7 +55,6 @@ func NewIterator(input *NewIteratorInput) *Iterator {
 	return &Iterator{
 		Scanner:      s,
 		Comment:      input.Comment,
-		Trim:         input.Trim,
 		SkipBlanks:   input.SkipBlanks,
 		SkipComments: input.SkipComments,
 		Limit:        input.Limit,
@@ -81,10 +77,7 @@ func (it *Iterator) Next() (interface{}, error) {
 	it.Count++
 
 	if it.Scanner.Scan() {
-		line := it.Scanner.Text()
-		if it.Trim {
-			line = strings.TrimSpace(line)
-		}
+		line := strings.TrimSpace(it.Scanner.Text())
 		if len(line) == 0 {
 			if it.SkipBlanks {
 				return it.Next()
@@ -97,9 +90,9 @@ func (it *Iterator) Next() (interface{}, error) {
 			}
 			return nil, nil
 		}
-		obj, err := json.Unmarshal([]byte(line))
+		obj, err := Unmarshal([]byte(line))
 		if err != nil {
-			return obj, errors.Wrap(err, "eror unmarshaling next JSON object")
+			return obj, errors.Wrap(err, "eror unmarshaling next tags object")
 		}
 		return obj, nil
 	}

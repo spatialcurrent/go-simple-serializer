@@ -5,17 +5,19 @@
 //
 // =================================================================
 
-package gss
+package tags
 
 import (
 	"fmt"
+	"reflect"
 )
 
-// ToStringSlice converts a slice of interface{} to a slice of strings using fmt.Sprint.
-func ToStringSlice(keys []interface{}) []string {
-	stringSlice := make([]string, 0, len(keys))
-	for _, v := range keys {
-		stringSlice = append(stringSlice, fmt.Sprint(v))
-	}
-	return stringSlice
+type ErrInvalidKind struct {
+	Value    reflect.Type
+	Expected []reflect.Kind
+}
+
+// Error returns the error formatted as a string.
+func (e ErrInvalidKind) Error() string {
+	return fmt.Sprintf("type %q is of invalid kind, expecting one of %q", e.Value, e.Expected)
 }

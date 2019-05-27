@@ -28,19 +28,19 @@ type Iterator interface {
 
 // Input for NewIterator function.
 type NewIteratorInput struct {
-	Reader        io.Reader    // the underlying reader
-	Format        string       // the format
-	Header        []interface{}     // for csv and tsv, the header.  If not given, then reads first line of stream as header.
-	SkipLines     int          // Skip a given number of lines at the beginning of the stream.
-	SkipBlanks    bool         // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	SkipComments  bool         // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	Comment       string       // The comment line prefix.  CSV and TSV only support single characters.  JSON Lines support any string.
-	Trim          bool         // Trim each input line before parsing into an object.
-	LazyQuotes    bool         // for csv and tsv, parse with lazy quotes
-	Limit         int          // Limit the number of objects to read and return from the underlying stream.
-	LineSeparator byte         // For JSON Lines, the new line byte.
-	DropCR        bool         // For JSON Lines, drop carriage returns at the end of lines.
-	Type          reflect.Type //
+	Reader        io.Reader     // the underlying reader
+	Format        string        // the format
+	Header        []interface{} // for csv and tsv, the header.  If not given, then reads first line of stream as header.
+	SkipLines     int           // Skip a given number of lines at the beginning of the stream.
+	SkipBlanks    bool          // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	SkipComments  bool          // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	Comment       string        // The comment line prefix.  CSV and TSV only support single characters.  JSON Lines support any string.
+	Trim          bool          // Trim each input line before parsing into an object.
+	LazyQuotes    bool          // for csv and tsv, parse with lazy quotes
+	Limit         int           // Limit the number of objects to read and return from the underlying stream.
+	LineSeparator byte          // For JSON Lines, the new line byte.
+	DropCR        bool          // For JSON Lines, drop carriage returns at the end of lines.
+	Type          reflect.Type  //
 }
 
 // NewIterator returns an Iterator for the given input source, format, and other options.

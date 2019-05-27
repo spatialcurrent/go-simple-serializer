@@ -19,6 +19,10 @@ import (
 )
 
 import (
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+)
+
+import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 
@@ -30,13 +34,13 @@ func Convert(inputString *C.char, inputFormat *C.char, inputHeader *C.char, inpu
 	s, err := gss.Convert(&gss.ConvertInput{
 		InputBytes:      []byte(C.GoString(inputString)),
 		InputFormat:     C.GoString(inputFormat),
-		InputHeader:     strings.Split(C.GoString(inputHeader), ","),
+		InputHeader:     stringify.StringSliceToInterfaceSlice(strings.Split(C.GoString(inputHeader), ",")),
 		InputComment:    C.GoString(inputComment),
 		InputLazyQuotes: int(inputLazyQuotes) > 0,
 		InputSkipLines:  int(inputSkipLines),
 		InputLimit:      int(inputLimit),
 		OutputFormat:    C.GoString(outputFormat),
-		OutputHeader:    strings.Split(C.GoString(outputHeader), ","),
+		OutputHeader:    stringify.StringSliceToInterfaceSlice(strings.Split(C.GoString(outputHeader), ",")),
 		OutputLimit:     int(outputLimit),
 		OutputPretty:    int(outputPretty) > 0,
 		OutputSorted:    int(outputSorted) > 0,

@@ -42,8 +42,17 @@ bin/gss_linux_arm64:
 	GOOS=linux GOARCH=arm64 go build -o $(DEST)/gss_linux_arm64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
 
 # Build Shared Object
-bin/gss.so:
-	go build -o $(DEST)/gss.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-simple-serializer/plugins/gss
+bin/gss_linux_amd64.so:
+	# https://golang.org/cmd/link/
+	# CGO Enabled : https://github.com/golang/go/issues/24068
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o $(DEST)/gss_linux_amd64.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-simple-serializer/plugins/gss
+
+bin/gss_linux_armv7.so:
+	# LDFLAGS - https://golang.org/cmd/link/
+	# CGO Enabled  - https://github.com/golang/go/issues/24068
+	# GOARM/GOARCH Compatability Table - https://github.com/golang/go/wiki/GoArm
+	# ARM Cross Compiler Required - https://www.acmesystems.it/arm9_toolchain
+	GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CC=arm-linux-gnueabi-gcc go build -ldflags "-linkmode external -extldflags -static" -o $(DEST)/gss_linux_armv7.so -buildmode=c-shared -ldflags "$(LDFLAGS)" -gcflags="$(GCFLAGS)" github.com/spatialcurrent/go-simple-serializer/plugins/gss
 
 # Build JavaScript Library
 bin/gss.js:
@@ -63,7 +72,7 @@ build_javascript: bin/gss.js bin/gss.min.js
 
 build_android: bin/gss.arr
 
-build_so: bin/gss.so
+build_so: bin/gss_linux_amd64.so bin/gss_linux_armv7.so
 
 build: build_cli build_javascript build_so build_android
 

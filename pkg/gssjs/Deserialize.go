@@ -31,7 +31,7 @@ func Deserialize(inputString string, inputFormat string, options *js.Object) int
 	async := false
 
 	if v, ok := m["header"]; ok {
-		inputHeader = toStringSlice(v)
+		inputHeader = toInterfaceSlice(v)
 	}
 
 	if v, ok := m["inputComment"]; ok {

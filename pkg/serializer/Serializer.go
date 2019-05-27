@@ -14,6 +14,9 @@ import (
 )
 
 import (
+	"github.com/hashicorp/hcl"
+	hcl2 "github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/pkg/errors"
 )
 
@@ -26,16 +29,21 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
 )
 
 const (
+	FormatBSON       = "bson"
 	FormatCSV        = "csv"
 	FormatTSV        = "tsv"
 	FormatJSON       = "json"
 	FormatJSONL      = "jsonl"
 	FormatProperties = "properties"
+	FormatTags       = "tags"
+	FormatHCL        = "hcl"
+	FormatHCL2       = "hcl2"
 )
 
 // UnmarshalTypeFunc is a function for unmarshaling bytes into an object of a given type.
@@ -72,7 +80,7 @@ var (
 	}
 )
 
-// Serializer is a struct for serializing/deserializing objects.
+// Serializer is a struct for serializing/deserializing objects.  This is the workhorse of the gss package.
 type Serializer struct {
 	format            string       // one of gss.Formats
 	header            []string     // if formt as csv or tsv, the column names
@@ -238,11 +246,28 @@ func (s *Serializer) ValueSerializer(valueSerializer func(object interface{}) (s
 // Deserialize deserializes the input slice of bytes into an object and returns an error, if any.
 func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 	switch s.format {
-	case "bson", FormatJSON, "toml", "yaml":
+	case FormatBSON, FormatJSON, "toml", "yaml":
 		if s.objectType != nil {
 			return UnmarshalTypeFuncs[s.format](b, s.objectType)
 		}
 		return UnmarshalFuncs[s.format](b)
+	case FormatHCL:
+		ptr := reflect.New(s.objectType)
+		ptr.Elem().Set(reflect.MakeMap(s.objectType))
+		obj, err := hcl.Parse(string(b))
+		if err != nil {
+			return nil, errors.Wrap(err, "Error parsing hcl")
+		}
+		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
+			return nil, errors.Wrap(err, "Error decoding hcl")
+		}
+		return ptr.Elem().Interface(), nil
+	case FormatHCL2:
+		file, diags := hclsyntax.ParseConfig(b, "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
+		if diags.HasErrors() {
+			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
+		}
+		return &file.Body, nil
 	case FormatProperties:
 		return properties.Read(&properties.ReadInput{
 			Type:            s.objectType,
@@ -256,14 +281,28 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 			UnescapeColon:   s.unescapeColon,
 			UnescapeNewLine: s.unescapeNewLine,
 		})
+	case FormatTags:
+		return properties.Read(&properties.ReadInput{
+			Type:          s.objectType,
+			Reader:        bytes.NewReader(b),
+			LineSeparator: []byte(s.lineSeparator)[0],
+			DropCR:        s.dropCR,
+			Comment:       s.comment,
+		})
 	}
 	return nil, &ErrUnknownFormat{Name: s.format}
 }
 
 // Serialize serializes an object into a slice of byte and returns and error, if any.
 func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
+
+	valueSerializer := s.valueSerializer
+	if valueSerializer == nil {
+		valueSerializer = stringify.DefaultValueStringer("")
+	}
+
 	switch s.format {
-	case "bson":
+	case FormatBSON:
 		return bson.Marshal(stringify.StringifyMapKeys(object))
 	case FormatCSV, FormatTSV:
 		return make([]byte, 0), errors.New("not implemented")
@@ -272,10 +311,6 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	case FormatJSONL:
 		return jsonl.Marshal(object, s.lineSeparator, s.pretty)
 	case FormatProperties:
-		valueSerializer := s.valueSerializer
-		if valueSerializer == nil {
-			valueSerializer = stringify.DefaultValueStringer("")
-		}
 		buf := new(bytes.Buffer)
 		err := properties.Write(&properties.WriteInput{
 			Writer:            buf,
@@ -293,7 +328,20 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		if err != nil {
 			return make([]byte, 0), errors.Wrap(err, "error writing properties")
 		}
-		return buf.Bytes(), err
+		return buf.Bytes(), nil
+	case FormatTags:
+		buf := new(bytes.Buffer)
+		err := tags.Write(&tags.WriteInput{
+			Writer:          buf,
+			LineSeparator:   s.lineSeparator,
+			Object:          object,
+			ValueSerializer: valueSerializer,
+			Sorted:          s.sorted,
+		})
+		if err != nil {
+			return make([]byte, 0), errors.Wrap(err, "error writing tags")
+		}
+		return buf.Bytes(), nil
 	case "go", "toml", "yaml":
 		return MarshalFuncs[s.format](object)
 	}

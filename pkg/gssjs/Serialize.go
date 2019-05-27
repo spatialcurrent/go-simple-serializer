@@ -27,7 +27,7 @@ func Serialize(inputObject interface{}, outputFormat string, options *js.Object)
 	outputPretty := false
 
 	if v, ok := m["outputHeader"]; ok {
-		outputHeader = toStringSlice(v)
+		outputHeader = toInterfaceSlice(v)
 	}
 
 	if v, ok := m["outputLimit"]; ok {

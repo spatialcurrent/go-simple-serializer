@@ -5,13 +5,14 @@
 //
 // =================================================================
 
-package sv
+package tags
 
 import (
-	"reflect"
+	"io"
 )
 
-// CreateHeaderAndKnownKeys returns an object's keys or field names as a slice and set.
-func CreateHeaderAndKnownKeys(object interface{}, sorted bool) ([]interface{}, map[interface{}]struct{}) {
-	return CreateHeaderAndKnownKeysFromValue(reflect.ValueOf(object), sorted)
+// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
+type WriteFlusher interface {
+	io.Writer
+	Flusher
 }

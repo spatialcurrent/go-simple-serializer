@@ -30,3 +30,19 @@ func TestCreateHeaderAndKnownKeys(t *testing.T) {
 	assert.Equal(t, []interface{}{"a", "b", "c"}, header)
 	assert.Equal(t, expectedKnownKeys, knownKeys)
 }
+
+func TestCreateHeaderAndKnownKeysPointer(t *testing.T) {
+	in := map[string]interface{}{
+		"a": "x",
+		"b": "y",
+		"c": "z",
+	}
+	expectedKnownKeys := map[interface{}]struct{}{
+		"a": struct{}{},
+		"b": struct{}{},
+		"c": struct{}{},
+	}
+	header, knownKeys := CreateHeaderAndKnownKeys(&in, true)
+	assert.Equal(t, []interface{}{"a", "b", "c"}, header)
+	assert.Equal(t, expectedKnownKeys, knownKeys)
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 )
 
+// CreateHeaderAndKnownKeysFromValue returns an object's keys or field names as a slice and set.
 func CreateHeaderAndKnownKeysFromValue(objectValue reflect.Value, sorted bool) ([]interface{}, map[interface{}]struct{}) {
 	for objectValue.Type().Kind() == reflect.Ptr {
 		objectValue = objectValue.Elem()
