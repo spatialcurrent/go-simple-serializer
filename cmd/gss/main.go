@@ -7,6 +7,22 @@
 
 // gss is the command line program for go-simple-serializer (GSS).
 //
+// Usage
+//
+// Use `gss help` to see full help documentation.
+//
+//	gss -i INPUT_FORMAT -o OUTPUT_FORMAT [flags]
+//
+// Examples
+//
+//	# convert .gitignore to JSON
+//	cat .gitignore | gss -i csv --input-header path -o json
+//
+//	# extract version from CircleCI config
+//	cat .circleci/config.yml | gss -i yaml -o json -c '#' | jq -r .version
+//
+//	# convert list of files to JSON Lines
+//	find . -name '*.go' | gss -i csv --input-header path -o jsonl
 package main
 
 import (
@@ -14,43 +30,52 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 )
 
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
-	"github.com/spatialcurrent/go-simple-serializer/gss"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+)
+
+import (
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 )
 
-var gitTag string
 var gitBranch string
 var gitCommit string
 
-func buildValueSerializer(decimal bool, noDataValue string) func(object interface{}) (string, error) {
-	if decimal {
-		return sv.DecimalValueSerializer(noDataValue)
-	}
-	return sv.DefaultValueSerializer(noDataValue)
-}
-
-func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputValueSerializer func(object interface{}) (string, error)) (pipe.Writer, error) {
+func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputKeySerializer stringify.Stringer, outputValueSerializer stringify.Stringer, outputLineSeparator string, outputPretty bool, outputSorted bool, outputReversed bool) (pipe.Writer, error) {
 	if outputFormat == "csv" || outputFormat == "tsv" {
 		separator, err := sv.FormatToSeparator(outputFormat)
 		if err != nil {
 			return nil, err
 		}
-		return sv.NewWriter(outputWriter, separator, outputHeader, outputValueSerializer), nil
+		w := sv.NewWriter(
+			outputWriter,
+			separator,
+			outputHeader,
+			outputKeySerializer,
+			outputValueSerializer,
+			outputSorted,
+			outputReversed,
+		)
+		return w, nil
 	} else if outputFormat == "jsonl" {
-		return jsonl.NewWriter(outputWriter), nil
+		return jsonl.NewWriter(outputWriter, outputLineSeparator, outputKeySerializer, outputPretty), nil
 	}
 	return nil, fmt.Errorf("invalid format %q", outputFormat)
 }
@@ -70,38 +95,76 @@ func canStream(inputFormat string, outputFormat string, outputSorted bool) bool 
 	return false
 }
 
+func initFlags(flag *pflag.FlagSet, formats []string) {
+	cli.InitInputFlags(flag, formats)
+	cli.InitOutputFlags(flag, formats)
+}
+
+func checkConfig(v *viper.Viper, formats []string) error {
+	if err := cli.CheckInput(v, formats); err != nil {
+		return err
+	}
+	if err := cli.CheckOutput(v, formats); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
+
+	formats := serializer.Formats
+
 	rootCommand := &cobra.Command{
-		Use:   "gss",
-		Short: "gss",
-		Long:  `gss is a simple program for serializing/deserializing data.`,
+		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
+		DisableFlagsInUseLine: false,
+		Short:                 "gss",
+		Long:                  `gss is a simple program for serializing/deserializing data.`,
+		SilenceUsage:          true,
+		SilenceErrors:         true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
-			err := v.BindPFlags(cmd.Flags())
-			if err != nil {
-				return err
+
+			if errorBind := v.BindPFlags(cmd.Flags()); errorBind != nil {
+				return errorBind
 			}
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv()
 
-			inputFormat := v.GetString("input-format")
-
-			if len(inputFormat) == 0 {
-				return errors.New("input-format is required")
+			if errorConfig := checkConfig(v, formats); errorConfig != nil {
+				return errorConfig
 			}
 
-			outputFormat := v.GetString("output-format")
+			inputFormat := v.GetString(cli.FlagInputFormat)
 
-			if len(outputFormat) == 0 {
-				return errors.New("output-format is required")
-			}
+			inputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagInputHeader))
 
-			outputHeader := v.GetStringSlice("output-header")
+			outputFormat := v.GetString(cli.FlagOutputFormat)
 
-			outputSorted := v.GetBool("output-sorted")
+			outputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagOutputHeader))
 
-			outputValueSerializer := buildValueSerializer(v.GetBool("output-decimal"), v.GetString("output-no-data-value"))
+			outputSorted := v.GetBool(cli.FlagOutputSorted)
+			outputReversed := v.GetBool(cli.FlagOutputReversed)
+
+			outputLineSeparator := v.GetString(cli.FlagOutputLineSeparator)
+
+			outputKeySerializer := stringify.NewStringer(
+				"",
+				v.GetBool(cli.FlagOutputDecimal),
+				v.GetBool(cli.FlagOutputKeyLower),
+				v.GetBool(cli.FlagOutputKeyUpper),
+			)
+
+			outputValueSerializer := stringify.NewStringer(
+				v.GetString(cli.FlagOutputNoDataValue),
+				v.GetBool(cli.FlagOutputDecimal),
+				v.GetBool(cli.FlagOutputValueLower),
+				v.GetBool(cli.FlagOutputValueUpper),
+			)
+
+			outputPretty := v.GetBool(cli.FlagOutputPretty)
+
+			outputLimit := v.GetInt(cli.FlagOutputLimit)
 
 			if canStream(inputFormat, outputFormat, outputSorted) {
 
@@ -109,12 +172,14 @@ func main() {
 
 				it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 					Reader:       os.Stdin,
+					Type:         reflect.TypeOf([]map[string]interface{}{}),
 					Format:       inputFormat,
-					SkipLines:    v.GetInt("input-skip-lines"),
+					Header:       inputHeader,
+					SkipLines:    v.GetInt(cli.FlagInputSkipLines),
 					SkipBlanks:   true,
 					SkipComments: true,
-					Comment:      v.GetString("input-comment"),
-					Trim:         v.GetBool("input-trim"),
+					Comment:      v.GetString(cli.FlagInputComment),
+					Trim:         v.GetBool(cli.FlagInputTrim),
 				})
 				if it == nil {
 					return errors.New(fmt.Sprintf("error building input iterator with format %q", inputFormat))
@@ -128,22 +193,23 @@ func main() {
 					p = p.InputLimit(inputLimit)
 				}
 
-				outputColumns := make([]interface{}, 0, len(outputHeader))
-				for _, str := range outputHeader {
-					outputColumns = append(outputColumns, str)
-				}
-
 				w, errorWriter := buildWriter(
 					os.Stdout,
 					outputFormat,
-					outputColumns,
-					outputValueSerializer)
+					outputHeader,
+					outputKeySerializer,
+					outputValueSerializer,
+					outputLineSeparator,
+					outputPretty,
+					outputSorted,
+					outputReversed,
+				)
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")
 				}
 				p = p.Output(w)
 
-				if outputLimit := v.GetInt("output-limit"); outputLimit >= 0 {
+				if outputLimit >= 0 {
 					p = p.OutputLimit(outputLimit)
 				}
 
@@ -159,47 +225,49 @@ func main() {
 				return errors.Wrap(err, "error reading from stdin")
 			}
 
-			outputString, err := gss.Convert(&gss.ConvertInput{
-				InputBytes:            inputBytes,
-				InputFormat:           inputFormat,
-				InputHeader:           v.GetStringSlice("input-header"),
-				InputComment:          v.GetString("input-comment"),
-				InputLazyQuotes:       v.GetBool("input-lazy-quotes"),
-				InputSkipLines:        v.GetInt("input-skip-lines"),
-				InputLimit:            v.GetInt("input-limit"),
-				OutputFormat:          outputFormat,
-				OutputHeader:          v.GetStringSlice("output-header"),
-				OutputLimit:           v.GetInt("output-limit"),
-				OutputPretty:          v.GetBool("output-pretty"),
-				OutputSorted:          v.GetBool("output-sorted"),
-				OutputValueSerializer: outputValueSerializer,
-				Async:                 v.GetBool("async"),
-				Verbose:               v.GetBool("verbose"),
+			outputBytes, err := gss.Convert(&gss.ConvertInput{
+				InputBytes:              inputBytes,
+				InputFormat:             inputFormat,
+				InputHeader:             inputHeader,
+				InputComment:            v.GetString(cli.FlagInputComment),
+				InputLazyQuotes:         v.GetBool(cli.FlagInputLazyQuotes),
+				InputSkipLines:          v.GetInt(cli.FlagInputSkipLines),
+				InputLimit:              v.GetInt(cli.FlagInputLimit),
+				InputLineSeparator:      v.GetString(cli.FlagInputLineSeparator),
+				InputEscapePrefix:       v.GetString(cli.FlagInputEscapePrefix),
+				InputUnescapeSpace:      v.GetBool(cli.FlagInputUnescapeSpace),
+				InputUnescapeNewLine:    v.GetBool(cli.FlagInputUnescapeNewLine),
+				InputUnescapeEqual:      v.GetBool(cli.FlagInputUnescapeEqual),
+				OutputFormat:            outputFormat,
+				OutputHeader:            outputHeader,
+				OutputLimit:             outputLimit,
+				OutputPretty:            v.GetBool(cli.FlagOutputPretty),
+				OutputSorted:            outputSorted,
+				OutputReversed:          outputReversed,
+				OutputKeySerializer:     outputKeySerializer,
+				OutputValueSerializer:   outputValueSerializer,
+				OutputLineSeparator:     v.GetString(cli.FlagOutputLineSeparator),
+				OutputKeyValueSeparator: v.GetString(cli.FlagOutputKeyValueSeparator),
+				OutputEscapePrefix:      v.GetString(cli.FlagOutputEscapePrefix),
+				OutputEscapeSpace:       v.GetBool(cli.FlagOutputEscapeSpace),
+				OutputEscapeNewLine:     v.GetBool(cli.FlagOutputEscapeNewLine),
+				OutputEscapeEqual:       v.GetBool(cli.FlagOutputEscapeEqual),
 			})
 			if err != nil {
 				return errors.Wrap(err, "error converting")
 			}
-			fmt.Println(outputString)
+			switch outputFormat {
+			case serializer.FormatCSV, serializer.FormatJSONL, serializer.FormatProperties, serializer.FormatTags, serializer.FormatTOML, serializer.FormatTSV, serializer.FormatYAML:
+				// do not include trailing new line, since it comes with the output
+				fmt.Print(string(outputBytes))
+			default:
+				// print trailing new line for all others
+				fmt.Println(string(outputBytes))
+			}
 			return nil
 		},
 	}
-	flags := rootCommand.Flags()
-	flags.StringP("input-format", "i", "", "The input format: "+strings.Join(gss.Formats, ", "))
-	flags.StringSlice("input-header", []string{}, "The input header if the stdin input has no header.")
-	flags.StringP("input-comment", "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
-	flags.Bool("input-lazy-quotes", false, "allows lazy quotes for CSV and TSV")
-	flags.Int("input-skip-lines", gss.NoSkip, "The number of lines to skip before processing")
-	flags.IntP("input-limit", "l", gss.NoLimit, "The input limit")
-	flags.BoolP("input-trim", "t", false, "trim input lines")
-	flags.StringP("output-format", "o", "", "The output format: "+strings.Join(gss.Formats, ", "))
-	flags.StringSlice("output-header", []string{}, "The output header if the stdout output has no header.")
-	flags.IntP("output-limit", "n", gss.NoLimit, "the output limit")
-	flags.BoolP("output-pretty", "p", false, "print pretty output")
-	flags.BoolP("output-sorted", "s", false, "sort output")
-	flags.BoolP("output-decimal", "d", false, "when converting floats to strings use decimals rather than scientific notation")
-	flags.StringP("output-no-data-value", "0", "", "no data value, e.g., used for missing values when converting JSON to CSV")
-	flags.BoolP("async", "a", false, "async processing")
-	flags.Bool("verbose", false, "Print debug info to stdout")
+	initFlags(rootCommand.Flags(), formats)
 
 	completionCommandLong := ""
 	if _, err := os.Stat("/etc/bash_completion.d/"); !os.IsNotExist(err) {
@@ -227,9 +295,6 @@ func main() {
 		Short: "print version information to stdout",
 		Long:  "print version information to stdout",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(gitTag) > 0 {
-				fmt.Println("Tag: " + gitTag)
-			}
 			if len(gitBranch) > 0 {
 				fmt.Println("Branch: " + gitBranch)
 			}
@@ -243,7 +308,8 @@ func main() {
 	rootCommand.AddCommand(version)
 
 	if err := rootCommand.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		fmt.Fprintf(os.Stderr, "Error: "+err.Error()+"\n")
+		fmt.Fprintf(os.Stderr, "Help: gss -h\n")
 		os.Exit(1)
 	}
 }

@@ -29,11 +29,11 @@ convert.restype = c_char_p
 input_string = "{\"a\":\"b\",\"c\":[\"d\"]}"
 output_string_pointer = c_char_p()
 
-print "Version:", version
+print version()
 
 print input_string
 
-err = convert(input_string, "json", "", "", "yaml", byref(output_string_pointer))
+err = convert(input_string, "json", "yaml", "", "", byref(output_string_pointer))
 if err != None:
     print("error: %s" % (str(err, encoding='utf-8')))
     sys.exit(1)

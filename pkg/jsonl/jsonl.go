@@ -5,5 +5,19 @@
 //
 // =================================================================
 
-// Package jsonl includes iterators for reading from JSON Lines files and writers for writing JSON Lines.
+// Package jsonl provides a simple API for reading and writing to JSON Lines (aka jsonl).
+// jsonl also supports iterators for efficiently reading through a stream.
+// jsonl uses the github.com/spatialcurrent/go-simple-serializer/pkg/json for marshaling/unmarshaling JSON.
+// See the examples below for usage.
+//
+//  - https://godoc.org/pkg/github.com/spatialcurrent/go-simple-serializer/pkg/json
 package jsonl
+
+import (
+	"github.com/pkg/errors"
+)
+
+var (
+	ErrMissingType          = errors.New("missing type")
+	ErrMissingLineSeparator = errors.New("missing line separator")
+)

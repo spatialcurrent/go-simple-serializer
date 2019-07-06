@@ -29,57 +29,59 @@ func TestIterator(t *testing.T) {
   `
 
 	it := NewIterator(&NewIteratorInput{
-		Reader:       strings.NewReader(text),
-		SkipLines:    0,
-		Comment:      "",
-		Trim:         true,
-		SkipBlanks:   false,
-		SkipComments: false,
+		Reader:        strings.NewReader(text),
+		SkipLines:     0,
+		Comment:       "",
+		Trim:          true,
+		SkipBlanks:    false,
+		SkipComments:  false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Empty Line
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"a": "b"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"c": "d"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"e": "f"}, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, false, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, true, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, "foo", obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, "bar", obj)
 
 	// Empty line returns nil object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	// Should return io.EOF to indicate the reader is finished
@@ -101,36 +103,38 @@ func TestIteratorComment(t *testing.T) {
   `
 
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(text),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: false,
+		Reader:        strings.NewReader(text),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Empty Line
 	obj, err := it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"a": "b"}, obj)
 
 	// Commented line returns nil object
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, obj)
 	assert.Equal(t, map[string]interface{}{"e": "f"}, obj)
 
 	// Empty Line
 	obj, err = it.Next()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, obj)
 
 	// Should return io.EOF to indicate the reader is finished
@@ -141,11 +145,13 @@ func TestIteratorComment(t *testing.T) {
 
 func TestIteratorEmpty(t *testing.T) {
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(""),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: false,
+		Reader:        strings.NewReader(""),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    false,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Should return io.EOF to indicate the reader is finished
@@ -156,11 +162,13 @@ func TestIteratorEmpty(t *testing.T) {
 
 func TestIteratorBlanks(t *testing.T) {
 	it := NewIterator(&NewIteratorInput{
-		Reader:     strings.NewReader(strings.Repeat("\n", 5)),
-		SkipLines:  0,
-		Comment:    "#",
-		Trim:       true,
-		SkipBlanks: true,
+		Reader:        strings.NewReader(strings.Repeat("\n", 5)),
+		SkipLines:     0,
+		Comment:       "#",
+		Trim:          true,
+		SkipBlanks:    true,
+		LineSeparator: []byte("\n")[0],
+		DropCR:        true,
 	})
 
 	// Should return io.EOF to indicate the reader is finished

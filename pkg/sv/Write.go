@@ -8,28 +8,194 @@
 package sv
 
 import (
-	"encoding/csv"
+	"fmt"
+	"io"
+	"reflect"
+	"sort"
 )
 
-// WriteSV writes the given rows as separated values.
+import (
+	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/spatialcurrent/go-pipe/pkg/pipe"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+)
+
+// WriteInput provides the input for the Write function.
+type WriteInput struct {
+	Writer          io.Writer // the underlying writer
+	Separator       rune      // the values separator
+	Header          []interface{}
+	KeySerializer   stringify.Stringer
+	ValueSerializer stringify.Stringer
+	Object          interface{} // the object to write
+	ExpandHeader    bool        // dynamically expand header, requires caching output in memory
+	Sorted          bool        // sort columns
+	Reversed        bool        // if sorted, sort in reverse alphabetical order.
+	Limit           int
+}
+
+// Write writes the given object(s) as separated values, e.g., CSV or T
+// If the type of the input object is of kind Array or Slice, then writes each object on its own line.
+// Otherwise, just writes a CSV with a header and one row for the object.
 func Write(input *WriteInput) error {
+	inputObject := input.Object
+	inputObjectValue := reflect.ValueOf(inputObject)
+	for reflect.TypeOf(inputObjectValue.Interface()).Kind() == reflect.Ptr {
+		inputObjectValue = inputObjectValue.Elem()
+	}
+	inputObjectValue = reflect.ValueOf(inputObjectValue.Interface()) // sets value to concerete type
+	inputObjectKind := inputObjectValue.Type().Kind()
 
-	// Create a new CSV writer.
-	csvWriter := csv.NewWriter(input.Writer)
+	if input.ExpandHeader {
 
-	// set the values separator
-	csvWriter.Comma = input.Separator
+		// set the key serializer
+		keySerializer := input.KeySerializer
+		if keySerializer == nil {
+			keySerializer = stringify.NewStringer("", false, false, false)
+		}
 
-	// Write the header to the underlying writer.
-	err := csvWriter.Write(input.Header)
-	if err != nil {
-		return err
+		// set the value serializer
+		valueSerializer := input.ValueSerializer
+		if valueSerializer == nil {
+			valueSerializer = stringify.NewStringer("", false, false, false)
+		}
+
+		// initialize header, wildcard, and known keys
+		header := input.Header
+		wildcard := false
+		knownKeys := map[interface{}]struct{}{}
+		if len(header) > 0 {
+			for _, k := range header {
+				if k == "*" {
+					wildcard = true
+				} else {
+					knownKeys[k] = struct{}{}
+				}
+			}
+			if input.Sorted {
+				sort.Slice(header, func(i, j int) bool {
+					return (fmt.Sprint(header[i]) < fmt.Sprint(header[j])) && (!input.Reversed)
+				})
+			}
+		}
+
+		rows := make([][]string, 0)
+
+		switch inputObjectKind {
+		case reflect.Map, reflect.Struct:
+			if len(header) == 0 {
+				header, _ = CreateHeaderAndKnownKeysFromValue(inputObjectValue, input.Sorted, input.Reversed)
+			} else if wildcard {
+				header, _ = ExpandHeaderWithWildcard(header, knownKeys, inputObjectValue, input.Sorted, input.Reversed)
+			} else {
+				header, _ = ExpandHeader(header, knownKeys, inputObjectValue, input.Sorted, input.Reversed)
+			}
+			row, err := ToRowFromValue(inputObjectValue, header, valueSerializer)
+			if err != nil {
+				return errors.Wrap(err, "error serializing object to row")
+			}
+			rows = append(rows, row)
+		case reflect.Array, reflect.Slice:
+			if inputObjectValue.Len() == 0 {
+				// If there are no records then just return an empty string
+				return nil
+			}
+			if len(header) == 0 {
+				header, knownKeys = CreateHeaderAndKnownKeysFromValue(inputObjectValue.Index(0), input.Sorted, input.Reversed)
+				for i := 0; i < inputObjectValue.Len() && (input.Limit < 0 || i <= input.Limit); i++ {
+					header, knownKeys = ExpandHeader(header, knownKeys, concerete(inputObjectValue.Index(i)), input.Sorted, input.Reversed)
+					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
+					if err != nil {
+						return errors.Wrap(err, "error serializing object to row")
+					}
+					rows = append(rows, row)
+				}
+			} else if wildcard {
+				// With a wildcard, must expand header before creating rows
+				for i := 0; i < inputObjectValue.Len() && (input.Limit < 0 || i <= input.Limit); i++ {
+					header, knownKeys = ExpandHeaderWithWildcard(header, knownKeys, concerete(inputObjectValue.Index(i)), input.Sorted, input.Reversed)
+				}
+				header = RemoveWildcard(header)
+				for i := 0; i < inputObjectValue.Len() && (input.Limit < 0 || i <= input.Limit); i++ {
+					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
+					if err != nil {
+						return errors.Wrap(err, "error serializing object to row")
+					}
+					rows = append(rows, row)
+				}
+			} else {
+				// If the length of the initial header is greater than zero and does not include a wildcard.
+				// Can expand header inline
+				for i := 0; i < inputObjectValue.Len() && (input.Limit < 0 || i <= input.Limit); i++ {
+					header, knownKeys = ExpandHeader(header, knownKeys, concerete(inputObjectValue.Index(i)), input.Sorted, input.Reversed)
+					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
+					if err != nil {
+						return errors.Wrap(err, "error serializing object to row")
+					}
+					rows = append(rows, row)
+				}
+			}
+		}
+		outputHeader, errStringifyHeader := stringify.StringifySlice(header, keySerializer)
+		if errStringifyHeader != nil {
+			return errors.Wrapf(errStringifyHeader, "error stringifying header %q", header)
+		}
+		errWriteTable := WriteTable(&WriteTableInput{
+			Writer:    input.Writer,
+			Separator: input.Separator,
+			Header:    outputHeader,
+			Rows:      rows,
+			Sorted:    input.Sorted && !wildcard, // if sorted and no specific wilcard position
+			Reversed:  input.Reversed,
+		})
+		return errors.Wrap(errWriteTable, "error writing table to underlying writer")
 	}
 
-	// WriteAll will write all the rows to the underlying io.Writer and then flushes.
-	err = csvWriter.WriteAll(input.Rows)
-	if err != nil {
-		return err
+	// if streaming and not expanding header.
+	p := pipe.NewBuilder().OutputLimit(input.Limit)
+	if inputObjectKind == reflect.Array || inputObjectKind == reflect.Slice {
+		it, errorIterator := pipe.NewSliceIterator(inputObject)
+		if errorIterator != nil {
+			return errors.Wrap(errorIterator, "error creating slice iterator")
+		}
+		p = p.Input(it)
+		p = p.Output(NewWriter(
+			input.Writer,
+			input.Separator,
+			input.Header,
+			input.KeySerializer,
+			input.ValueSerializer,
+			input.Sorted,
+			input.Reversed,
+		))
+		errorRun := p.Run()
+		if errorRun != nil {
+			return errors.Wrap(errorRun, "error serializing separated values")
+		}
+		return nil
+	}
+
+	w := NewWriter(
+		input.Writer,
+		input.Separator,
+		input.Header,
+		input.KeySerializer,
+		input.ValueSerializer,
+		input.Sorted,
+		input.Reversed,
+	)
+
+	errorWrite := w.WriteObject(inputObject)
+	if errorWrite != nil {
+		return errors.Wrap(errorWrite, "error serializing separated values")
+	}
+
+	errorFlush := w.Flush()
+	if errorFlush != nil {
+		return errors.Wrap(errorFlush, "error serializing separated values")
 	}
 
 	return nil

@@ -1,0 +1,10 @@
+__mocks__/
+dist/
+bin/
+node_modules/
+webpack/
+.DS_Store
+.npm
+node_modules
+npm-debug.*
+package-lock.json

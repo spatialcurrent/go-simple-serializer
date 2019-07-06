@@ -15,44 +15,60 @@ package main
 
 import (
 	"C"
+	"fmt"
 	"strings"
 )
 
+//"github.com/spatialcurrent/go-stringify/pkg/stringify"
+
 import (
-	"github.com/spatialcurrent/go-simple-serializer/gss"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
+
+var gitBranch string
+var gitCommit string
 
 func main() {}
 
+//export Version
+func Version() *C.char {
+	var b strings.Builder
+	if len(gitBranch) > 0 {
+		b.WriteString(fmt.Sprintf("Branch: %q\n", gitBranch))
+	}
+	if len(gitCommit) > 0 {
+		b.WriteString(fmt.Sprintf("Commit: %q\n", gitCommit))
+	}
+	return C.CString(b.String())
+}
+
 //export Convert
-func Convert(inputString *C.char, inputFormat *C.char, inputHeader *C.char, inputComment *C.char, inputLazyQuotes C.int, inputSkipLines C.long, inputLimit C.long, outputFormat *C.char, outputHeader *C.char, outputLimit C.long, outputPretty C.int, outputSorted C.int, async C.int, outputString **C.char) *C.char {
+func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, outputPretty *C.char, outputSorted *C.char, outputString **C.char) *C.char {
 
 	s, err := gss.Convert(&gss.ConvertInput{
-		InputBytes:      []byte(C.GoString(inputString)),
-		InputFormat:     C.GoString(inputFormat),
-		InputHeader:     strings.Split(C.GoString(inputHeader), ","),
-		InputComment:    C.GoString(inputComment),
-		InputLazyQuotes: int(inputLazyQuotes) > 0,
-		InputSkipLines:  int(inputSkipLines),
-		InputLimit:      int(inputLimit),
-		OutputFormat:    C.GoString(outputFormat),
-		OutputHeader:    strings.Split(C.GoString(outputHeader), ","),
-		OutputLimit:     int(outputLimit),
-		OutputPretty:    int(outputPretty) > 0,
-		OutputSorted:    int(outputSorted) > 0,
-		Async:           int(async) > 0,
-		Verbose:         false,
+		InputBytes:  []byte(C.GoString(inputString)),
+		InputFormat: C.GoString(inputFormat),
+		//InputHeader:     stringify.StringSliceToInterfaceSlice(strings.Split(C.GoString(inputHeader), ",")),
+		InputHeader:         []interface{}{},
+		InputComment:        "",
+		InputLazyQuotes:     false,
+		InputSkipLines:      0,
+		InputLimit:          -1,
+		InputLineSeparator:  "\n",
+		InputEscapePrefix:   "//",
+		OutputFormat:        C.GoString(outputFormat),
+		OutputHeader:        []interface{}{},
+		OutputLimit:         -1,
+		OutputPretty:        C.GoString(outputFormat) == "1",
+		OutputSorted:        C.GoString(outputSorted) == "1",
+		OutputEscapePrefix:  "//",
+		OutputLineSeparator: "\n",
 	})
 	if err != nil {
 		return C.CString(err.Error())
 	}
 
-	*outputString = C.CString(s)
+	*outputString = C.CString(string(s))
 
 	return nil
-}
-
-//export Version
-func Version() *C.char {
-	return C.CString(gss.Version)
 }
