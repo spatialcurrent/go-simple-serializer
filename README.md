@@ -4,7 +4,7 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple serialization formats in their applications.
+**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple serialization formats in their applications.  GSS supports a variety of operating systems, architectures, and use cases.  A CLI is released for Microsoft Windows, Linux distributions, and [Darwin](https://en.wikipedia.org/wiki/Darwin_%28operating_system%29) platforms.
 
 Using cross compilers, this library can also be called by other languages, including `C`, `C++`, `Python`, and `JavaScript`.  This library is cross compiled into a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs), which can be called by [Node.js](https://nodejs.org) and loaded in the browser.  See the examples folder for patterns that you can use.
 
@@ -14,17 +14,17 @@ GSS supports the following formats.
 
 | Format | Description |
 | ---- | ------ |
-| bson | Binary JSON |
-| csv | Comma-Separated Values
+| bson | [Binary JSON](https://en.wikipedia.org/wiki/BSON) |
+| csv | [Comma-Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values) |
 | hcl | HashiCorp Configuration Language |
 | hcl2 | HashiCorp Configuration Language (version 2.x) |
-| json | JSON |
-| jsonl | JSON Lines |
-| properties | Properties |
+| json | [JSON](http://json.org/) |
+| jsonl | [JSON Lines](http://jsonlines.org/) |
+| properties | [Properties](https://en.wikipedia.org/wiki/.properties) |
 | tags | single-line key=value tags |
-| toml | TOML |
+| toml | [TOML](https://github.com/toml-lang/toml) |
 | tsv | Tab-Separated Values |
-| yaml | YAML |
+| yaml | [YAML](https://yaml.org/) |
 
 `hcl` and `hcl2` implementation is fragile and very much in `alpha`.  The other formats are well-supported.
 
@@ -81,10 +81,10 @@ See [go-simple-serializer](https://godoc.org/github.com/spatialcurrent/go-simple
 GSS is built as a module.  In modern JavaScript, the module can be imported using [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
 
 ```javascript
-const { serialize, deserialize, convert, formats } = require('./dist/gss.global.min.js');
+const { serialize, deserialize, convert, formats } = require('./dist/gss.mod.min.js');
 ```
 
-In legacy JavaScript, you can use the `gss.main.js` file that simply adds `gss` to the global scope.
+In legacy JavaScript, you can use the `gss.global.js` file that simply adds `gss` to the global scope.
 
 **Android**
 
@@ -103,7 +103,30 @@ A variant of the `Convert` function is exported in a Shared Object file (`*.so`)
 
 # Releases
 
-**go-simple-serializer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-simple-serializer/releases.
+**go-simple-serializer** is currently in **alpha**.  See releases at https://github.com/spatialcurrent/go-simple-serializer/releases.  See the **Building** section below to build from scratch.
+
+**JavaScript**
+
+- `gss.global.js`, `gss.global.js.map` - JavaScript global build  with source map
+- `gss.global.min.js`, `gss.global.min.js.map` - Minified JavaScript global build with source map
+- `gss.mod.js`, `gss.mod.js.map` - JavaScript module build  with source map
+- `gss.mod.min.js`, `gss.mod.min.js.map` - Minified JavaScript module with source map
+
+**Darwin**
+
+- `gss_darwin_amd64` - CLI for Darwin on amd64 (includes `macOS` and `iOS` platforms)
+
+**Linux**
+
+- `gss_linux_amd64` - CLI for Linux on amd64
+- `gss_linux_amd64` - CLI for Linux on arm64
+- `gss_linux_amd64.h`, `gss_linuxamd64.so` - Shared Object for Linux on amd64
+- `gss_linux_armv7.h`, `gss_linux_armv7.so` - Shared Object for Linux on ARMv7
+- `gss_linux_armv8.h`, `gss_linux_armv8.so` - Shared Object for Linux on ARMv8
+
+**Windows**
+
+- `gss_windows_amd64.exe` - CLI for Windows on amd64
 
 # Examples
 
@@ -148,6 +171,8 @@ See the `examples/python/test.py` file.  You can run the example with `make run_
 See the `examples/js/index.js` file.  You can run the example with `make run_example_javascript`.
 
 # Building
+
+Use `make help` to see help information for each target.
 
 **CLI**
 
