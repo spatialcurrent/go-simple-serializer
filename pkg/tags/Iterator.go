@@ -11,6 +11,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"unicode/utf8"
 )
 
 import (
@@ -25,45 +26,60 @@ import (
 // returning a new object on each call of Next()
 // until it reaches the end and returns io.EOF.
 type Iterator struct {
-	Scanner      scanner.Scanner // the scanner that splits the underlying stream of bytes
-	Type         reflect.Type
-	Comment      string // The comment line prefix.  Can be any string.
-	SkipBlanks   bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	SkipComments bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	Limit        int    // Limit the number of objects to read and return from the underlying stream.
-	Count        int    // The current count of the number of objects read.
+	Scanner           scanner.Scanner // the scanner that splits the underlying stream of bytes
+	Type              reflect.Type
+	KeyValueSeparator rune   // the key value separator
+	Comment           string // The comment line prefix.  Can be any string.
+	SkipBlanks        bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	SkipComments      bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	Limit             int    // Limit the number of objects to read and return from the underlying stream.
+	Count             int    // The current count of the number of objects read.
 }
 
 // Input for NewIterator function.
 type NewIteratorInput struct {
-	Reader        io.Reader
-	Type          reflect.Type
-	SkipLines     int    // Skip a given number of lines at the beginning of the stream.
-	SkipBlanks    bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	SkipComments  bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	Comment       string // The comment line prefix. Can be any string.
-	Limit         int    // Limit the number of objects to read and return from the underlying stream.
-	LineSeparator byte   // The new line byte.
-	DropCR        bool   // Drop carriage returns at the end of lines.
+	Reader            io.Reader
+	Type              reflect.Type
+	SkipLines         int    // Skip a given number of lines at the beginning of the stream.
+	SkipBlanks        bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	SkipComments      bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	Comment           string // The comment line prefix. Can be any string.
+	Limit             int    // Limit the number of objects to read and return from the underlying stream.
+	KeyValueSeparator string // the key value separator
+	LineSeparator     byte   // The new line byte.
+	DropCR            bool   // Drop carriage returns at the end of lines.
 }
 
 // NewIterator returns a new JSON Lines (aka jsonl) Iterator base on the given input.
-func NewIterator(input *NewIteratorInput) *Iterator {
+func NewIterator(input *NewIteratorInput) (*Iterator, error) {
+	if len(input.KeyValueSeparator) == 0 {
+		return nil, ErrMissingKeyValueSeparator
+	}
+
+	KeyValueSeparator, n := utf8.DecodeRuneInString(input.KeyValueSeparator)
+	if KeyValueSeparator == utf8.RuneError && n == 1 {
+		return nil, errors.Wrap(ErrInvalidUTF8, "error decoding key-value separator")
+	}
+
 	s := scanner.New(input.Reader, input.LineSeparator, input.DropCR)
 	for i := 0; i < input.SkipLines; i++ {
 		if !s.Scan() {
 			break
 		}
 	}
-	return &Iterator{
-		Scanner:      s,
-		Type:         input.Type,
-		Comment:      input.Comment,
-		SkipBlanks:   input.SkipBlanks,
-		SkipComments: input.SkipComments,
-		Limit:        input.Limit,
-		Count:        0,
+
+	it := &Iterator{
+		Scanner:           s,
+		Type:              input.Type,
+		KeyValueSeparator: KeyValueSeparator,
+		Comment:           input.Comment,
+		SkipBlanks:        input.SkipBlanks,
+		SkipComments:      input.SkipComments,
+		Limit:             input.Limit,
+		Count:             0,
 	}
+
+	return it, nil
 }
 
 // Next reads from the underlying reader and returns the next object and error, if any.
@@ -95,13 +111,13 @@ func (it *Iterator) Next() (interface{}, error) {
 			return nil, nil
 		}
 		if it.Type != nil {
-			obj, err := UnmarshalType([]byte(line), it.Type)
+			obj, err := UnmarshalType([]byte(line), it.KeyValueSeparator, it.Type)
 			if err != nil {
 				return obj, errors.Wrap(err, "eror unmarshaling next tags object")
 			}
 			return obj, nil
 		}
-		obj, err := Unmarshal([]byte(line))
+		obj, err := Unmarshal([]byte(line), it.KeyValueSeparator)
 		if err != nil {
 			return obj, errors.Wrap(err, "eror unmarshaling next tags object")
 		}

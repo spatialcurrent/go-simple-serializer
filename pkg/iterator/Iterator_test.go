@@ -16,6 +16,7 @@ import (
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIteratorJsonl(t *testing.T) {
@@ -40,8 +41,8 @@ func TestIteratorJsonl(t *testing.T) {
 		LineSeparator: []byte("\n")[0],
 		DropCR:        true,
 	})
-	assert.NoError(t, err)
-	assert.NotNil(t, it)
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Empty Line
 	obj, err := it.Next()
@@ -107,19 +108,20 @@ func TestIteratorTags(t *testing.T) {
   `
 
 	it, err := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		Type:          reflect.TypeOf([]map[string]interface{}{}),
-		Format:        "tags",
-		SkipLines:     0,
-		Comment:       "",
-		Trim:          true,
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+		Reader:            strings.NewReader(text),
+		Type:              reflect.TypeOf([]map[string]interface{}{}),
+		Format:            "tags",
+		SkipLines:         0,
+		Comment:           "",
+		Trim:              true,
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
-	assert.NoError(t, err)
-	assert.NotNil(t, it)
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Empty Line
 	obj, err := it.Next()
@@ -155,4 +157,5 @@ func TestIteratorTags(t *testing.T) {
 	obj, err = it.Next()
 	assert.Equal(t, io.EOF, err)
 	assert.Nil(t, obj)
+
 }

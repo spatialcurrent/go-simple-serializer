@@ -162,9 +162,10 @@ func TestSerializeBytesTsvSlice(t *testing.T) {
 
 func TestSerializeBytesTags(t *testing.T) {
 	b, err := SerializeBytes(&SerializeBytesInput{
-		Object: map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0},
-		Format: "tags",
-		Sorted: true,
+		Object:            map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0},
+		KeyValueSeparator: "=",
+		Format:            "tags",
+		Sorted:            true,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "a=1 b=2 c=3", string(b))
@@ -176,10 +177,11 @@ func TestSerializeBytesTagsMultiple(t *testing.T) {
 			map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0},
 			map[string]interface{}{"a": "x", "b": "y", "c": "z"},
 		},
-		Format:        "tags",
-		LineSeparator: "\n",
-		Sorted:        true,
-		Limit:         -1,
+		KeyValueSeparator: "=",
+		Format:            "tags",
+		LineSeparator:     "\n",
+		Sorted:            true,
+		Limit:             -1,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "a=1 b=2 c=3\na=x b=y c=z\n", string(b))

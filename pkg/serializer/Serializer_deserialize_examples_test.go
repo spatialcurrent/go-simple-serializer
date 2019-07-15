@@ -85,7 +85,7 @@ func ExampleSerializer_Deserialize_properties() {
 
 func ExampleSerializer_Deserialize_tags() {
 	in := "hello=\"beautiful world\""
-	s := New(FormatTags).LineSeparator("\n")
+	s := New(FormatTags).KeyValueSeparator("=").LineSeparator("\n")
 	out, err := s.Deserialize([]byte(in))
 	if err != nil {
 		panic(err)

@@ -19,17 +19,21 @@ import (
 // This example shows you can marshal a single map into a JSON object
 func ExampleWrite_map() {
 	obj := map[string]string{"a": "b", "c": "beautiful world", "d": "beautiful \"wide\" world"}
-	buf := new(bytes.Buffer)
+	keys := make([]interface{}, 0)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
+
+	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
-		Writer:          buf,
-		LineSeparator:   "\n",
-		Object:          obj,
-		KeySerializer:   keySerializer,
-		ValueSerializer: valueSerializer,
-		Sorted:          true,
-		Limit:           -1,
+		Writer:            buf,
+		Keys:              keys,
+		KeyValueSeparator: "=",
+		LineSeparator:     "\n",
+		Object:            obj,
+		KeySerializer:     keySerializer,
+		ValueSerializer:   valueSerializer,
+		Sorted:            true,
+		Limit:             -1,
 	})
 	if err != nil {
 		panic(err)
@@ -52,17 +56,21 @@ func ExampleWrite_slice() {
 			"c": 6,
 		},
 	}
-	buf := new(bytes.Buffer)
+	keys := make([]interface{}, 0)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
+
+	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
-		Writer:          buf,
-		LineSeparator:   "\n",
-		Object:          obj,
-		KeySerializer:   keySerializer,
-		ValueSerializer: valueSerializer,
-		Sorted:          true,
-		Limit:           -1,
+		Writer:            buf,
+		Keys:              keys,
+		KeyValueSeparator: "=",
+		LineSeparator:     "\n",
+		Object:            obj,
+		KeySerializer:     keySerializer,
+		ValueSerializer:   valueSerializer,
+		Sorted:            true,
+		Limit:             -1,
 	})
 	if err != nil {
 		panic(err)

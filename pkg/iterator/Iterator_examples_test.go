@@ -26,15 +26,16 @@ func ExampleIterator_jsonl() {
   `
 
 	it, err := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		Format:        "jsonl",
-		SkipLines:     0,
-		Comment:       "",
-		Trim:          true,
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+		Reader:            strings.NewReader(text),
+		Format:            "jsonl",
+		SkipLines:         0,
+		Comment:           "",
+		Trim:              true,
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
 	if err != nil {
 		panic(err)
@@ -70,15 +71,16 @@ func ExampleIterator_tags() {
   `
 
 	it, err := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		Format:        "tags",
-		SkipLines:     0,
-		Comment:       "",
-		Trim:          true,
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+		Reader:            strings.NewReader(text),
+		Format:            "tags",
+		SkipLines:         0,
+		Comment:           "",
+		Trim:              true,
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
 	if err != nil {
 		panic(err)

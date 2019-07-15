@@ -22,14 +22,17 @@ import (
 
 // WriteInput provides the input for the Write function.
 type WriteInput struct {
-	Writer          io.Writer   // the underlying writer
-	LineSeparator   string      // the line separator
-	Object          interface{} // the object to write
-	KeySerializer   stringify.Stringer
-	ValueSerializer stringify.Stringer
-	Sorted          bool // sort keys
-	Reversed        bool
-	Limit           int
+	Writer            io.Writer     // the underlying writer
+	Keys              []interface{} // subset of keys to print
+	ExpandKeys        bool          // dynamically expand keys
+	KeyValueSeparator string        // the key-value separator
+	LineSeparator     string        // the line separator
+	Object            interface{}   // the object to write
+	KeySerializer     stringify.Stringer
+	ValueSerializer   stringify.Stringer
+	Sorted            bool // sort keys
+	Reversed          bool
+	Limit             int
 }
 
 // Write writes the given object(s) as lines of tags.
@@ -55,6 +58,9 @@ func Write(input *WriteInput) error {
 		}
 		w := NewWriter(
 			input.Writer,
+			input.Keys,
+			input.ExpandKeys,
+			input.KeyValueSeparator,
 			input.LineSeparator,
 			input.KeySerializer,
 			input.ValueSerializer,
@@ -70,7 +76,15 @@ func Write(input *WriteInput) error {
 
 	// If not an array of slice, then just marshal.
 
-	b, errMarshal := Marshal(inputObject, input.KeySerializer, input.ValueSerializer, input.Sorted, input.Reversed)
+	b, errMarshal := Marshal(
+		inputObject,
+		input.Keys,
+		input.ExpandKeys,
+		input.KeyValueSeparator,
+		input.KeySerializer,
+		input.ValueSerializer,
+		input.Sorted,
+		input.Reversed)
 	if errMarshal != nil {
 		return errors.Wrap(errMarshal, "error serializing to tags")
 	}

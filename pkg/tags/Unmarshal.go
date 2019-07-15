@@ -8,6 +8,7 @@
 package tags
 
 import (
+	"strings"
 	"unicode/utf8" // utf8 is used to decode the first rune in the string
 )
 
@@ -20,7 +21,7 @@ import (
 // that you have no a priori awareness of its structure or type.
 // If no input is given, then returns ErrEmptyInput.
 // If the first rune is invalid, then returns ErrInvalidRune.
-func Unmarshal(b []byte) (interface{}, error) {
+func Unmarshal(b []byte, keyValueSeparator rune) (interface{}, error) {
 
 	if len(b) == 0 {
 		return nil, ErrEmptyInput
@@ -41,14 +42,14 @@ func Unmarshal(b []byte) (interface{}, error) {
 	for i, c := range string(b) {
 		if quotes == 0 {
 			switch c {
-			case '"':
+			case quote:
 				quotes++
-			case '=':
+			case keyValueSeparator:
 				if len(key) == 0 {
 					key = str
 					str = ""
 				}
-			case ' ':
+			case space:
 				if len(key) > 0 {
 					obj[key] = e.Unescape(str)
 				}
@@ -59,7 +60,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 			}
 		} else if quotes == 1 {
 			switch c {
-			case '"':
+			case quote:
 				// if the previous character is an escape character
 				if b[i-1] == '\\' {
 					str += string(c)
@@ -73,7 +74,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 	}
 
 	if len(key) > 0 {
-		obj[key] = e.Unescape(str)
+		obj[key] = e.Unescape(strings.TrimSpace(str))
 	}
 
 	return obj, nil

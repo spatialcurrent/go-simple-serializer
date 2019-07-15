@@ -16,11 +16,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	quote rune = '"'
+	space rune = ' '
+)
+
 var (
-	ErrEmptyInput             = errors.New("empty input")
-	ErrInvalidRune            = errors.New("invalid rune")
-	ErrMissingLineSeparator   = errors.New("missing line separator")
-	ErrMissingKeySerializer   = errors.New("missing key serializer")
-	ErrMissingValueSerializer = errors.New("missing value serializer")
-	ErrMissingType            = errors.New("missing type")
+	ErrEmptyInput               = errors.New("empty input")
+	ErrInvalidRune              = errors.New("invalid rune")
+	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
+	ErrMissingLineSeparator     = errors.New("missing line separator")
+	ErrMissingKeySerializer     = errors.New("missing key serializer")
+	ErrMissingValueSerializer   = errors.New("missing value serializer")
+	ErrMissingType              = errors.New("missing type")
+	ErrInvalidUTF8              = errors.New("invalid utf-8")
 )

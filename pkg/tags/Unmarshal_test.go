@@ -16,7 +16,7 @@ import (
 )
 
 func TestUnmarshalEmpty(t *testing.T) {
-	obj, err := Unmarshal([]byte{})
+	obj, err := Unmarshal([]byte{}, '=')
 	assert.Equal(t, err, ErrEmptyInput)
 	assert.Equal(t, obj, nil)
 }
@@ -24,7 +24,7 @@ func TestUnmarshalEmpty(t *testing.T) {
 func TestUnmarshalSingle(t *testing.T) {
 	text := "a=b"
 	expected := map[string]string{"a": "b"}
-	obj, err := Unmarshal([]byte(text))
+	obj, err := Unmarshal([]byte(text), '=')
 	assert.NoError(t, err)
 	assert.Equal(t, expected, obj)
 }
@@ -32,7 +32,7 @@ func TestUnmarshalSingle(t *testing.T) {
 func TestUnmarshalMap(t *testing.T) {
 	text := "a=b c=\"beautiful world\" d=\"beautiful \\\"wide\\\" world\""
 	expected := map[string]string{"a": "b", "c": "beautiful world", "d": "beautiful \"wide\" world"}
-	obj, err := Unmarshal([]byte(text))
+	obj, err := Unmarshal([]byte(text), '=')
 	assert.NoError(t, err)
 	assert.Equal(t, expected, obj)
 }
