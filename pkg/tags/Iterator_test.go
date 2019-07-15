@@ -16,6 +16,7 @@ import (
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIterator(t *testing.T) {
@@ -25,15 +26,18 @@ func TestIterator(t *testing.T) {
 	hello="beautiful \"wide\" world"
   `
 
-	it := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		SkipLines:     0,
-		Comment:       "",
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            strings.NewReader(text),
+		SkipLines:         0,
+		Comment:           "",
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Empty Line
 	obj, err := it.Next()
@@ -78,16 +82,19 @@ func TestIteratorType(t *testing.T) {
 	hello="beautiful \"wide\" world"
   `
 
-	it := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		Type:          reflect.TypeOf(map[string]interface{}{}),
-		SkipLines:     0,
-		Comment:       "",
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            strings.NewReader(text),
+		Type:              reflect.TypeOf(map[string]interface{}{}),
+		SkipLines:         0,
+		Comment:           "",
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Empty Line
 	obj, err := it.Next()
@@ -123,6 +130,7 @@ func TestIteratorType(t *testing.T) {
 	obj, err = it.Next()
 	assert.Equal(t, io.EOF, err)
 	assert.Nil(t, obj)
+
 }
 
 func TestIteratorComment(t *testing.T) {
@@ -132,14 +140,17 @@ func TestIteratorComment(t *testing.T) {
   e=f
   `
 
-	it := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(text),
-		SkipLines:     0,
-		Comment:       "#",
-		SkipBlanks:    false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            strings.NewReader(text),
+		SkipLines:         0,
+		Comment:           "#",
+		SkipBlanks:        false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Empty Line
 	obj, err := it.Next()
@@ -173,14 +184,17 @@ func TestIteratorComment(t *testing.T) {
 }
 
 func TestIteratorEmpty(t *testing.T) {
-	it := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(""),
-		SkipLines:     0,
-		Comment:       "#",
-		SkipBlanks:    false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            strings.NewReader(""),
+		SkipLines:         0,
+		Comment:           "#",
+		SkipBlanks:        false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Should return io.EOF to indicate the reader is finished
 	obj, err := it.Next()
@@ -189,14 +203,18 @@ func TestIteratorEmpty(t *testing.T) {
 }
 
 func TestIteratorBlanks(t *testing.T) {
-	it := NewIterator(&NewIteratorInput{
-		Reader:        strings.NewReader(strings.Repeat("\n", 5)),
-		SkipLines:     0,
-		Comment:       "#",
-		SkipBlanks:    true,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            strings.NewReader(strings.Repeat("\n", 5)),
+		SkipLines:         0,
+		Comment:           "#",
+		SkipBlanks:        true,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
 	})
+
+	require.NoError(t, err)
+	require.NotNil(t, it)
 
 	// Should return io.EOF to indicate the reader is finished
 	obj, err := it.Next()

@@ -26,15 +26,16 @@ var (
 
 var (
 	DeserializeDefaults = map[string]interface{}{
-		"limit":         NoLimit,
-		"lineSeparator": "\n",
-		"escapePrefix":  "\\",
-		"expandHeader":  true,
+		"limit":             NoLimit,
+		"keyValueSeparator": "=",
+		"lineSeparator":     "\n",
+		"escapePrefix":      "\\",
+		"expandHeader":      true,
 	}
 	SerializeDefaults = map[string]interface{}{
 		"limit":             NoLimit,
-		"lineSeparator":     "\n",
 		"keyValueSeparator": "=",
+		"lineSeparator":     "\n",
 		"escapePrefix":      "\\",
 	}
 )

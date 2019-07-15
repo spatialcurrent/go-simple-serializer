@@ -17,19 +17,19 @@ import (
 )
 
 func TestUnmarshalTypeMapInterfaceInterface(t *testing.T) {
-	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), reflect.TypeOf(map[interface{}]interface{}{}))
+	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), '=', reflect.TypeOf(map[interface{}]interface{}{}))
 	assert.NoError(t, err)
 	assert.Equal(t, obj, map[interface{}]interface{}{"a": "1", "b": "2", "c": "3"})
 }
 
 func TestUnmarshalTypeMapStringInterface(t *testing.T) {
-	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), reflect.TypeOf(map[string]interface{}{}))
+	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), '=', reflect.TypeOf(map[string]interface{}{}))
 	assert.NoError(t, err)
 	assert.Equal(t, obj, map[string]interface{}{"a": "1", "b": "2", "c": "3"})
 }
 
 func TestUnmarshalTypeMapStringString(t *testing.T) {
-	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), reflect.TypeOf(map[string]string{}))
+	obj, err := UnmarshalType([]byte("a=1 b=2 c=3"), '=', reflect.TypeOf(map[string]string{}))
 	assert.NoError(t, err)
 	assert.Equal(t, obj, map[string]string{"a": "1", "b": "2", "c": "3"})
 }

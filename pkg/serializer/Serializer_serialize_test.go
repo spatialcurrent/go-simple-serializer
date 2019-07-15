@@ -170,7 +170,12 @@ func TestSerializerSerializeTags(t *testing.T) {
 	in := map[interface{}]interface{}{
 		"hello": "beautiful world",
 	}
-	s := New(FormatTags).Limit(NoLimit).Sorted(true).ValueSerializer(stringify.NewStringer("", false, false, false))
+	s := New(FormatTags).
+		KeyValueSeparator("=").
+		LineSeparator("\n").
+		ValueSerializer(stringify.NewStringer("", false, false, false)).
+		Limit(NoLimit).
+		Sorted(true)
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
 	assert.Equal(t, "hello=\"beautiful world\"", string(out))

@@ -119,7 +119,12 @@ func ExampleSerializer_Serialize_tags() {
 	in := map[interface{}]interface{}{
 		"hello": "beautiful world",
 	}
-	s := New(FormatTags).Limit(-1).Sorted(true).ValueSerializer(stringify.NewStringer("", false, false, false))
+	s := New(FormatTags).
+		KeyValueSeparator("=").
+		LineSeparator("\n").
+		ValueSerializer(stringify.NewStringer("", false, false, false)).
+		Limit(-1).
+		Sorted(true)
 	out, err := s.Serialize(in)
 	if err != nil {
 		panic(err)

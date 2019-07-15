@@ -54,6 +54,9 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 		if f == serializer.FormatJSONL || f == serializer.FormatProperties || f == serializer.FormatTags {
 			s = s.LineSeparator(input.LineSeparator)
 		}
+		if f == serializer.FormatProperties || f == serializer.FormatTags {
+			s = s.KeyValueSeparator(input.KeyValueSeparator)
+		}
 		if f == serializer.FormatCSV || f == serializer.FormatProperties || f == serializer.FormatTags || f == serializer.FormatTSV {
 			// Sort the order of the keys/properties
 			// Does not sort the order of the records (if serializing multiples objects as tags)
@@ -64,12 +67,11 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 				Sorted(input.Sorted).
 				Reversed(input.Reversed)
 		}
-		if f == serializer.FormatCSV || f == serializer.FormatTSV {
+		if f == serializer.FormatCSV || f == serializer.FormatTSV || f == serializer.FormatTags {
 			s = s.Header(input.Header).ExpandHeader(input.ExpandHeader)
 		}
 		if f == "properties" {
 			s = s.
-				KeyValueSeparator(input.KeyValueSeparator).
 				EscapePrefix(input.EscapePrefix).
 				EscapeSpace(input.EscapeSpace).
 				EscapeColon(input.EscapeColon).

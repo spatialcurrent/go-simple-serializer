@@ -69,7 +69,8 @@ var (
 		FormatHCL2,
 		FormatYAML,
 	}
-	ErrMissingLineSeparator = errors.New("missing line separator")
+	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
+	ErrMissingLineSeparator     = errors.New("missing line separator")
 )
 
 // UnmarshalTypeFunc is a function for unmarshaling bytes into an object of a given type.
@@ -86,7 +87,6 @@ var (
 	UnmarshalFuncs = map[string]UnmarshalFunc{
 		FormatBSON: bson.Unmarshal,
 		FormatJSON: json.Unmarshal,
-		FormatTags: tags.Unmarshal,
 		FormatTOML: toml.Unmarshal,
 		FormatYAML: yaml.Unmarshal,
 	}
@@ -94,7 +94,6 @@ var (
 	UnmarshalTypeFuncs = map[string]UnmarshalTypeFunc{
 		FormatBSON: bson.UnmarshalType,
 		FormatJSON: json.UnmarshalType,
-		FormatTags: tags.UnmarshalType,
 		FormatTOML: toml.UnmarshalType,
 		FormatYAML: yaml.UnmarshalType,
 	}
@@ -450,16 +449,21 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 				UnescapeNewLine: s.unescapeNewLine,
 			})
 		case FormatTags:
+			if len(s.keyValueSeparator) == 0 {
+				return nil, ErrMissingKeyValueSeparator
+			}
 			return tags.Read(&tags.ReadInput{
-				Type:          s.objectType,
-				Reader:        bytes.NewReader(b),
-				LineSeparator: []byte(s.lineSeparator)[0],
-				DropCR:        s.dropCR,
-				Comment:       s.comment,
-				SkipLines:     s.skipLines,
-				SkipBlanks:    s.skipBlanks,
-				SkipComments:  s.skipComments,
-				Limit:         s.limit,
+				Type:              s.objectType,
+				Reader:            bytes.NewReader(b),
+				Keys:              s.header,
+				KeyValueSeparator: s.keyValueSeparator,
+				LineSeparator:     []byte(s.lineSeparator)[0],
+				DropCR:            s.dropCR,
+				Comment:           s.comment,
+				SkipLines:         s.skipLines,
+				SkipBlanks:        s.skipBlanks,
+				SkipComments:      s.skipComments,
+				Limit:             s.limit,
 			})
 		}
 	case FormatHCL:
@@ -563,16 +567,22 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		}
 		return buf.Bytes(), nil
 	case FormatTags:
+		if len(s.keyValueSeparator) == 0 {
+			return nil, ErrMissingKeyValueSeparator
+		}
 		buf := new(bytes.Buffer)
 		err := tags.Write(&tags.WriteInput{
-			Writer:          buf,
-			LineSeparator:   s.lineSeparator,
-			Object:          object,
-			KeySerializer:   keySerializer,
-			ValueSerializer: valueSerializer,
-			Sorted:          s.sorted,
-			Reversed:        s.reversed,
-			Limit:           s.limit,
+			Writer:            buf,
+			Keys:              s.header,
+			ExpandKeys:        s.expandHeader,
+			KeyValueSeparator: s.keyValueSeparator,
+			LineSeparator:     s.lineSeparator,
+			Object:            object,
+			KeySerializer:     keySerializer,
+			ValueSerializer:   valueSerializer,
+			Sorted:            s.sorted,
+			Reversed:          s.reversed,
+			Limit:             s.limit,
 		})
 		if err != nil {
 			return make([]byte, 0), errors.Wrap(err, "error writing tags")

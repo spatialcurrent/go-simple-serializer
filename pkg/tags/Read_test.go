@@ -31,14 +31,15 @@ func TestRead(t *testing.T) {
 	}
 
 	out, err := Read(&ReadInput{
-		Type:          reflect.TypeOf([]interface{}{}),
-		Reader:        strings.NewReader(in),
-		SkipLines:     0,
-		SkipBlanks:    true,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
-		Comment:       "",
+		Type:              reflect.TypeOf([]interface{}{}),
+		Reader:            strings.NewReader(in),
+		SkipLines:         0,
+		SkipBlanks:        true,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
+		Comment:           "",
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, out)
@@ -60,14 +61,15 @@ func TestReadBlanks(t *testing.T) {
 	}
 
 	out, err := Read(&ReadInput{
-		Type:          reflect.TypeOf([]interface{}{}),
-		Reader:        strings.NewReader(in),
-		SkipLines:     0,
-		SkipBlanks:    false,
-		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
-		DropCR:        true,
-		Comment:       "",
+		Type:              reflect.TypeOf([]interface{}{}),
+		Reader:            strings.NewReader(in),
+		SkipLines:         0,
+		SkipBlanks:        false,
+		SkipComments:      false,
+		KeyValueSeparator: "=",
+		LineSeparator:     []byte("\n")[0],
+		DropCR:            true,
+		Comment:           "",
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, out)

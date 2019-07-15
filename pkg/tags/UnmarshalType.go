@@ -9,6 +9,7 @@ package tags
 
 import (
 	"reflect"
+	"strings"
 	"unicode/utf8" // utf8 is used to decode the first rune in the string
 )
 
@@ -19,7 +20,7 @@ import (
 // UnmarshalType parses a slice of bytes into an object of a given type.
 // If no input is given, then returns ErrEmptyInput.
 // If the first rune in the slice of bytes is invalid, then returns ErrInvalidRune.
-func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
+func UnmarshalType(b []byte, keyValueSeparator rune, outputType reflect.Type) (interface{}, error) {
 
 	if len(b) == 0 {
 		return nil, ErrEmptyInput
@@ -41,14 +42,14 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		for i, c := range string(b) {
 			if quotes == 0 {
 				switch c {
-				case '"':
+				case quote:
 					quotes++
-				case '=':
+				case keyValueSeparator:
 					if len(key) == 0 {
 						key = str
 						str = ""
 					}
-				case ' ':
+				case space:
 					if len(key) > 0 {
 						m.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(e.Unescape(str)))
 					}
@@ -59,7 +60,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 				}
 			} else if quotes == 1 {
 				switch c {
-				case '"':
+				case quote:
 					// if the previous character is an escape character
 					if b[i-1] == '\\' {
 						str += string(c)
@@ -73,7 +74,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		}
 
 		if len(key) > 0 {
-			m.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(e.Unescape(str)))
+			m.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(strings.TrimSpace(e.Unescape(str))))
 		}
 		return m.Interface(), nil
 	}

@@ -29,10 +29,11 @@ func TestWriteObject(t *testing.T) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
+	keys := make([]interface{}, 0)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
-	w := NewWriter(buf, "\n", keySerializer, valueSerializer, true, false)
+	w := NewWriter(buf, keys, true, "=", "\n", keySerializer, valueSerializer, true, false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObject(object)
@@ -58,6 +59,7 @@ func TestWriteStruct(t *testing.T) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
+	keys := make([]interface{}, 0)
 	keySerializer := func(object interface{}) (string, error) {
 		str, err := stringify.NewStringer("", false, false, false)(object)
 		if err != nil {
@@ -67,7 +69,7 @@ func TestWriteStruct(t *testing.T) {
 	}
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
-	w := NewWriter(buf, "\n", keySerializer, valueSerializer, true, false)
+	w := NewWriter(buf, keys, true, "=", "\n", keySerializer, valueSerializer, true, false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObject(object)
@@ -96,10 +98,11 @@ func TestWriterObjects(t *testing.T) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
+	keys := make([]interface{}, 0)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
-	w := NewWriter(buf, "\n", keySerializer, valueSerializer, true, false)
+	w := NewWriter(buf, keys, true, "=", "\n", keySerializer, valueSerializer, true, false)
 	assert.NotNil(t, w)
 
 	err := w.WriteObjects(objects)

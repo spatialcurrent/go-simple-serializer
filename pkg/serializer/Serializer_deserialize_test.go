@@ -72,7 +72,7 @@ func TestSerializerDeserializeJSONL(t *testing.T) {
 
 func TestSerializerDeserializeTags(t *testing.T) {
 	in := "hello=\"beautiful world\""
-	s := New(FormatTags).LineSeparator("\n")
+	s := New(FormatTags).KeyValueSeparator("=").LineSeparator("\n")
 	out, err := s.Deserialize([]byte(in))
 	assert.NoError(t, err)
 	assert.Equal(t, []map[string]string{map[string]string{"hello": "beautiful world"}}, out)

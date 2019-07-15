@@ -15,7 +15,7 @@ import (
 // This example shows you can unmarshal a line of tags into a map.
 func ExampleUnmarshalType_map() {
 	str := "a=1 b=2 c=3"
-	obj, err := UnmarshalType([]byte(str), reflect.TypeOf(map[string]string{}))
+	obj, err := UnmarshalType([]byte(str), '=', reflect.TypeOf(map[string]string{}))
 	if err != nil {
 		panic(err)
 	}

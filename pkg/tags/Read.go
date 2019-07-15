@@ -13,20 +13,26 @@ import (
 )
 
 import (
+	"github.com/pkg/errors"
+)
+
+import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
 // ReadInput provides the input for the Read function.
 type ReadInput struct {
-	Type          reflect.Type // the output type
-	Reader        io.Reader    // the underlying reader
-	SkipLines     int
-	SkipBlanks    bool
-	SkipComments  bool
-	Comment       string // the comment prefix
-	LineSeparator byte   // the newline byte
-	DropCR        bool   // drop carriage return
-	Limit         int
+	Type              reflect.Type  // the output type
+	Reader            io.Reader     // the underlying reader
+	Keys              []interface{} // the keys to read
+	SkipLines         int
+	SkipBlanks        bool
+	SkipComments      bool
+	Comment           string // the comment prefix
+	KeyValueSeparator string // the key-value separator
+	LineSeparator     byte   // the line separator
+	DropCR            bool   // drop carriage return
+	Limit             int
 }
 
 // Read reads the lines of tags from the input Reader into the given type.
@@ -36,18 +42,22 @@ func Read(input *ReadInput) (interface{}, error) {
 	if input.Type != nil {
 		inputType = input.Type
 	}
-	it := NewIterator(&NewIteratorInput{
-		Reader:        input.Reader,
-		SkipLines:     input.SkipLines,
-		SkipBlanks:    input.SkipBlanks,
-		SkipComments:  input.SkipComments,
-		Comment:       input.Comment,
-		Limit:         input.Limit,
-		LineSeparator: input.LineSeparator,
-		DropCR:        input.DropCR,
+	it, err := NewIterator(&NewIteratorInput{
+		Reader:            input.Reader,
+		SkipLines:         input.SkipLines,
+		SkipBlanks:        input.SkipBlanks,
+		SkipComments:      input.SkipComments,
+		Comment:           input.Comment,
+		Limit:             input.Limit,
+		KeyValueSeparator: input.KeyValueSeparator,
+		LineSeparator:     input.LineSeparator,
+		DropCR:            input.DropCR,
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating interator")
+	}
 	output := reflect.MakeSlice(inputType, 0, 0).Interface()
 	w := pipe.NewSliceWriterWithValues(output)
-	err := pipe.NewBuilder().Input(it).Output(w).Run()
+	err = pipe.NewBuilder().Input(it).Output(w).Run()
 	return w.Values(), err
 }
