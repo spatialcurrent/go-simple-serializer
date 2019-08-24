@@ -11,19 +11,11 @@ import (
 	"bytes"
 	"reflect"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func marshalTag(keyValueSeparator []byte, keySerializer stringify.Stringer, valueSerializer stringify.Stringer, e *escaper.Escaper, objectValue reflect.Value, key interface{}) ([]byte, error) {

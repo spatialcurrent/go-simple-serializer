@@ -10,18 +10,10 @@ package jsonl
 import (
 	"io"
 	"reflect"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
@@ -90,6 +82,17 @@ func (w *Writer) Flush() error {
 		err := flusher.Flush()
 		if err != nil {
 			return errors.Wrap(err, "error flushing underlying writer")
+		}
+	}
+	return nil
+}
+
+// Close closes the underlying writer, if it has a Close method.
+func (w *Writer) Close() error {
+	if closer, ok := w.writer.(io.Closer); ok {
+		err := closer.Close()
+		if err != nil {
+			return errors.Wrap(err, "error closing underlying writer")
 		}
 	}
 	return nil

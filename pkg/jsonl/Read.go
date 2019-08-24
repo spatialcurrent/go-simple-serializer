@@ -10,9 +10,7 @@ package jsonl
 import (
 	"io"
 	"reflect"
-)
 
-import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 

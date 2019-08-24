@@ -10,11 +10,8 @@ package toml
 import (
 	"fmt"
 
-	bstoml "github.com/BurntSushi/toml" // import the BurntSushi toml library as bstoml
-)
-
-import (
-	"github.com/pkg/errors"
+	bstoml "github.com/BurntSushi/toml"
+	"github.com/pkg/errors" // import the BurntSushi toml library as bstoml
 )
 
 // Unmarshal parses a slice of bytes into a map[string]interface{} object

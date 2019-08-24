@@ -9,11 +9,9 @@ package tags
 
 import (
 	"strings"
-	"unicode/utf8" // utf8 is used to decode the first rune in the string
-)
+	"unicode/utf8"
 
-import (
-	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper" // utf8 is used to decode the first rune in the string
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.

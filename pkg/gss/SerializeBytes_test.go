@@ -9,9 +9,7 @@ package gss
 
 import (
 	"testing"
-)
 
-import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )

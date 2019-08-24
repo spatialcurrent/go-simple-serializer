@@ -11,13 +11,8 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )

@@ -9,9 +9,7 @@ package sv
 
 import (
 	"reflect"
-)
 
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 )
 

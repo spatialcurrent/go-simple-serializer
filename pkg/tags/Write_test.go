@@ -10,14 +10,9 @@ package tags
 import (
 	"bytes"
 	"testing"
-)
 
-import (
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWrite(t *testing.T) {

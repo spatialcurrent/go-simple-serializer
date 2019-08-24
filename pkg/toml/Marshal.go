@@ -10,11 +10,8 @@ package toml
 import (
 	"bytes"
 
-	bstoml "github.com/BurntSushi/toml" // import the BurntSushi toml library as bstoml
-)
-
-import (
-	"github.com/pkg/errors"
+	bstoml "github.com/BurntSushi/toml"
+	"github.com/pkg/errors" // import the BurntSushi toml library as bstoml
 )
 
 // Marshal formats an object into a slice of bytes of TOML.

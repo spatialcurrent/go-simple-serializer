@@ -10,11 +10,10 @@ package json
 import (
 	stdjson "encoding/json" // import the standard json library as stdjson
 	"fmt"
-	"unicode/utf8" // utf8 is used to decode the first rune in the string
-)
+	"unicode/utf8"
 
-import (
 	"github.com/pkg/errors"
+	// utf8 is used to decode the first rune in the string
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.

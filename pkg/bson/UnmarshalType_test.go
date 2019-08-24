@@ -10,9 +10,7 @@ package bson
 import (
 	"reflect"
 	"testing"
-)
 
-import (
 	"github.com/stretchr/testify/assert"
 )
 

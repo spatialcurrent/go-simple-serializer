@@ -12,13 +12,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -152,6 +147,17 @@ func (w *Writer) Flush() error {
 		err := flusher.Flush()
 		if err != nil {
 			return errors.Wrap(err, "error flushing underlying writer")
+		}
+	}
+	return nil
+}
+
+// Close closes the underlying writer, if it has a Close method.
+func (w *Writer) Close() error {
+	if closer, ok := w.underlying.(io.Closer); ok {
+		err := closer.Close()
+		if err != nil {
+			return errors.Wrap(err, "error closing underlying writer")
 		}
 	}
 	return nil

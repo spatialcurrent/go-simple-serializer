@@ -15,9 +15,7 @@ package iterator
 import (
 	"io"
 	"reflect"
-)
 
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
@@ -74,6 +72,9 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 		}
 		switch input.Format {
 		case "csv":
+			if inputType == nil {
+				inputType = reflect.TypeOf(map[string]string{})
+			}
 			return sv.NewIterator(&sv.NewIteratorInput{
 				Reader:     input.Reader,
 				Type:       inputType,

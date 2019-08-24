@@ -12,19 +12,11 @@ import (
 	"io"
 	"reflect"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // WriteInput provides the input for the Write function.

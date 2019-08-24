@@ -10,32 +10,31 @@ package cli
 import (
 	"fmt"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 const (
-	FlagInputURI              string = "input-uri"
-	FlagInputCompression      string = "input-compression"
-	FlagInputFormat           string = "input-format"
-	FlagInputHeader           string = "input-header"
-	FlagInputLimit            string = "input-limit"
-	FlagInputComment          string = "input-comment"
-	FlagInputLazyQuotes       string = "input-lazy-quotes"
-	FlagInputTrim             string = "input-trim"
-	FlagInputReaderBufferSize string = "input-reader-buffer-size"
-	FlagInputSkipLines        string = "input-skip-lines"
-	FlagInputLineSeparator    string = "input-line-separator"
-	FlagInputDropCR           string = "input-drop-cr"
-	FlagInputEscapePrefix     string = "input-escape-prefix"
-	FlagInputUnescapeColon    string = "input-unescape-colon"
-	FlagInputUnescapeEqual    string = "input-unescape-equal"
-	FlagInputUnescapeSpace    string = "input-unescape-space"
-	FlagInputUnescapeNewLine  string = "input-unescape-new-line"
+	FlagInputURI               string = "input-uri"
+	FlagInputCompression       string = "input-compression"
+	FlagInputFormat            string = "input-format"
+	FlagInputHeader            string = "input-header"
+	FlagInputLimit             string = "input-limit"
+	FlagInputComment           string = "input-comment"
+	FlagInputLazyQuotes        string = "input-lazy-quotes"
+	FlagInputTrim              string = "input-trim"
+	FlagInputReaderBufferSize  string = "input-reader-buffer-size"
+	FlagInputSkipLines         string = "input-skip-lines"
+	FlagInputLineSeparator     string = "input-line-separator"
+	FlagInputKeyValueSeparator string = "input-key-value-separator"
+	FlagInputDropCR            string = "input-drop-cr"
+	FlagInputEscapePrefix      string = "input-escape-prefix"
+	FlagInputUnescapeColon     string = "input-unescape-colon"
+	FlagInputUnescapeEqual     string = "input-unescape-equal"
+	FlagInputUnescapeSpace     string = "input-unescape-space"
+	FlagInputUnescapeNewLine   string = "input-unescape-new-line"
 
 	DefaultSkipLines  int = 0
 	DefaultInputLimit int = -1
@@ -72,6 +71,7 @@ func InitInputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.IntP(FlagInputLimit, "l", DefaultInputLimit, "The input limit")
 	flag.BoolP(FlagInputTrim, "t", false, "trim input lines")
 	flag.String(FlagInputLineSeparator, "\n", "override line separator.  Used with properties and JSONL formats.")
+	flag.String(FlagInputKeyValueSeparator, "", "override key-value separator.  not used.")
 	flag.Bool(FlagInputDropCR, false, "drop carriage return characters that immediately precede new line characters")
 	flag.String(FlagInputEscapePrefix, "", "override escape prefix.  Used with properties format.")
 	flag.Bool(FlagInputUnescapeColon, false, "Unescape colon characters in input.  Used with properties format.")
@@ -91,6 +91,9 @@ func CheckInput(v *viper.Viper, formats []string) error {
 	}
 	if ls := v.GetString(FlagInputLineSeparator); len(ls) != 1 {
 		return ErrMissingLineSeparator
+	}
+	if ls := v.GetString(FlagInputKeyValueSeparator); len(ls) != 1 {
+		return ErrMissingKeyValueSeparator
 	}
 	if len(v.GetString(FlagInputEscapePrefix)) == 0 {
 		if v.GetBool(FlagInputUnescapeColon) {

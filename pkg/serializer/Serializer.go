@@ -13,20 +13,12 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
-)
 
-import (
 	"github.com/hashicorp/hcl"
+
 	hcl2 "github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
@@ -35,6 +27,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/yaml"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 const (

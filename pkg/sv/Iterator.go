@@ -11,9 +11,7 @@ import (
 	"encoding/csv"
 	"io"
 	"reflect"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 
@@ -28,8 +26,8 @@ type Iterator struct {
 // Input for NewIterator function.
 type NewIteratorInput struct {
 	Reader     io.Reader
-	Type       reflect.Type
-	Separator  rune // the values separator
+	Type       reflect.Type // required
+	Separator  rune         // the values separator
 	Header     []interface{}
 	SkipLines  int
 	Comment    string

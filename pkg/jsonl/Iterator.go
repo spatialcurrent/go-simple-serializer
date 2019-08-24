@@ -10,13 +10,8 @@ package jsonl
 import (
 	"io"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
@@ -49,6 +44,7 @@ type NewIteratorInput struct {
 
 // NewIterator returns a new JSON Lines (aka jsonl) Iterator base on the given input.
 func NewIterator(input *NewIteratorInput) *Iterator {
+
 	s := scanner.New(input.Reader, input.LineSeparator, input.DropCR)
 	for i := 0; i < input.SkipLines; i++ {
 		if !s.Scan() {
@@ -99,7 +95,7 @@ func (it *Iterator) Next() (interface{}, error) {
 		}
 		obj, err := json.Unmarshal([]byte(line))
 		if err != nil {
-			return obj, errors.Wrap(err, "eror unmarshaling next JSON object")
+			return obj, errors.Wrap(err, "error unmarshaling next JSON object")
 		}
 		return obj, nil
 	}

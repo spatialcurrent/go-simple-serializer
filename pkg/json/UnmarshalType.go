@@ -12,11 +12,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"unicode/utf8" // utf8 is used to decode the first rune in the string
-)
+	"unicode/utf8"
 
-import (
-	"github.com/pkg/errors"
+	"github.com/pkg/errors" // utf8 is used to decode the first rune in the string
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
