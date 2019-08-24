@@ -9,9 +9,7 @@ package splitter
 
 import (
 	"testing"
-)
 
-import (
 	"github.com/stretchr/testify/assert"
 )
 

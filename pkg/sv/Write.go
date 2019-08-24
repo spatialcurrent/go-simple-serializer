@@ -12,13 +12,8 @@ import (
 	"io"
 	"reflect"
 	"sort"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )

@@ -9,13 +9,8 @@ package gss
 
 import (
 	"fmt"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 

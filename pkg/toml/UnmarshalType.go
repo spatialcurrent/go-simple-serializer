@@ -10,12 +10,12 @@ package toml
 import (
 	"fmt"
 	"reflect"
-)
 
-import (
-	bstoml "github.com/BurntSushi/toml" // import the BurntSushi toml library as bstoml
+	bstoml "github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 )
+
+// import the BurntSushi toml library as bstoml
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
 // If no input is given, then returns ErrEmptyInput.

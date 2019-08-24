@@ -11,14 +11,9 @@ import (
 	"bytes"
 	"strings"
 	"testing"
-)
 
-import (
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteObject(t *testing.T) {

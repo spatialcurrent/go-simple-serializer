@@ -9,14 +9,9 @@ package sv
 
 import (
 	"testing"
-)
 
-import (
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToRow(t *testing.T) {

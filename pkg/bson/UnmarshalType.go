@@ -12,11 +12,8 @@ import (
 	// import the mgo bson library
 	"reflect"
 
-	mgobson "gopkg.in/mgo.v2/bson"
-)
-
-import (
 	"github.com/pkg/errors"
+	mgobson "gopkg.in/mgo.v2/bson"
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.

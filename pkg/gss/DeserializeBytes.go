@@ -10,22 +10,15 @@ package gss
 import (
 	"bytes"
 	"reflect"
-)
 
-import (
 	"github.com/hashicorp/hcl"
+
 	hcl2 "github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/pkg/errors"
-)
-
-import (
+	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
-)
-
-import (
-	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
 // DeserializeBytesInput provides the input for the DeserializeBytes function.

@@ -14,11 +14,8 @@ import (
 	"strings"
 	"unicode/utf8" // utf8 is used to decode the first rune in the string
 
-	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
-)
-
-import (
 	"github.com/pkg/errors"
+	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.

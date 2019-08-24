@@ -142,10 +142,10 @@ dist/gss.mod.min.js:  ## Build minified JavaScript module
 	gopherjs build -m -o dist/gss.mod.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.mod.js
 
 dist/gss.global.js:  ## Build JavaScript library that attaches to global or window.
-	GSS_JS_EXPORT_GLOBAL=1 gopherjs build -o dist/gss.global.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
+	gopherjs build -o dist/gss.global.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
 
 dist/gss.global.min.js:  ## Build minified JavaScript library that attaches to global or window.
-	GSS_JS_EXPORT_GLOBAL=1 gopherjs build -m -o dist/gss.global.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
+	gopherjs build -m -o dist/gss.global.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
 
 build_javascript: dist/gss.mod.js dist/gss.mod.min.js dist/gss.global.js dist/gss.global.min.js  ## Build artifacts for JavaScript
 
@@ -174,7 +174,7 @@ run_example_cpp: bin/gss.so bin/gss_example_cpp  ## Run C++ example
 run_example_python: bin/gss.so  ## Run Python example
 	LD_LIBRARY_PATH=bin python examples/python/test.py
 
-run_example_javascript: dist/gss.mod.js  ## Run JavaScript module example
+run_example_javascript: dist/gss.mod.min.js  ## Run JavaScript module example
 	node examples/js/index.mod.js
 
 ## Clean

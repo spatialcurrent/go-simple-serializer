@@ -12,13 +12,8 @@ import (
 	"reflect"
 	"strings"
 	"unicode/utf8"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
 
@@ -113,13 +108,13 @@ func (it *Iterator) Next() (interface{}, error) {
 		if it.Type != nil {
 			obj, err := UnmarshalType([]byte(line), it.KeyValueSeparator, it.Type)
 			if err != nil {
-				return obj, errors.Wrap(err, "eror unmarshaling next tags object")
+				return obj, errors.Wrap(err, "error unmarshaling next tags object")
 			}
 			return obj, nil
 		}
 		obj, err := Unmarshal([]byte(line), it.KeyValueSeparator)
 		if err != nil {
-			return obj, errors.Wrap(err, "eror unmarshaling next tags object")
+			return obj, errors.Wrap(err, "error unmarshaling next tags object")
 		}
 		return obj, nil
 	}

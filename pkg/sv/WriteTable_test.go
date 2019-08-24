@@ -10,9 +10,7 @@ package sv
 import (
 	"bytes"
 	"testing"
-)
 
-import (
 	"github.com/stretchr/testify/assert"
 )
 

@@ -9,9 +9,6 @@ package gssjs
 
 import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 

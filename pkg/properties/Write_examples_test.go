@@ -10,9 +10,7 @@ package properties
 import (
 	"bytes"
 	"fmt"
-)
 
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 

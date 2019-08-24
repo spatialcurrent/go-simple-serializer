@@ -9,13 +9,8 @@ package jsonl
 
 import (
 	"bytes"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 

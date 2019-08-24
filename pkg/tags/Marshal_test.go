@@ -9,14 +9,9 @@ package tags
 
 import (
 	"testing"
-)
 
-import (
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMarshalMap(t *testing.T) {

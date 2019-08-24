@@ -11,19 +11,11 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
-)
 
-import (
 	"github.com/pkg/errors"
-)
-
-import (
+	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
-)
-
-import (
-	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
 // DeserializeReaderInput provides the input for the DeserializeReader function.

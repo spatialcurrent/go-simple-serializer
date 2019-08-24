@@ -9,14 +9,8 @@ package gss
 
 import (
 	"github.com/pkg/errors"
-)
-
-import (
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // ConvertInput provides the input for the Convert function.

@@ -11,9 +11,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 

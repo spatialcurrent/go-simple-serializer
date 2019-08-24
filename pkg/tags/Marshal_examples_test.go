@@ -9,9 +9,7 @@ package tags
 
 import (
 	"fmt"
-)
 
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 

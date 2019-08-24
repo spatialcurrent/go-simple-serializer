@@ -10,9 +10,7 @@ package cli
 import (
 	"fmt"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -53,11 +51,6 @@ const (
 
 var (
 	DefaultOutputHeader = []string{}
-)
-
-var (
-	ErrMissingLineSeparator = errors.New("line separator cannot be blank")
-	ErrMissingEscapePrefix  = errors.New("escape prefix is missing")
 )
 
 type ErrMissingOutputFormat struct {
@@ -112,6 +105,9 @@ func CheckOutput(v *viper.Viper, formats []string) error {
 	}
 	if ls := v.GetString(FlagOutputLineSeparator); len(ls) != 1 {
 		return ErrMissingLineSeparator
+	}
+	if ls := v.GetString(FlagOutputKeyValueSeparator); len(ls) != 1 {
+		return ErrMissingKeyValueSeparator
 	}
 	if len(v.GetString(FlagOutputEscapePrefix)) == 0 {
 		if v.GetBool(FlagOutputEscapeColon) {

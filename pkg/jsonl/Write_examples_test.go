@@ -10,9 +10,7 @@ package jsonl
 import (
 	"bytes"
 	"fmt"
-)
 
-import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 

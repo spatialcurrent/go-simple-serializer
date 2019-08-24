@@ -32,27 +32,19 @@ import (
 	"os"
 	"reflect"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-)
-
-import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-)
-
-import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 var gitBranch string

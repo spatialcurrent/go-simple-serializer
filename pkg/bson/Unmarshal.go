@@ -10,11 +10,8 @@ package bson
 import (
 	"fmt"
 	// import the mgo bson library
-	mgobson "gopkg.in/mgo.v2/bson"
-)
-
-import (
 	"github.com/pkg/errors"
+	mgobson "gopkg.in/mgo.v2/bson"
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
