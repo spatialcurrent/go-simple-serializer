@@ -58,7 +58,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			LazyQuotes:    input.LazyQuotes,
 			Trim:          input.Trim,
 			Limit:         input.Limit,
-			LineSeparator: []byte(input.LineSeparator)[0],
+			LineSeparator: input.LineSeparator,
 			DropCR:        input.DropCR,
 		})
 		if errorIterator != nil {

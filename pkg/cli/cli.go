@@ -10,6 +10,7 @@ package cli
 
 import (
 	"github.com/pkg/errors"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -17,3 +18,17 @@ var (
 	ErrMissingLineSeparator     = errors.New("missing line separator")
 	ErrMissingEscapePrefix      = errors.New("missing escape prefix")
 )
+
+const (
+	FlagVerbose string = "verbose"
+)
+
+// Initialize cli flags
+func InitCliFlags(flag *pflag.FlagSet, formats []string) {
+
+	InitInputFlags(flag, formats)
+
+	InitOutputFlags(flag, formats)
+
+	flag.BoolP(FlagVerbose, "v", false, "verbose output")
+}

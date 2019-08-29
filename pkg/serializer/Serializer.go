@@ -103,6 +103,7 @@ type Serializer struct {
 	header            []interface{} // if formt as csv or tsv, the column names
 	comment           string        // the line comment prefix
 	lazyQuotes        bool          // if format is csv or tsv, allow LazyQuotes.
+	scannerBufferSize int           // the initial buffer size for the scanner.
 	skipLines         int           // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
 	skipBlanks        bool          // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
 	skipComments      bool          // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
@@ -152,6 +153,13 @@ func NewWithOptions(format string, options ...map[string]interface{}) (*Serializ
 				s = s.LineSeparator(fmt.Sprint(value))
 			case "keyValueSeparator":
 				s = s.KeyValueSeparator(fmt.Sprint(value))
+			case "scannerBufferSize":
+				switch v := value.(type) {
+				case int:
+					s = s.ScannerBufferSize(v)
+				case float64:
+					s = s.ScannerBufferSize(int(v))
+				}
 			case "limit":
 				switch v := value.(type) {
 				case int:
@@ -258,7 +266,13 @@ func (s *Serializer) SkipComments(skipComments bool) *Serializer {
 	return s
 }
 
-// Limit seets the limit of the serializer.
+// ScannerBufferSize sets the initial scanner buffer size.
+func (s *Serializer) ScannerBufferSize(scannerBufferSize int) *Serializer {
+	s.scannerBufferSize = scannerBufferSize
+	return s
+}
+
+// Limit sets the limit of the serializer.
 func (s *Serializer) Limit(limit int) *Serializer {
 	s.limit = limit
 	return s
@@ -417,16 +431,17 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 		switch s.format {
 		case FormatJSONL:
 			return jsonl.Read(&jsonl.ReadInput{
-				Type:          s.objectType,
-				Reader:        bytes.NewReader(b),
-				LineSeparator: []byte(s.lineSeparator)[0],
-				DropCR:        s.dropCR,
-				Comment:       s.comment,
-				SkipLines:     s.skipLines,
-				SkipBlanks:    s.skipBlanks,
-				SkipComments:  s.skipComments,
-				Limit:         s.limit,
-				Trim:          s.trim,
+				Type:              s.objectType,
+				Reader:            bytes.NewReader(b),
+				ScannerBufferSize: s.scannerBufferSize,
+				LineSeparator:     []byte(s.lineSeparator)[0],
+				DropCR:            s.dropCR,
+				Comment:           s.comment,
+				SkipLines:         s.skipLines,
+				SkipBlanks:        s.skipBlanks,
+				SkipComments:      s.skipComments,
+				Limit:             s.limit,
+				Trim:              s.trim,
 			})
 		case FormatProperties:
 			return properties.Read(&properties.ReadInput{

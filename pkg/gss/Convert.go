@@ -20,6 +20,7 @@ type ConvertInput struct {
 	InputHeader             []interface{}
 	InputComment            string
 	InputLazyQuotes         bool
+	InputScannerBufferSize  int
 	InputSkipLines          int
 	InputLimit              int
 	InputLineSeparator      string
@@ -52,6 +53,7 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 		InputHeader:             NoHeader,
 		InputComment:            NoComment,
 		InputLazyQuotes:         false,
+		InputScannerBufferSize:  0,
 		InputSkipLines:          NoSkip,
 		InputLimit:              NoLimit,
 		InputLineSeparator:      "\n",
@@ -82,6 +84,7 @@ func Convert(input *ConvertInput) ([]byte, error) {
 		Limit(input.InputLimit).
 		Header(input.InputHeader).
 		Comment(input.InputComment).
+		ScannerBufferSize(input.InputScannerBufferSize).
 		LazyQuotes(input.InputLazyQuotes).
 		SkipLines(input.InputSkipLines).
 		LineSeparator(input.InputLineSeparator).

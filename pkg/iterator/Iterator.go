@@ -16,9 +16,15 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
+)
+
+var (
+	ErrMissingLineSeparator = errors.New("missing line separator")
 )
 
 // Iterator is a simple interface that supports iterating over an input object source.
@@ -31,6 +37,7 @@ type NewIteratorInput struct {
 	Reader            io.Reader     // the underlying reader
 	Format            string        // the format
 	Header            []interface{} // for csv and tsv, the header.  If not given, then reads first line of stream as header.
+	ScannerBufferSize int           // the initial buffer size for the scanner
 	SkipLines         int           // Skip a given number of lines at the beginning of the stream.
 	SkipBlanks        bool          // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
 	SkipComments      bool          // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
@@ -39,7 +46,7 @@ type NewIteratorInput struct {
 	LazyQuotes        bool          // for csv and tsv, parse with lazy quotes
 	Limit             int           // Limit the number of objects to read and return from the underlying stream.
 	KeyValueSeparator string        // For tags, the key-value separator.
-	LineSeparator     byte          // For JSON Lines, the new line byte.
+	LineSeparator     string        // For JSON Lines, the new line byte.
 	DropCR            bool          // For JSON Lines, drop carriage returns at the end of lines.
 	Type              reflect.Type  //
 }
@@ -51,18 +58,24 @@ type NewIteratorInput struct {
 //	- tags - Tags (key-value pairs)
 //	- tsv - Tab-Separated Values
 func NewIterator(input *NewIteratorInput) (Iterator, error) {
+
+	if len(input.LineSeparator) == 0 {
+		return nil, ErrMissingLineSeparator
+	}
+
 	switch input.Format {
 	case "jsonl":
 		it := jsonl.NewIterator(&jsonl.NewIteratorInput{
-			Reader:        input.Reader,
-			SkipLines:     input.SkipLines,
-			SkipBlanks:    input.SkipBlanks,
-			SkipComments:  input.SkipComments,
-			Comment:       input.Comment,
-			Trim:          input.Trim,
-			Limit:         input.Limit,
-			LineSeparator: input.LineSeparator,
-			DropCR:        input.DropCR,
+			Reader:            input.Reader,
+			ScannerBufferSize: input.ScannerBufferSize,
+			SkipLines:         input.SkipLines,
+			SkipBlanks:        input.SkipBlanks,
+			SkipComments:      input.SkipComments,
+			Comment:           input.Comment,
+			Trim:              input.Trim,
+			Limit:             input.Limit,
+			LineSeparator:     []byte(input.LineSeparator)[0],
+			DropCR:            input.DropCR,
 		})
 		return it, nil
 	case "csv", "tags", "tsv":
@@ -94,7 +107,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 				SkipComments:      input.SkipComments,
 				Comment:           input.Comment,
 				KeyValueSeparator: input.KeyValueSeparator,
-				LineSeparator:     input.LineSeparator,
+				LineSeparator:     []byte(input.LineSeparator)[0],
 				DropCR:            input.DropCR,
 				Limit:             input.Limit,
 			})

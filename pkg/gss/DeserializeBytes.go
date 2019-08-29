@@ -23,24 +23,25 @@ import (
 
 // DeserializeBytesInput provides the input for the DeserializeBytes function.
 type DeserializeBytesInput struct {
-	Bytes           []byte
-	Format          string
-	Header          []interface{}
-	Comment         string
-	LazyQuotes      bool
-	SkipLines       int
-	SkipBlanks      bool
-	SkipComments    bool
-	Trim            bool
-	Limit           int
-	LineSeparator   string
-	DropCR          bool
-	Type            reflect.Type
-	EscapePrefix    string
-	UnescapeSpace   bool
-	UnescapeNewLine bool
-	UnescapeColon   bool
-	UnescapeEqual   bool
+	Bytes             []byte
+	Format            string
+	Header            []interface{}
+	Comment           string
+	LazyQuotes        bool
+	ScannerBufferSize int
+	SkipLines         int
+	SkipBlanks        bool
+	SkipComments      bool
+	Trim              bool
+	Limit             int
+	LineSeparator     string
+	DropCR            bool
+	Type              reflect.Type
+	EscapePrefix      string
+	UnescapeSpace     bool
+	UnescapeNewLine   bool
+	UnescapeColon     bool
+	UnescapeEqual     bool
 }
 
 // DeserializeBytes reads in an object as string bytes and returns the representative Go instance.
@@ -49,19 +50,20 @@ func DeserializeBytes(input *DeserializeBytesInput) (interface{}, error) {
 	switch input.Format {
 	case "csv", "tsv", "jsonl", "tags":
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
-			Reader:        bytes.NewReader(input.Bytes),
-			Type:          input.Type,
-			Format:        input.Format,
-			Header:        input.Header,
-			Comment:       input.Comment,
-			SkipLines:     input.SkipLines,
-			SkipBlanks:    input.SkipBlanks,
-			SkipComments:  input.SkipComments,
-			LazyQuotes:    input.LazyQuotes,
-			Trim:          input.Trim,
-			Limit:         input.Limit,
-			LineSeparator: []byte(input.LineSeparator)[0],
-			DropCR:        input.DropCR,
+			Reader:            bytes.NewReader(input.Bytes),
+			Type:              input.Type,
+			Format:            input.Format,
+			Header:            input.Header,
+			Comment:           input.Comment,
+			ScannerBufferSize: input.ScannerBufferSize,
+			SkipLines:         input.SkipLines,
+			SkipBlanks:        input.SkipBlanks,
+			SkipComments:      input.SkipComments,
+			LazyQuotes:        input.LazyQuotes,
+			Trim:              input.Trim,
+			Limit:             input.Limit,
+			LineSeparator:     input.LineSeparator,
+			DropCR:            input.DropCR,
 		})
 		if errorIterator != nil {
 			return nil, errors.Wrap(errorIterator, "error creating iterator")

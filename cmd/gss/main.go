@@ -39,6 +39,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -88,8 +89,7 @@ func canStream(inputFormat string, outputFormat string, outputSorted bool) bool 
 }
 
 func initFlags(flag *pflag.FlagSet, formats []string) {
-	cli.InitInputFlags(flag, formats)
-	cli.InitOutputFlags(flag, formats)
+	cli.InitCliFlags(flag, formats)
 }
 
 func checkConfig(v *viper.Viper, formats []string) error {
@@ -131,6 +131,8 @@ func main() {
 
 			inputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagInputHeader))
 
+			inputLineSeparator := v.GetString(cli.FlagInputLineSeparator)
+
 			outputFormat := v.GetString(cli.FlagOutputFormat)
 
 			outputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagOutputHeader))
@@ -158,20 +160,46 @@ func main() {
 
 			outputLimit := v.GetInt(cli.FlagOutputLimit)
 
+			verbose := v.GetBool(cli.FlagVerbose)
+
+			if verbose {
+				err := properties.Write(&properties.WriteInput{
+					Writer:            os.Stdout,
+					LineSeparator:     "\n",
+					KeyValueSeparator: "=",
+					Object:            v.AllSettings(),
+					KeySerializer:     stringify.NewDefaultStringer(),
+					ValueSerializer:   stringify.NewDefaultStringer(),
+					Sorted:            true,
+					Reversed:          false,
+					EscapePrefix:      "\\",
+					EscapeSpace:       false,
+					EscapeEqual:       true,
+					EscapeColon:       false,
+					EscapeNewLine:     true,
+				})
+				if err != nil {
+					return errors.Wrap(err, "error writing viper settings")
+				}
+			}
+
 			if canStream(inputFormat, outputFormat, outputSorted) {
 
 				p := pipe.NewBuilder()
 
 				it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
-					Reader:       os.Stdin,
-					Type:         reflect.TypeOf([]map[string]interface{}{}),
-					Format:       inputFormat,
-					Header:       inputHeader,
-					SkipLines:    v.GetInt(cli.FlagInputSkipLines),
-					SkipBlanks:   true,
-					SkipComments: true,
-					Comment:      v.GetString(cli.FlagInputComment),
-					Trim:         v.GetBool(cli.FlagInputTrim),
+					Reader:            os.Stdin,
+					Type:              reflect.TypeOf([]map[string]interface{}{}),
+					Format:            inputFormat,
+					Header:            inputHeader,
+					ScannerBufferSize: v.GetInt(cli.FlagInputScannerBufferSize),
+					SkipLines:         v.GetInt(cli.FlagInputSkipLines),
+					SkipBlanks:        true,
+					SkipComments:      true,
+					Comment:           v.GetString(cli.FlagInputComment),
+					Trim:              v.GetBool(cli.FlagInputTrim),
+					LineSeparator:     inputLineSeparator,
+					DropCR:            v.GetBool(cli.FlagInputDropCR),
 				})
 				if it == nil {
 					return errors.New(fmt.Sprintf("error building input iterator with format %q", inputFormat))
@@ -223,9 +251,11 @@ func main() {
 				InputHeader:             inputHeader,
 				InputComment:            v.GetString(cli.FlagInputComment),
 				InputLazyQuotes:         v.GetBool(cli.FlagInputLazyQuotes),
+				InputScannerBufferSize:  v.GetInt(cli.FlagInputScannerBufferSize),
 				InputSkipLines:          v.GetInt(cli.FlagInputSkipLines),
 				InputLimit:              v.GetInt(cli.FlagInputLimit),
-				InputLineSeparator:      v.GetString(cli.FlagInputLineSeparator),
+				InputLineSeparator:      inputLineSeparator,
+				InputDropCR:             v.GetBool(cli.FlagInputDropCR),
 				InputEscapePrefix:       v.GetString(cli.FlagInputEscapePrefix),
 				InputUnescapeSpace:      v.GetBool(cli.FlagInputUnescapeSpace),
 				InputUnescapeNewLine:    v.GetBool(cli.FlagInputUnescapeNewLine),

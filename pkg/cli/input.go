@@ -26,6 +26,7 @@ const (
 	FlagInputLazyQuotes        string = "input-lazy-quotes"
 	FlagInputTrim              string = "input-trim"
 	FlagInputReaderBufferSize  string = "input-reader-buffer-size"
+	FlagInputScannerBufferSize string = "input-scanner-buffer-size"
 	FlagInputSkipLines         string = "input-skip-lines"
 	FlagInputLineSeparator     string = "input-line-separator"
 	FlagInputKeyValueSeparator string = "input-key-value-separator"
@@ -67,11 +68,13 @@ func InitInputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.StringSlice(FlagInputHeader, DefaultInputHeader, "The input header if the stdin input has no header.")
 	flag.StringP(FlagInputComment, "c", "", "The input comment character, e.g., #.  Commented lines are not sent to output.")
 	flag.Bool(FlagInputLazyQuotes, false, "allows lazy quotes for CSV and TSV")
+	flag.Int(FlagInputReaderBufferSize, 4096, "the buffer size of the file reader")
+	flag.Int(FlagInputScannerBufferSize, 0, "the initial buffer size for the scanner")
 	flag.Int(FlagInputSkipLines, DefaultSkipLines, "The number of lines to skip before processing")
 	flag.IntP(FlagInputLimit, "l", DefaultInputLimit, "The input limit")
 	flag.BoolP(FlagInputTrim, "t", false, "trim input lines")
 	flag.String(FlagInputLineSeparator, "\n", "override line separator.  Used with properties and JSONL formats.")
-	flag.String(FlagInputKeyValueSeparator, "", "override key-value separator.  not used.")
+	flag.String(FlagInputKeyValueSeparator, "=", "override key-value separator.  not used.")
 	flag.Bool(FlagInputDropCR, false, "drop carriage return characters that immediately precede new line characters")
 	flag.String(FlagInputEscapePrefix, "", "override escape prefix.  Used with properties format.")
 	flag.Bool(FlagInputUnescapeColon, false, "Unescape colon characters in input.  Used with properties format.")
