@@ -8,6 +8,7 @@
 package json
 
 import (
+  "bytes"
 	stdjson "encoding/json" // import the standard json library as stdjson
 	"fmt"
 	"unicode/utf8"
@@ -34,7 +35,20 @@ func Unmarshal(b []byte) (interface{}, error) {
 	if len(b) == 0 {
 		return nil, ErrEmptyInput
 	}
+	
+	if bytes.HasPrefix(b, BytesTrue) {
+	  return true, nil
+	}
+	
+	if bytes.HasPrefix(b, BytesFalse) {
+	  return false, nil
+	}
+	
+	if bytes.HasPrefix(b, BytesNull) {
+	  return nil, nil
+	}
 
+  /*
 	switch string(b) {
 	case "true":
 		return true, nil
@@ -42,7 +56,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return false, nil
 	case "null":
 		return nil, nil
-	}
+	}*/
 
 	first, _ := utf8.DecodeRune(b)
 	if first == utf8.RuneError {
@@ -54,16 +68,16 @@ func Unmarshal(b []byte) (interface{}, error) {
 		obj := make([]interface{}, 0)
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into slice", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), obj))
 		}
 		return obj, nil
 	case '{':
 		obj := map[string]interface{}{}
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into map", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), obj))
 		}
-		return obj, nil
+		return &obj, nil
 	case '"':
 		obj := ""
 		err := stdjson.Unmarshal(b, &obj)

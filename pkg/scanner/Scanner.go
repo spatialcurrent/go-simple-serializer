@@ -22,9 +22,10 @@ import (
 // Scanner is an interface compatible with bufio.Scanner that is used by iterators.
 // By using this interface, we can support streams separated by null bytes, new-line characters, or any separator.
 type Scanner interface {
-	Scan() bool    // advanced the scanner to the next block
-	Bytes() []byte // returns the bytes of the current block
-	Text() string  // returns the text of the current block
+	Buffer(buf []byte, max int) // sets the initial buffer
+	Scan() bool                 // advanced the scanner to the next block
+	Bytes() []byte              // returns the bytes of the current block
+	Text() string               // returns the text of the current block
 }
 
 // New returns a new Scanner that reads from the given reader,

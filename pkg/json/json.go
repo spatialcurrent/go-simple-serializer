@@ -16,4 +16,8 @@ import (
 var (
 	ErrEmptyInput  = errors.New("empty input")
 	ErrInvalidRune = errors.New("invalid rune")
+	
+	BytesTrue = []byte("true")
+	BytesFalse = []byte("false")
+	BytesNull = []byte("null")
 )
