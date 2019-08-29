@@ -107,12 +107,12 @@ func main() {
 	formats := serializer.Formats
 
 	rootCommand := &cobra.Command{
-		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
+		Use: "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
 		DisableFlagsInUseLine: false,
-		Short:                 "gss",
-		Long:                  `gss is a simple program for serializing/deserializing data.`,
-		SilenceUsage:          true,
-		SilenceErrors:         true,
+		Short:         "gss",
+		Long:          `gss is a simple program for serializing/deserializing data.`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
@@ -246,11 +246,11 @@ func main() {
 			}
 
 			outputBytes, err := gss.Convert(&gss.ConvertInput{
-				InputBytes:      inputBytes,
-				InputFormat:     inputFormat,
-				InputHeader:     inputHeader,
-				InputComment:    v.GetString(cli.FlagInputComment),
-				InputLazyQuotes: v.GetBool(cli.FlagInputLazyQuotes),
+				InputBytes:              inputBytes,
+				InputFormat:             inputFormat,
+				InputHeader:             inputHeader,
+				InputComment:            v.GetString(cli.FlagInputComment),
+				InputLazyQuotes:         v.GetBool(cli.FlagInputLazyQuotes),
 				InputScannerBufferSize:  v.GetInt(cli.FlagInputScannerBufferSize),
 				InputSkipLines:          v.GetInt(cli.FlagInputSkipLines),
 				InputLimit:              v.GetInt(cli.FlagInputLimit),

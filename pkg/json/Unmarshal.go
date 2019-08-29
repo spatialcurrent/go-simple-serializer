@@ -8,7 +8,7 @@
 package json
 
 import (
-  "bytes"
+	"bytes"
 	stdjson "encoding/json" // import the standard json library as stdjson
 	"fmt"
 	"unicode/utf8"
@@ -35,28 +35,18 @@ func Unmarshal(b []byte) (interface{}, error) {
 	if len(b) == 0 {
 		return nil, ErrEmptyInput
 	}
-	
+
 	if bytes.HasPrefix(b, BytesTrue) {
-	  return true, nil
-	}
-	
-	if bytes.HasPrefix(b, BytesFalse) {
-	  return false, nil
-	}
-	
-	if bytes.HasPrefix(b, BytesNull) {
-	  return nil, nil
+		return true, nil
 	}
 
-  /*
-	switch string(b) {
-	case "true":
-		return true, nil
-	case "false":
+	if bytes.HasPrefix(b, BytesFalse) {
 		return false, nil
-	case "null":
+	}
+
+	if bytes.HasPrefix(b, BytesNull) {
 		return nil, nil
-	}*/
+	}
 
 	first, _ := utf8.DecodeRune(b)
 	if first == utf8.RuneError {
