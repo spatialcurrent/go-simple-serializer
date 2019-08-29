@@ -67,7 +67,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), obj))
 		}
-		return &obj, nil
+		return obj, nil
 	case '"':
 		obj := ""
 		err := stdjson.Unmarshal(b, &obj)
