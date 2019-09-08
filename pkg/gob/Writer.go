@@ -5,58 +5,39 @@
 //
 // =================================================================
 
-package jsonl
+package gob
 
 import (
 	"io"
 	"reflect"
 
 	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
 type Writer struct {
-	writer        io.Writer // writer for the underlying stream
-	separator     string    // the separator stirng to use, e.g, null byte or \n.
-	keySerializer stringify.Stringer
-	pretty        bool // write pretty output
+	writer  io.Writer // writer for the underlying stream
+	encoder *Encoder  // GOB encoder
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
-func NewWriter(w io.Writer, separator string, keySerializer stringify.Stringer, pretty bool) *Writer {
+func NewWriter(w io.Writer, fit bool) *Writer {
 	return &Writer{
-		writer:        w,
-		separator:     separator,
-		keySerializer: keySerializer,
-		pretty:        pretty,
+		writer:  w,
+		encoder: NewEncoder(w, fit),
 	}
 }
 
-// WriteObject formats and writes a single object to the underlying writer as JSON
-// and appends the writer's line separator.
+// WriteObject formats and writes a single object to the underlying writer as GOB.
 func (w *Writer) WriteObject(obj interface{}) error {
-	obj, err := stringify.StringifyMapKeys(obj, w.keySerializer)
-	if err != nil {
-		return errors.Wrap(err, "error stringify map keys")
-	}
-	b, err := json.Marshal(obj, w.pretty)
-	if err != nil {
-		return errors.Wrap(err, "error marshaling object")
-	}
-	if len(w.separator) > 0 {
-		b = append(b, []byte(w.separator)...)
-	}
-	_, err = w.writer.Write(b)
+	err := w.encoder.Encode(obj)
 	if err != nil {
 		return errors.Wrap(err, "error writing to underlying writer")
 	}
 	return nil
 }
 
-// WriteObjects formats and writes the given objects to the underlying writer as JSON lines
-// and separates the objects using the writer's line separator.
+// WriteObjects formats and writes the given objects to the underlying writer.
 func (w *Writer) WriteObjects(objects interface{}) error {
 	value := reflect.ValueOf(objects)
 	k := value.Type().Kind()

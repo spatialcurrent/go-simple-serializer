@@ -18,6 +18,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
@@ -66,6 +67,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 	switch input.Format {
 	case "jsonl":
 		it := jsonl.NewIterator(&jsonl.NewIteratorInput{
+			Type:              input.Type,
 			Reader:            input.Reader,
 			ScannerBufferSize: input.ScannerBufferSize,
 			SkipLines:         input.SkipLines,
@@ -80,11 +82,9 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 		return it, nil
 	case "csv", "tags", "tsv":
 		var inputType reflect.Type
-		if input.Type != nil {
-			inputType = input.Type.Elem()
-		}
 		switch input.Format {
 		case "csv":
+			inputType := input.Type
 			if inputType == nil {
 				inputType = reflect.TypeOf(map[string]string{})
 			}
@@ -123,6 +123,13 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 				Limit:      input.Limit,
 			})
 		}
+	case "gob":
+		it := gob.NewIterator(&gob.NewIteratorInput{
+			Reader: input.Reader,
+			Type:   input.Type,
+			Limit:  input.Limit,
+		})
+		return it, nil
 	}
 	return nil, &ErrInvalidFormat{Format: input.Format}
 }

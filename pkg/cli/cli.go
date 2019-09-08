@@ -20,7 +20,8 @@ var (
 )
 
 const (
-	FlagVerbose string = "verbose"
+	FlagNoStream string = "no-stream"
+	FlagVerbose  string = "verbose"
 )
 
 // Initialize cli flags
@@ -30,5 +31,6 @@ func InitCliFlags(flag *pflag.FlagSet, formats []string) {
 
 	InitOutputFlags(flag, formats)
 
+	flag.Bool(FlagNoStream, false, "disable streaming")
 	flag.BoolP(FlagVerbose, "v", false, "verbose output")
 }

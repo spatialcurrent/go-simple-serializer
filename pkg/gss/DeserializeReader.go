@@ -8,6 +8,7 @@
 package gss
 
 import (
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"reflect"
@@ -44,7 +45,7 @@ type DeserializeReaderInput struct {
 func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl", "tags":
+	case "csv", "tsv", "jsonl", "geojsonl", "tags":
 		// These formats can be streamed.
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        input.Reader,
@@ -70,6 +71,11 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}
 		return w.Values(), nil
+	case "gob":
+		obj := make([]interface{}, 0)
+		d := gob.NewDecoder(input.Reader)
+		err := d.Decode(obj)
+		return obj, err
 	case "bson", "hcl", "hcl2", "json", "properties", "toml", "yaml":
 		// These formats do not support streaming.
 		b, err := ioutil.ReadAll(input.Reader)

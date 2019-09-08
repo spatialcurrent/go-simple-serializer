@@ -32,12 +32,18 @@ type ReadInput struct {
 // Read reads the json lines from the input reader of the type given.
 func Read(input *ReadInput) (interface{}, error) {
 
-	inputType := reflect.TypeOf([]interface{}{})
+	var inputType reflect.Type
 	if input.Type != nil {
-		inputType = input.Type
+		inputType = input.Type.Elem()
+	}
+
+	outputType := reflect.TypeOf([]interface{}{})
+	if input.Type != nil {
+		outputType = input.Type
 	}
 
 	it := NewIterator(&NewIteratorInput{
+		Type:              inputType,
 		Reader:            input.Reader,
 		ScannerBufferSize: input.ScannerBufferSize,
 		SkipLines:         input.SkipLines,
@@ -49,8 +55,11 @@ func Read(input *ReadInput) (interface{}, error) {
 		LineSeparator:     input.LineSeparator,
 		DropCR:            input.DropCR,
 	})
-	output := reflect.MakeSlice(inputType, 0, 0).Interface()
+
+	output := reflect.MakeSlice(outputType, 0, 0).Interface()
+
 	w := pipe.NewSliceWriterWithValues(output)
+
 	err := pipe.NewBuilder().Input(it).Output(w).Run()
 	return w.Values(), err
 }

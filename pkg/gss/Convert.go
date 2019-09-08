@@ -8,6 +8,8 @@
 package gss
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -30,7 +32,9 @@ type ConvertInput struct {
 	InputUnescapeSpace      bool
 	InputUnescapeNewLine    bool
 	InputUnescapeEqual      bool
+	InputType               reflect.Type
 	OutputFormat            string
+	OutputFit               bool
 	OutputHeader            []interface{}
 	OutputLimit             int
 	OutputPretty            bool
@@ -62,7 +66,9 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 		InputUnescapeSpace:      false,
 		InputUnescapeNewLine:    false,
 		InputUnescapeEqual:      false,
+		InputType:               nil,
 		OutputFormat:            outputFormat,
+		OutputFit:               false,
 		OutputHeader:            NoHeader,
 		OutputLimit:             NoLimit,
 		OutputPretty:            false,
@@ -80,7 +86,9 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 }
 
 func Convert(input *ConvertInput) ([]byte, error) {
+
 	in := serializer.New(input.InputFormat).
+		Type(input.InputType).
 		Limit(input.InputLimit).
 		Header(input.InputHeader).
 		Comment(input.InputComment).
@@ -101,6 +109,7 @@ func Convert(input *ConvertInput) ([]byte, error) {
 	}
 
 	out := serializer.New(input.OutputFormat).
+		Fit(input.OutputFit).
 		Limit(input.OutputLimit).
 		Header(input.OutputHeader).
 		Pretty(input.OutputPretty).

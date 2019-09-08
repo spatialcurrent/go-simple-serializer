@@ -36,6 +36,7 @@ const (
 	FlagInputUnescapeEqual     string = "input-unescape-equal"
 	FlagInputUnescapeSpace     string = "input-unescape-space"
 	FlagInputUnescapeNewLine   string = "input-unescape-new-line"
+	FlagInputType              string = "input-type"
 
 	DefaultSkipLines  int = 0
 	DefaultInputLimit int = -1
@@ -81,6 +82,7 @@ func InitInputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.Bool(FlagInputUnescapeEqual, false, "Unescape equal characters in input.  Used with properties format.")
 	flag.Bool(FlagInputUnescapeSpace, false, "Unescape space characters in input.  Used with properties format.")
 	flag.Bool(FlagInputUnescapeNewLine, false, "Unescape new line characters in input.  Used with properties format.")
+	flag.String(FlagInputType, "", "if using GOB format, input type, default map[string]interface {}")
 }
 
 // CheckInput checks the output configuration.

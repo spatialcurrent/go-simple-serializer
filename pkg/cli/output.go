@@ -20,6 +20,7 @@ const (
 	FlagOutputURI               string = "output-uri"
 	FlagOutputCompression       string = "output-compression"
 	FlagOutputFormat            string = "output-format"
+	FlagOutputFit               string = "output-fit"
 	FlagOutputPretty            string = "output-pretty"
 	FlagOutputHeader            string = "output-header"
 	FlagOutputLimit             string = "output-limit"
@@ -45,6 +46,7 @@ const (
 	FlagOutputEscapeSpace       string = "output-escape-space"
 	FlagOutputSorted            string = "output-sorted"
 	FlagOutputReversed          string = "output-reversed"
+	FlagOutputType              string = "output-type"
 
 	DefaultOutputLimit = -1
 )
@@ -73,6 +75,7 @@ func (e ErrInvalidOutputFormat) Error() string {
 // Initialize output flags
 func InitOutputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.StringP(FlagOutputFormat, "o", "", "The output format.  One of: "+strings.Join(formats, ", "))
+	flag.Bool(FlagOutputFit, false, "if using GOB, fit output")
 	flag.StringSlice(FlagOutputHeader, DefaultOutputHeader, "The output header if the stdout output has no header.")
 	flag.IntP(FlagOutputLimit, "n", DefaultOutputLimit, "the output limit")
 	flag.BoolP(FlagOutputPretty, "p", false, "print pretty output")
@@ -92,6 +95,7 @@ func InitOutputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.Bool(FlagOutputEscapeEqual, false, "Escape equal characters in output.  Used with properties format.")
 	flag.Bool(FlagOutputEscapeSpace, false, "Escape space characters in output.  Used with properties format.")
 	flag.Bool(FlagOutputEscapeNewLine, false, "Escape new line characters in output.  Used with properties format.")
+	flag.String(FlagOutputType, "", "if using GOB format, the output type, default map[string]interface {}")
 }
 
 // CheckOutput checks the output configuration.
