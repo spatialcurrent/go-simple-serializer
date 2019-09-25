@@ -13,28 +13,31 @@
 package writer
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/fmt"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // Parameters for NewWriter function.
 type NewWriterInput struct {
-	Writer          io.Writer
-	Format          string
-	Header          []interface{}
-	KeySerializer   stringify.Stringer
-	ValueSerializer stringify.Stringer
-	LineSeparator   string
-	Fit             bool
-	Pretty          bool
-	Sorted          bool
-	Reversed        bool
+	Writer            io.Writer
+	Format            string
+	Header            []interface{}
+	ExpandHeader      bool // in context, only used by tags as ExpandKeys
+	KeySerializer     stringify.Stringer
+	ValueSerializer   stringify.Stringer
+	KeyValueSeparator string
+	LineSeparator     string
+	Fit               bool
+	Pretty            bool
+	Sorted            bool
+	Reversed          bool
 }
 
 // NewWriter returns a new pipe.Writer for writing formatted objects to an underlying writer.
@@ -56,16 +59,26 @@ func NewWriter(input *NewWriterInput) (pipe.Writer, error) {
 			input.Reversed,
 		)
 		return w, nil
-	case "jsonl":
-		return jsonl.NewWriter(input.Writer, input.LineSeparator, input.KeySerializer, input.Pretty), nil
 	case "go":
-		w := pipe.NewFunctionWriter(func(object interface{}) error {
-			_, err := fmt.Fprintf(input.Writer, "%#v\n", object)
-			return err
-		})
+		w := fmt.NewWriter(input.Writer, "%#v", input.LineSeparator)
 		return w, nil
 	case "gob":
 		return gob.NewWriter(input.Writer, input.Fit), nil
+	case "jsonl":
+		return jsonl.NewWriter(input.Writer, input.LineSeparator, input.KeySerializer, input.Pretty), nil
+	case "tags":
+		w := tags.NewWriter(
+			input.Writer,
+			input.Header,
+			input.ExpandHeader,
+			input.KeyValueSeparator,
+			input.LineSeparator,
+			input.KeySerializer,
+			input.ValueSerializer,
+			input.Sorted,
+			input.Reversed,
+		)
+		return w, nil
 	}
 
 	return nil, &ErrInvalidFormat{Format: input.Format}

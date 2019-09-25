@@ -38,6 +38,14 @@ func TestSerializerCSVMap(t *testing.T) {
 	assert.Equal(t, "a,b,c\nx,y,z\n", string(out))
 }
 
+func TestSerializerCSVSliceString(t *testing.T) {
+	in := []string{"a", "b", "c"}
+	s := New(FormatCSV).Limit(NoLimit)
+	out, err := s.Serialize(in)
+	assert.NoError(t, err)
+	assert.Equal(t, "a,b,c\n", string(out))
+}
+
 func TestSerializerCSVSlice(t *testing.T) {
 	in := []map[string]interface{}{
 		map[string]interface{}{

@@ -13,12 +13,18 @@
 package tags
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
 )
 
 const (
 	quote rune = '"'
 	space rune = ' '
+)
+
+var (
+	DefaultType = reflect.TypeOf(map[string]string{})
 )
 
 var (

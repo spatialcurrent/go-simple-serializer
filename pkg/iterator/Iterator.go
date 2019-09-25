@@ -26,6 +26,7 @@ import (
 
 var (
 	ErrMissingLineSeparator = errors.New("missing line separator")
+	ErrMissingType          = errors.New("missing type")
 )
 
 // Iterator is a simple interface that supports iterating over an input object source.
@@ -65,6 +66,35 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 	}
 
 	switch input.Format {
+	case "csv", "tsv", "gob":
+		if input.Type == nil {
+			return nil, ErrMissingType
+		}
+	}
+
+	switch input.Format {
+	case "csv":
+		it, err := sv.NewIterator(&sv.NewIteratorInput{
+			Reader:     input.Reader,
+			Type:       input.Type,
+			Separator:  ',',
+			Header:     input.Header,
+			SkipLines:  input.SkipLines,
+			Comment:    input.Comment,
+			LazyQuotes: input.LazyQuotes,
+			Limit:      input.Limit,
+		})
+		if err != nil {
+			return it, errors.Wrap(err, "error creating CSV iterator")
+		}
+		return it, nil
+	case "gob":
+		it := gob.NewIterator(&gob.NewIteratorInput{
+			Reader: input.Reader,
+			Type:   input.Type,
+			Limit:  input.Limit,
+		})
+		return it, nil
 	case "jsonl":
 		it := jsonl.NewIterator(&jsonl.NewIteratorInput{
 			Type:              input.Type,
@@ -80,55 +110,37 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			DropCR:            input.DropCR,
 		})
 		return it, nil
-	case "csv", "tags", "tsv":
-		var inputType reflect.Type
-		switch input.Format {
-		case "csv":
-			inputType := input.Type
-			if inputType == nil {
-				inputType = reflect.TypeOf(map[string]string{})
-			}
-			return sv.NewIterator(&sv.NewIteratorInput{
-				Reader:     input.Reader,
-				Type:       inputType,
-				Separator:  ',',
-				Header:     input.Header,
-				SkipLines:  input.SkipLines,
-				Comment:    input.Comment,
-				LazyQuotes: input.LazyQuotes,
-				Limit:      input.Limit,
-			})
-		case "tags":
-			return tags.NewIterator(&tags.NewIteratorInput{
-				Reader:            input.Reader,
-				Type:              inputType,
-				SkipLines:         input.SkipLines,
-				SkipBlanks:        input.SkipBlanks,
-				SkipComments:      input.SkipComments,
-				Comment:           input.Comment,
-				KeyValueSeparator: input.KeyValueSeparator,
-				LineSeparator:     []byte(input.LineSeparator)[0],
-				DropCR:            input.DropCR,
-				Limit:             input.Limit,
-			})
-		case "tsv":
-			return sv.NewIterator(&sv.NewIteratorInput{
-				Reader:     input.Reader,
-				Type:       inputType,
-				Separator:  '\t',
-				Header:     input.Header,
-				SkipLines:  input.SkipLines,
-				Comment:    input.Comment,
-				LazyQuotes: input.LazyQuotes,
-				Limit:      input.Limit,
-			})
-		}
-	case "gob":
-		it := gob.NewIterator(&gob.NewIteratorInput{
-			Reader: input.Reader,
-			Type:   input.Type,
-			Limit:  input.Limit,
+	case "tags":
+		it, err := tags.NewIterator(&tags.NewIteratorInput{
+			Reader:            input.Reader,
+			Type:              input.Type,
+			SkipLines:         input.SkipLines,
+			SkipBlanks:        input.SkipBlanks,
+			SkipComments:      input.SkipComments,
+			Comment:           input.Comment,
+			KeyValueSeparator: input.KeyValueSeparator,
+			LineSeparator:     []byte(input.LineSeparator)[0],
+			DropCR:            input.DropCR,
+			Limit:             input.Limit,
 		})
+		if err != nil {
+			return it, errors.Wrap(err, "error creating tags iterator")
+		}
+		return it, nil
+	case "tsv":
+		it, err := sv.NewIterator(&sv.NewIteratorInput{
+			Reader:     input.Reader,
+			Type:       input.Type,
+			Separator:  '\t',
+			Header:     input.Header,
+			SkipLines:  input.SkipLines,
+			Comment:    input.Comment,
+			LazyQuotes: input.LazyQuotes,
+			Limit:      input.Limit,
+		})
+		if err != nil {
+			return it, errors.Wrap(err, "error creating TSV iterator")
+		}
 		return it, nil
 	}
 	return nil, &ErrInvalidFormat{Format: input.Format}

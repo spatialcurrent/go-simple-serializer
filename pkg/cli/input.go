@@ -114,5 +114,8 @@ func CheckInput(v *viper.Viper, formats []string) error {
 			return errors.Wrap(ErrMissingEscapePrefix, "unescaping new line requires an escape prefix")
 		}
 	}
+	if (inputFormat == "csv" || inputFormat == "tsv") && len(inputComment) > 1 {
+		return &ErrInvalidInputComment{Value: inputComment}
+	}
 	return nil
 }

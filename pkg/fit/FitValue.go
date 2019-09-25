@@ -5,20 +5,19 @@
 //
 // =================================================================
 
-package gob
+package fit
 
 import (
-	"encoding/gob"
-	"io"
+	"reflect"
 )
 
-type Encoder struct {
-	*gob.Encoder
-}
-
-// Encoder returns a new gob encoder given the underlying writer.
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{
-		Encoder: gob.NewEncoder(w),
+// FitValue fits the value and any underlying values.
+func FitValue(in reflect.Value) reflect.Value {
+	switch in.Type().Kind() {
+	case reflect.Array, reflect.Slice:
+		return FitSliceValue(in)
+	case reflect.Map:
+		return FitMapValue(in)
 	}
+	return in
 }

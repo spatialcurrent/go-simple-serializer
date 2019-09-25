@@ -46,10 +46,15 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
 	case "csv", "tsv", "jsonl", "geojsonl", "tags":
+
+		var iteratorType reflect.Type
+		if input.Type != nil {
+			iteratorType = input.Type.Elem()
+		}
 		// These formats can be streamed.
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        input.Reader,
-			Type:          input.Type,
+			Type:          iteratorType,
 			Format:        input.Format,
 			Header:        input.Header,
 			Comment:       input.Comment,

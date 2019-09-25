@@ -36,6 +36,20 @@ type WriteInput struct {
 // If the type of the input object is of kind Array or Slice, then writes each object on its own line.
 // Otherwise, just writes a CSV with a header and one row for the object.
 func Write(input *WriteInput) error {
+
+	// If the input is a slice of strings, simply write it as a row
+	if slc, ok := input.Object.([]string); ok {
+		errWriteTable := WriteTable(&WriteTableInput{
+			Writer:    input.Writer,
+			Separator: input.Separator,
+			Header:    make([]string, 0),
+			Rows:      [][]string{slc},
+			Sorted:    input.Sorted, // if sorted and no specific wilcard position
+			Reversed:  input.Reversed,
+		})
+		return errors.Wrap(errWriteTable, "error writing table to underlying writer")
+	}
+
 	inputObject := input.Object
 	inputObjectValue := reflect.ValueOf(inputObject)
 	for reflect.TypeOf(inputObjectValue.Interface()).Kind() == reflect.Ptr {

@@ -5,49 +5,47 @@
 //
 // =================================================================
 
-package gob
+package fmt
 
 import (
 	"io"
 	"reflect"
 
 	"github.com/pkg/errors"
-	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 )
 
-// Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
+// Writer formats and writes objects to the underlying writer as formatted lines.
 type Writer struct {
-	writer  io.Writer // writer for the underlying stream
-	encoder *Encoder  // GOB encoder
-	fit     bool      // fit values before writing
+	writer        io.Writer // writer for the underlying stream
+	format        string    // the format string
+	lineSeparator string    // the separator stirng to use, e.g, null byte or \n.
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
-func NewWriter(w io.Writer, fit bool) *Writer {
+func NewWriter(w io.Writer, format string, lineSeparator string) *Writer {
 	return &Writer{
-		writer:  w,
-		encoder: NewEncoder(w),
-		fit:     fit,
+		writer:        w,
+		format:        format,
+		lineSeparator: lineSeparator,
 	}
 }
 
-// WriteObject formats and writes a single object to the underlying writer as GOB.
+// WriteObject formats and writes a single object to the underlying writer as a formatted line
+// and appends the writer's line separator.
 func (w *Writer) WriteObject(obj interface{}) error {
-	if w.fit {
-		err := w.encoder.EncodeValue(pkgfit.FitValue(reflect.ValueOf(obj)))
-		if err != nil {
-			return errors.Wrap(err, "error writing to underlying writer")
-		}
-		return nil
+	format := w.format
+	if len(w.lineSeparator) > 0 {
+		format += w.lineSeparator
 	}
-	err := w.encoder.EncodeValue(reflect.ValueOf(obj))
+	_, err := Fprintf(w.writer, format, obj)
 	if err != nil {
 		return errors.Wrap(err, "error writing to underlying writer")
 	}
 	return nil
 }
 
-// WriteObjects formats and writes the given objects to the underlying writer.
+// WriteObjects formats and writes the given objets to the underlying writer as formatted lines
+// and separates the objects using the writer's line separator.
 func (w *Writer) WriteObjects(objects interface{}) error {
 	value := reflect.ValueOf(objects)
 	k := value.Type().Kind()
@@ -69,7 +67,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 // Flush flushes the underlying writer, if it has a Flush method.
 // This writer itself does no buffering.
 func (w *Writer) Flush() error {
-	if flusher, ok := w.writer.(Flusher); ok {
+	if flusher, ok := w.writer.(interface{ Flush() error }); ok {
 		err := flusher.Flush()
 		if err != nil {
 			return errors.Wrap(err, "error flushing underlying writer")

@@ -75,7 +75,7 @@ func (e ErrInvalidOutputFormat) Error() string {
 // Initialize output flags
 func InitOutputFlags(flag *pflag.FlagSet, formats []string) {
 	flag.StringP(FlagOutputFormat, "o", "", "The output format.  One of: "+strings.Join(formats, ", "))
-	flag.Bool(FlagOutputFit, false, "if using GOB, fit output")
+	flag.Bool(FlagOutputFit, false, "Fit output")
 	flag.StringSlice(FlagOutputHeader, DefaultOutputHeader, "The output header if the stdout output has no header.")
 	flag.IntP(FlagOutputLimit, "n", DefaultOutputLimit, "the output limit")
 	flag.BoolP(FlagOutputPretty, "p", false, "print pretty output")
@@ -108,10 +108,10 @@ func CheckOutput(v *viper.Viper, formats []string) error {
 		return &ErrInvalidOutputFormat{Value: outputFormat, Expected: formats}
 	}
 	if ls := v.GetString(FlagOutputLineSeparator); len(ls) != 1 {
-		return ErrMissingLineSeparator
+		return &ErrInvalidLineSeparator{Value: ls}
 	}
-	if ls := v.GetString(FlagOutputKeyValueSeparator); len(ls) != 1 {
-		return ErrMissingKeyValueSeparator
+	if kvs := v.GetString(FlagOutputKeyValueSeparator); len(kvs) != 1 {
+		return &ErrInvalidKeyValueSeparator{Value: kvs}
 	}
 	if len(v.GetString(FlagOutputEscapePrefix)) == 0 {
 		if v.GetBool(FlagOutputEscapeColon) {

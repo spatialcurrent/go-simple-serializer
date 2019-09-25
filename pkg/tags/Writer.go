@@ -91,3 +91,14 @@ func (w *Writer) Flush() error {
 	}
 	return nil
 }
+
+// Close closes the underlying writer, if it has a Close method.
+func (w *Writer) Close() error {
+	if closer, ok := w.writer.(io.Closer); ok {
+		err := closer.Close()
+		if err != nil {
+			return errors.Wrap(err, "error closing underlying writer")
+		}
+	}
+	return nil
+}

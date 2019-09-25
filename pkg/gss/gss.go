@@ -56,6 +56,7 @@ package gss
 
 import (
 	"github.com/pkg/errors"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
 const (
@@ -69,6 +70,9 @@ var (
 	// Derive the header from the input data.
 	NoHeader = []interface{}{}
 	// Formats is a list of all the formats supported by GSS
-	Formats     = []string{"bson", "csv", "tsv", "hcl", "hcl2", "json", "jsonl", "properties", "toml", "yaml"}
+	Formats = serializer.Formats
+)
+
+var (
 	ErrEmptyRow = errors.New("empty row")
 )

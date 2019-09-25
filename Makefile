@@ -60,7 +60,7 @@ fmt:  ## Format Go source code
 
 imports: ## Update imports in Go source code
 	# If missing, install goimports with: go get golang.org/x/tools/cmd/goimports
-	goimports -w $$(find . -iname '*.go')
+	goimports -w -local github.com/spatialcurrent/go-simple-serializer,github.com/spatialcurrent/ $$(find . -iname '*.go')
 
 vet: ## Vet Go source code
 	go vet $$(go list ./...)

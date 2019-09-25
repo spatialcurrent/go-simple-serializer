@@ -16,6 +16,10 @@ const (
 	Wildcard = "*"
 )
 
+var (
+	DefaultType = reflect.TypeOf(map[string]string{})
+)
+
 func concerete(object reflect.Value) reflect.Value {
 	return reflect.ValueOf(object.Interface())
 }

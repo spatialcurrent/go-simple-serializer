@@ -5,20 +5,16 @@
 //
 // =================================================================
 
-package gob
+package cli
 
 import (
-	"encoding/gob"
-	"io"
+	"fmt"
 )
 
-type Encoder struct {
-	*gob.Encoder
+type ErrInvalidLineSeparator struct {
+	Value string
 }
 
-// Encoder returns a new gob encoder given the underlying writer.
-func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{
-		Encoder: gob.NewEncoder(w),
-	}
+func (e *ErrInvalidLineSeparator) String() {
+	return fmt.Sprintf("invalid line separator %q", e.Value)
 }
