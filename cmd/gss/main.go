@@ -35,6 +35,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/formats"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/version"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
@@ -43,7 +45,6 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/writer"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -55,32 +56,16 @@ var (
 	sliceMapStringInterfaceType = reflect.TypeOf([]map[string]interface{}{})
 )
 
-func initFlags(flag *pflag.FlagSet, formats []string) {
-	cli.InitCliFlags(flag, formats)
-}
-
-func checkConfig(v *viper.Viper, formats []string) error {
-	if err := cli.CheckInput(v, formats); err != nil {
-		return err
-	}
-	if err := cli.CheckOutput(v, formats); err != nil {
-		return err
-	}
-	return nil
-}
-
 func main() {
 
 	// Register gob types
 	gob.RegisterTypes()
 
-	formats := serializer.Formats
-
 	rootCommand := &cobra.Command{
 		Use: "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
 		DisableFlagsInUseLine: false,
 		Short:         "gss",
-		Long:          `gss is a simple program for serializing/deserializing data.`,
+		Long:          `gsss is a simple and fast program for serializing/deserializing data that supports following file formats: ` + strings.Join(gss.Formats, ", "),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -93,7 +78,7 @@ func main() {
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv()
 
-			if errorConfig := checkConfig(v, formats); errorConfig != nil {
+			if errorConfig := cli.CheckConfig(v, serializer.Formats); errorConfig != nil {
 				return errorConfig
 			}
 
@@ -110,6 +95,7 @@ func main() {
 			outputSorted := v.GetBool(cli.FlagOutputSorted)
 			outputReversed := v.GetBool(cli.FlagOutputReversed)
 
+			outputKeyValueSeparator := v.GetString(cli.FlagOutputKeyValueSeparator)
 			outputLineSeparator := v.GetString(cli.FlagOutputLineSeparator)
 
 			outputKeySerializer := stringify.NewStringer(
@@ -202,16 +188,18 @@ func main() {
 				}
 
 				w, errorWriter := writer.NewWriter(&writer.NewWriterInput{
-					Writer:          os.Stdout,
-					Format:          outputFormat,
-					Header:          outputHeader,
-					KeySerializer:   outputKeySerializer,
-					ValueSerializer: outputValueSerializer,
-					LineSeparator:   outputLineSeparator,
-					Fit:             outputFit,
-					Pretty:          outputPretty,
-					Sorted:          outputSorted,
-					Reversed:        outputReversed,
+					Writer:            os.Stdout,
+					Format:            outputFormat,
+					FormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),
+					Header:            outputHeader,
+					KeySerializer:     outputKeySerializer,
+					ValueSerializer:   outputValueSerializer,
+					KeyValueSeparator: outputKeyValueSeparator,
+					LineSeparator:     outputLineSeparator,
+					Fit:               outputFit,
+					Pretty:            outputPretty,
+					Sorted:            outputSorted,
+					Reversed:          outputReversed,
 				})
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")
@@ -256,6 +244,7 @@ func main() {
 				InputUnescapeEqual:      v.GetBool(cli.FlagInputUnescapeEqual),
 				InputType:               inputType,
 				OutputFormat:            outputFormat,
+				OutputFormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),
 				OutputFit:               outputFit,
 				OutputHeader:            outputHeader,
 				OutputLimit:             outputLimit,
@@ -264,8 +253,8 @@ func main() {
 				OutputReversed:          outputReversed,
 				OutputKeySerializer:     outputKeySerializer,
 				OutputValueSerializer:   outputValueSerializer,
-				OutputLineSeparator:     v.GetString(cli.FlagOutputLineSeparator),
-				OutputKeyValueSeparator: v.GetString(cli.FlagOutputKeyValueSeparator),
+				OutputLineSeparator:     outputLineSeparator,
+				OutputKeyValueSeparator: outputKeyValueSeparator,
 				OutputEscapePrefix:      v.GetString(cli.FlagOutputEscapePrefix),
 				OutputEscapeSpace:       v.GetBool(cli.FlagOutputEscapeSpace),
 				OutputEscapeNewLine:     v.GetBool(cli.FlagOutputEscapeNewLine),
@@ -285,7 +274,7 @@ func main() {
 			return nil
 		},
 	}
-	initFlags(rootCommand.Flags(), formats)
+	cli.InitFlags(rootCommand.Flags())
 
 	completionCommandLong := ""
 	if _, err := os.Stat("/etc/bash_completion.d/"); !os.IsNotExist(err) {
@@ -308,22 +297,12 @@ func main() {
 	}
 	rootCommand.AddCommand(completionCommand)
 
-	version := &cobra.Command{
-		Use:   "version",
-		Short: "print version information to stdout",
-		Long:  "print version information to stdout",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(gitBranch) > 0 {
-				fmt.Println("Branch: " + gitBranch)
-			}
-			if len(gitCommit) > 0 {
-				fmt.Println("Commit: " + gitCommit)
-			}
-			return nil
-		},
-	}
+	rootCommand.AddCommand(formats.NewCommand())
 
-	rootCommand.AddCommand(version)
+	rootCommand.AddCommand(version.NewCommand(&version.NewCommandInput{
+		GitBranch: gitBranch,
+		GitCommit: gitCommit,
+	}))
 
 	if err := rootCommand.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: "+err.Error()+"\n")

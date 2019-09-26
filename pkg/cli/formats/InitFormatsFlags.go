@@ -5,16 +5,13 @@
 //
 // =================================================================
 
-package cli
+package formats
 
 import (
-	"fmt"
+	"github.com/spf13/pflag"
 )
 
-type ErrInvalidLineSeparator struct {
-	Value string
-}
-
-func (e *ErrInvalidLineSeparator) String() {
-	return fmt.Sprintf("invalid line separator %q", e.Value)
+// InitFormatsFlags initializes the formats flags.
+func InitFormatsFlags(flag *pflag.FlagSet) {
+	flag.StringP(FlagFormat, "f", DefaultFormat, "output format")
 }

@@ -19,6 +19,7 @@ import (
 type SerializeBytesInput struct {
 	Object            interface{}
 	Format            string
+	FormatSpecifier   string
 	Fit               bool
 	Header            []interface{}
 	Limit             int
@@ -43,8 +44,11 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 	f := input.Format
 
 	switch f {
-	case "bson", "csv", "gob", "json", "jsonl", "properties", "go", "tags", "toml", "tsv", "yaml":
+	case "bson", "csv", "fmt", "go", "gob", "json", "jsonl", "properties", "tags", "toml", "tsv", "yaml":
 		s := serializer.New(f)
+		if f == serializer.FormatFmt {
+			s = s.FormatSpecifier(input.FormatSpecifier)
+		}
 		if f == serializer.FormatGo || f == serializer.FormatJSON || f == serializer.FormatJSONL {
 			s = s.Pretty(input.Pretty)
 		}

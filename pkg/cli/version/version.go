@@ -5,13 +5,4 @@
 //
 // =================================================================
 
-package cli
-
-func stringSliceContains(slc []string, str string) bool {
-	for _, x := range slc {
-		if x == str {
-			return true
-		}
-	}
-	return false
-}
+package version

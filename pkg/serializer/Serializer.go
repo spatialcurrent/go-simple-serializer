@@ -34,6 +34,7 @@ import (
 const (
 	FormatBSON       = "bson"       // Binary JSON
 	FormatCSV        = "csv"        // Comma-Separated Values
+	FormatFmt        = "fmt"        // Formatter
 	FormatGo         = "go"         // Native Golang print format
 	FormatGob        = "gob"        // Native Golang binary format
 	FormatJSON       = "json"       // JSON
@@ -53,6 +54,7 @@ var (
 	Formats = []string{
 		FormatBSON,
 		FormatCSV,
+		FormatFmt,
 		FormatGo,
 		FormatGob,
 		FormatJSON,
@@ -103,6 +105,7 @@ var (
 // Serializer is a struct for serializing/deserializing objects.  This is the workhorse of the gss package.
 type Serializer struct {
 	format            string // one of gss.Formats
+	formatSpecifier   string
 	fit               bool
 	header            []interface{} // if formt as csv or tsv, the column names
 	comment           string        // the line comment prefix
@@ -239,6 +242,12 @@ func NewWithOptions(format string, options ...map[string]interface{}) (*Serializ
 // Format sets the format of the serializer.
 func (s *Serializer) Format(format string) *Serializer {
 	s.format = format
+	return s
+}
+
+// FormatSpecifier sets the format sepcifier of the serializer.
+func (s *Serializer) FormatSpecifier(formatSpecifier string) *Serializer {
+	s.formatSpecifier = formatSpecifier
 	return s
 }
 
@@ -448,7 +457,7 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 			return nil, ErrMissingLineSeparator
 		}
 		switch s.format {
-		case FormatJSON:
+		case FormatJSONL:
 			return jsonl.Read(&jsonl.ReadInput{
 				Type:              s.objectType,
 				Reader:            bytes.NewReader(b),
@@ -564,6 +573,8 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			return make([]byte, 0), errors.Wrap(errWrite, "error writing separated values")
 		}
 		return buf.Bytes(), nil
+	case FormatFmt:
+		return []byte(fmt.Sprintf(s.formatSpecifier, object)), nil
 	case FormatGo:
 		// TODO:
 		// Pretty output disabled until https://github.com/kr/pretty/issues/45 is fixed

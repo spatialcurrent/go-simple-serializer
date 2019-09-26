@@ -5,16 +5,17 @@
 //
 // =================================================================
 
-package cli
+package input
 
 import (
 	"fmt"
+	"strings"
 )
 
-type ErrInvalidKeyValueSeparator struct {
-	Value string
+type ErrMissingInputFormat struct {
+	Expected []string
 }
 
-func (e *ErrInvalidKeyValueSeparator) String() {
-	return fmt.Sprintf("invalid key-value separator %q", e.Value)
+func (e *ErrMissingInputFormat) Error() string {
+	return fmt.Sprintf("missing input format, expecting on of %s", strings.Join(e.Expected, ", "))
 }

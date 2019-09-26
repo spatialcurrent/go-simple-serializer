@@ -24,12 +24,12 @@ func CanStream(inputFormat string, outputFormat string, outputSorted bool) bool 
 	switch inputFormat {
 	case serializer.FormatCSV, serializer.FormatTSV:
 		switch outputFormat {
-		case serializer.FormatCSV, serializer.FormatTSV, serializer.FormatJSONL, serializer.FormatGob, serializer.FormatTags:
+		case serializer.FormatCSV, serializer.FormatJSONL, serializer.FormatFmt, serializer.FormatGo, serializer.FormatGob, serializer.FormatTags, serializer.FormatTSV:
 			return true
 		}
 	case serializer.FormatJSONL, serializer.FormatGob, serializer.FormatTags:
 		switch outputFormat {
-		case serializer.FormatJSONL, serializer.FormatGo, serializer.FormatGob, serializer.FormatTags:
+		case serializer.FormatJSONL, serializer.FormatFmt, serializer.FormatGo, serializer.FormatGob, serializer.FormatTags:
 			return true
 		}
 	}

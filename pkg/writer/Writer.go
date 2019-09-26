@@ -15,6 +15,7 @@ package writer
 import (
 	"io"
 
+	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/fmt"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
@@ -24,10 +25,16 @@ import (
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
+var (
+	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
+	ErrMissingLineSeparator     = errors.New("missing line separator")
+)
+
 // Parameters for NewWriter function.
 type NewWriterInput struct {
 	Writer            io.Writer
 	Format            string
+	FormatSpecifier   string
 	Header            []interface{}
 	ExpandHeader      bool // in context, only used by tags as ExpandKeys
 	KeySerializer     stringify.Stringer
@@ -42,6 +49,13 @@ type NewWriterInput struct {
 
 // NewWriter returns a new pipe.Writer for writing formatted objects to an underlying writer.
 func NewWriter(input *NewWriterInput) (pipe.Writer, error) {
+
+	switch input.Format {
+	case "go", "jsonl", "tags":
+		if len(input.LineSeparator) == 0 {
+			return nil, ErrMissingLineSeparator
+		}
+	}
 
 	switch input.Format {
 	case "csv", "tsv":
@@ -59,14 +73,26 @@ func NewWriter(input *NewWriterInput) (pipe.Writer, error) {
 			input.Reversed,
 		)
 		return w, nil
+	case "fmt":
+		w := fmt.NewWriter(input.Writer, input.FormatSpecifier, input.LineSeparator)
+		return w, nil
 	case "go":
 		w := fmt.NewWriter(input.Writer, "%#v", input.LineSeparator)
 		return w, nil
 	case "gob":
 		return gob.NewWriter(input.Writer, input.Fit), nil
 	case "jsonl":
-		return jsonl.NewWriter(input.Writer, input.LineSeparator, input.KeySerializer, input.Pretty), nil
+		w := jsonl.NewWriter(
+			input.Writer,
+			input.LineSeparator,
+			input.KeySerializer,
+			input.Pretty,
+		)
+		return w, nil
 	case "tags":
+		if len(input.KeyValueSeparator) == 0 {
+			return nil, ErrMissingKeyValueSeparator
+		}
 		w := tags.NewWriter(
 			input.Writer,
 			input.Header,

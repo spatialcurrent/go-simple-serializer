@@ -34,6 +34,7 @@ type ConvertInput struct {
 	InputUnescapeEqual      bool
 	InputType               reflect.Type
 	OutputFormat            string
+	OutputFormatSpecifier   string
 	OutputFit               bool
 	OutputHeader            []interface{}
 	OutputLimit             int
@@ -68,6 +69,7 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 		InputUnescapeEqual:      false,
 		InputType:               nil,
 		OutputFormat:            outputFormat,
+		OutputFormatSpecifier:   "",
 		OutputFit:               false,
 		OutputHeader:            NoHeader,
 		OutputLimit:             NoLimit,
@@ -109,6 +111,7 @@ func Convert(input *ConvertInput) ([]byte, error) {
 	}
 
 	out := serializer.New(input.OutputFormat).
+		FormatSpecifier(input.OutputFormatSpecifier).
 		Fit(input.OutputFit).
 		Limit(input.OutputLimit).
 		Header(input.OutputHeader).
