@@ -5,7 +5,6 @@
 //
 // =================================================================
 
-// Package cli manages loading and testing configuration for serializing and deserializing objects from the command line.
 package cli
 
 import (

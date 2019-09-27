@@ -14,10 +14,7 @@ import (
 	"fmt"
 	"reflect"
 
-	//"github.com/hashicorp/hcl"
-
-	//hcl2 "github.com/hashicorp/hcl2/hcl"
-	//"github.com/hashicorp/hcl2/hcl/hclsyntax"
+	"github.com/hashicorp/hcl"
 	"github.com/pkg/errors"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
@@ -37,15 +34,14 @@ const (
 	FormatFmt        = "fmt"        // Formatter
 	FormatGo         = "go"         // Native Golang print format
 	FormatGob        = "gob"        // Native Golang binary format
+	FormatHCL        = "hcl"        // HashiCorp Configuration Language
 	FormatJSON       = "json"       // JSON
 	FormatJSONL      = "jsonl"      // JSON Lines
 	FormatProperties = "properties" // Properties
 	FormatTags       = "tags"       // Tags (a=b c=d ...)
 	FormatTOML       = "toml"       // TOML
 	FormatTSV        = "tsv"        // Tab-Separated Values
-	//FormatHCL        = "hcl"        // HashiCorp Configuration Language
-	//FormatHCL2       = "hcl2"       // HashiCorp Configuration Language Version 2.x
-	FormatYAML = "yaml" // YAML
+	FormatYAML       = "yaml"       // YAML
 
 	NoLimit = -1
 )
@@ -57,14 +53,13 @@ var (
 		FormatFmt,
 		FormatGo,
 		FormatGob,
+		FormatHCL,
 		FormatJSON,
 		FormatJSONL,
 		FormatProperties,
 		FormatTags,
 		FormatTOML,
 		FormatTSV,
-		//FormatHCL,
-		//FormatHCL2,
 		FormatYAML,
 	}
 	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
@@ -503,30 +498,33 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 			})
 		}
 	case FormatGob:
+		if s.trim {
+			return gob.Read(&gob.ReadInput{
+				Type:   s.objectType,
+				Reader: bytes.NewReader(bytes.TrimSpace(b)),
+				Limit:  s.limit,
+			})
+		}
 		return gob.Read(&gob.ReadInput{
 			Type:   s.objectType,
 			Reader: bytes.NewReader(b),
 			Limit:  s.limit,
 		})
-		/*
-			case FormatHCL:
-				ptr := reflect.New(s.objectType)
-				ptr.Elem().Set(reflect.MakeMap(s.objectType))
-				obj, err := hcl.Parse(string(b))
-				if err != nil {
-					return nil, errors.Wrap(err, "Error parsing hcl")
-				}
-				if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-					return nil, errors.Wrap(err, "Error decoding hcl")
-				}
-				return ptr.Elem().Interface(), nil
-			case FormatHCL2:
-				file, diags := hclsyntax.ParseConfig(b, "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
-				if diags.HasErrors() {
-					return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
-				}
-				return &file.Body, nil
-		*/
+	case FormatHCL:
+		objectType := s.objectType
+		if objectType == nil {
+			objectType = reflect.TypeOf(map[string]interface{}{})
+		}
+		ptr := reflect.New(objectType)
+		ptr.Elem().Set(reflect.MakeMap(objectType))
+		obj, err := hcl.Parse(string(b))
+		if err != nil {
+			return nil, errors.Wrap(err, "Error parsing hcl")
+		}
+		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
+			return nil, errors.Wrap(err, "Error decoding hcl")
+		}
+		return ptr.Elem().Interface(), nil
 	}
 	return nil, &ErrUnknownFormat{Name: s.format}
 }

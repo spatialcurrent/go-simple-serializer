@@ -14,14 +14,14 @@ import (
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
-// ReadInput provides the input for the Read function.
+// ReadInput provides the input parameters for the Read function.
 type ReadInput struct {
 	Type   reflect.Type // the output type
 	Reader io.Reader    // the underlying reader
 	Limit  int
 }
 
-// Read reads the json lines from the input reader of the type given.
+// Read reads the sequence of gob items from the input reader of the type given.
 func Read(input *ReadInput) (interface{}, error) {
 
 	if input.Type == nil {

@@ -242,6 +242,7 @@ func main() {
 				InputUnescapeSpace:      v.GetBool(cli.FlagInputUnescapeSpace),
 				InputUnescapeNewLine:    v.GetBool(cli.FlagInputUnescapeNewLine),
 				InputUnescapeEqual:      v.GetBool(cli.FlagInputUnescapeEqual),
+				InputTrim:               v.GetBool(cli.FlagInputTrim),
 				InputType:               inputType,
 				OutputFormat:            outputFormat,
 				OutputFormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),

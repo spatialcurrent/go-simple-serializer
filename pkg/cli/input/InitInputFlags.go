@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Initialize input flags
+// InitInputFlags initializes the flags for processing the input data from the gss command.
 func InitInputFlags(flag *pflag.FlagSet) {
 	flag.StringP(FlagInputFormat, "i", "", "The input format")
 	flag.StringSlice(FlagInputHeader, DefaultInputHeader, "The input header if the stdin input has no header.")

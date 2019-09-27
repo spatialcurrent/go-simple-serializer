@@ -14,7 +14,7 @@ import (
 	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 )
 
-// Marshal formats an object into a slice of bytes of GOB.
+// Marshal formats an object into a slice of gob-encoded bytes.
 func Marshal(obj interface{}, fit bool) ([]byte, error) {
 	b := new(bytes.Buffer)
 	e := NewEncoder(b)
@@ -29,6 +29,5 @@ func Marshal(obj interface{}, fit bool) ([]byte, error) {
 			return make([]byte, 0), err
 		}
 	}
-
 	return b.Bytes(), nil
 }

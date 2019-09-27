@@ -5,4 +5,5 @@
 //
 // =================================================================
 
+// Package version contains the command for printing version information.
 package version

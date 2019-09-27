@@ -19,7 +19,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
-// NewCommand returns a new instance of the version command.
+// NewCommand returns a new instance of the formats command.
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   CliUse,

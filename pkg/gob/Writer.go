@@ -15,14 +15,14 @@ import (
 	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 )
 
-// Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
+// Writer formats and writes objects to the underlying writer as gob-encoded items.
 type Writer struct {
 	writer  io.Writer // writer for the underlying stream
 	encoder *Encoder  // GOB encoder
 	fit     bool      // fit values before writing
 }
 
-// NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
+// NewWriter returns a writer for formating and writing objets to the underlying writer as gob-encoded items.
 func NewWriter(w io.Writer, fit bool) *Writer {
 	return &Writer{
 		writer:  w,
@@ -31,7 +31,7 @@ func NewWriter(w io.Writer, fit bool) *Writer {
 	}
 }
 
-// WriteObject formats and writes a single object to the underlying writer as GOB.
+// WriteObject formats and writes a single object to the underlying writer as a gob-encoded item.
 func (w *Writer) WriteObject(obj interface{}) error {
 	if w.fit {
 		err := w.encoder.EncodeValue(pkgfit.FitValue(reflect.ValueOf(obj)))
@@ -69,7 +69,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 // Flush flushes the underlying writer, if it has a Flush method.
 // This writer itself does no buffering.
 func (w *Writer) Flush() error {
-	if flusher, ok := w.writer.(Flusher); ok {
+	if flusher, ok := w.writer.(interface{ Flush() error }); ok {
 		err := flusher.Flush()
 		if err != nil {
 			return errors.Wrap(err, "error flushing underlying writer")

@@ -5,6 +5,7 @@
 //
 // =================================================================
 
+// Package output contains the code for processing the user provided configuration for the input.
 package input
 
 import (

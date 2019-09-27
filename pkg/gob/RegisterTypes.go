@@ -11,7 +11,7 @@ import (
 	stdgob "encoding/gob"
 )
 
-// RegisterTypes registers some default types.
+// RegisterTypes registers some default types that are not registered by default by the standard library gob package.
 func RegisterTypes() {
 	stdgob.Register(map[string]interface{}(nil))
 	stdgob.Register([]interface{}(nil))

@@ -17,7 +17,7 @@ import (
 // returning a new object on each call of Next()
 // until it reaches the end and returns io.EOF.
 type Iterator struct {
-	Type    reflect.Type    // the type to unmarshal for each line
+	Type    reflect.Type    // the type to unmarshal for each item
 	Decoder *stdgob.Decoder // the scanner that splits the underlying stream of bytes
 	Limit   int             // Limit the number of objects to read and return from the underlying stream.
 	Count   int             // The current count of the number of objects read.
@@ -30,7 +30,7 @@ type NewIteratorInput struct {
 	Limit  int          // Limit the number of objects to read and return from the underlying stream.
 }
 
-// NewIterator returns a new GOB (aka Go Binary) Iterator base on the given input.
+// NewIterator returns a new gob iterator base on the given input.
 func NewIterator(input *NewIteratorInput) *Iterator {
 
 	return &Iterator{

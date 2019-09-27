@@ -5,6 +5,7 @@
 //
 // =================================================================
 
+// Package formats provides the command for printing a list of supported formats.
 package formats
 
 const (

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Initialize output flags
+// InitOutputFlags initializes the flags for processing the output data from the gss command.
 func InitOutputFlags(flag *pflag.FlagSet) {
 	flag.StringP(FlagOutputFormat, "o", "", "The output format")
 	flag.String(FlagOutputFormatSpecifier, "", "The output format specifier")

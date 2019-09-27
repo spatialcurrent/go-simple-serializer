@@ -23,9 +23,8 @@ type WriteInput struct {
 	Fit    bool
 }
 
-// Write writes the given object(s) as JSON Lines (aka jsonl).
-// If the type of the input object is of kind Array or Slice, then writes each object on its own line.
-// Otherwise, the object is simply written as JSON.
+// Write writes the given object(s) as gob-encoded items.
+// As gob is a stream encoding, if provded an object of array or slice, then each contained element is written as its own item.  If not provided an array or slice, then the provided object is encoded as is as a gob item.
 func Write(input *WriteInput) error {
 	inputObject := input.Object
 	inputObjectValue := reflect.ValueOf(inputObject)

@@ -21,7 +21,7 @@ type Writer struct {
 	lineSeparator string    // the separator stirng to use, e.g, null byte or \n.
 }
 
-// NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
+// NewWriter returns a writer for formating and writing objets to the underlying writer as formatted lines.
 func NewWriter(w io.Writer, format string, lineSeparator string) *Writer {
 	return &Writer{
 		writer:        w,

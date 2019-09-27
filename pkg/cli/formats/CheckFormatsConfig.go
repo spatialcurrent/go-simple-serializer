@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// CheckFormatsConfig checks the formats configuration.
+// CheckFormatsConfig checks the configuration for the formats command.
 func CheckFormatsConfig(v *viper.Viper) error {
 	return nil
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// InitFormatsFlags initializes the formats flags.
+// InitFormatsFlags initializes the flags for the formats command.
 func InitFormatsFlags(flag *pflag.FlagSet) {
 	flag.StringP(FlagFormat, "f", DefaultFormat, "output format")
 }

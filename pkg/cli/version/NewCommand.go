@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCommandInput contains the input parameters for the NewCommand function.
 type NewCommandInput struct {
 	GitBranch string
 	GitCommit string

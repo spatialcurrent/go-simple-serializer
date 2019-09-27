@@ -5,6 +5,7 @@
 //
 // =================================================================
 
+// Package gob provides support for reading and writing a stream of gob-encoded obejcts.
 package gob
 
 import (
