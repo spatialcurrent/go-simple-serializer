@@ -9,9 +9,10 @@ package cli
 
 import (
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/input"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/output"
-	"github.com/spf13/viper"
 )
 
 // CheckConfig checks the configuration.

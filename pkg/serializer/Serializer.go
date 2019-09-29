@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/hcl"
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"

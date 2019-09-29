@@ -12,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+
 	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 )
 

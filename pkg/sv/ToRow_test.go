@@ -10,8 +10,9 @@ package sv
 import (
 	"testing"
 
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func TestToRow(t *testing.T) {

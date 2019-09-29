@@ -14,6 +14,7 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )

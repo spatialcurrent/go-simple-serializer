@@ -45,7 +45,7 @@ jobs:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
       - run: make deps_gopherjs
       - run: make deps_javascript
-      - run: npm run test:clean
+      - run: npm run build:clean
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_javascript

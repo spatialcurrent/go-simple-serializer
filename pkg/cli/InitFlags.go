@@ -8,9 +8,10 @@
 package cli
 
 import (
+	"github.com/spf13/pflag"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/input"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/output"
-	"github.com/spf13/pflag"
 )
 
 // Initialize cli flags

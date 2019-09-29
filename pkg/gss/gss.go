@@ -56,6 +56,7 @@ package gss
 
 import (
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 

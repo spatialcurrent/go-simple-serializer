@@ -14,6 +14,7 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )

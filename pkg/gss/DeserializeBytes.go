@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/hcl"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
