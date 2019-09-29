@@ -71,8 +71,16 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 		if errorIterator != nil {
 			return nil, errors.Wrap(errorIterator, "error creating iterator")
 		}
-		w := pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
-		errorRun := pipe.NewBuilder().Input(it).Output(w).Run()
+		p := pipe.NewBuilder().Input(it)
+		var w *pipe.SliceWriter
+		if input.Type != nil {
+			w = pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
+			p = p.Output(w)
+		} else {
+			w = pipe.NewSliceWriterWithValues([]interface{}{})
+			p = p.Output(w)
+		}
+		errorRun := p.Run()
 		if errorRun != nil {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}

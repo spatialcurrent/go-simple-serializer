@@ -15,4 +15,5 @@ import (
 func RegisterTypes() {
 	stdgob.Register(map[string]interface{}(nil))
 	stdgob.Register([]interface{}(nil))
+	stdgob.Register([]map[string]interface{}(nil))
 }
