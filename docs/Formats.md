@@ -15,5 +15,5 @@ The following file formats are supported.  Pull requests to support other format
 | properties | ✓ | ✓ | - |[Properties](https://en.wikipedia.org/wiki/.properties) |
 | tags | ✓ | ✓ | ✓ | single-line series of key=value tags |
 | toml | ✓ | ✓ | - | [TOML](https://github.com/toml-lang/toml) |
-| tsv | ✓ | ✓ | - |[ Tab-Separated Values](https://en.wikipedia.org/wiki/Tab-separated_values) |
-| yaml | ✓ | ✓ | ✓ | [YAML](https://yaml.org/) |
+| tsv | ✓ | ✓ | ✓ |[ Tab-Separated Values](https://en.wikipedia.org/wiki/Tab-separated_values) |
+| yaml | ✓ | ✓ | - | [YAML](https://yaml.org/) |

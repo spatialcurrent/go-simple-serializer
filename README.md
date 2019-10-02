@@ -4,7 +4,7 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple serialization formats in their applications.  GSS supports a variety of operating systems, architectures, and use cases.  A CLI is released for Microsoft Windows, Linux distributions, and [Darwin](https://en.wikipedia.org/wiki/Darwin_%28operating_system%29) platforms.
+**go-simple-serializer** (aka GSS) is a simple library to easily convert data between formats that aims to decrease the burden on developers to support multiple serialization formats in their applications.  GSS supports a variety of operating systems, architectures, and use cases.  A CLI is released for Microsoft Windows, Linux distributions, and [Darwin](https://en.wikipedia.org/wiki/Darwin_%28operating_system%29) platforms.
 
 Using cross compilers, this library can also be called by other languages, including `C`, `C++`, `Python`, and `JavaScript`.  This library is cross compiled into a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs), which can be called by [Node.js](https://nodejs.org) and loaded in the browser.  See the examples folder for patterns that you can use.
 
@@ -20,7 +20,7 @@ The main public api for GSS is in the `gss` package.  However, this library does
 
 **CLI**
 
-The command line tool, `gss`, can be used to easily read convert data between formats.  We currently support the following platforms.
+The command line tool, `gss`, can be used to easily convert data between formats.  We currently support the following platforms.
 
 | GOOS | GOARCH |
 | ---- | ------ |

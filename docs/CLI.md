@@ -6,7 +6,6 @@
 - [Examples](#examples)  - detailed usage exampels
 - [Examples](#building) - how to build the CLI
 - [Testing](#testing) - test the CLI
-- [Troubleshooting](#Troubleshooting) - how to troubleshoot common errors
 
 ## Usage
 
@@ -29,8 +28,8 @@ The following file formats are supported.  Pull requests to support other format
 | properties | ✓ | ✓ | - |[Properties](https://en.wikipedia.org/wiki/.properties) |
 | tags | ✓ | ✓ | ✓ | single-line series of key=value tags |
 | toml | ✓ | ✓ | - | [TOML](https://github.com/toml-lang/toml) |
-| tsv | ✓ | ✓ | - |[ Tab-Separated Values](https://en.wikipedia.org/wiki/Tab-separated_values) |
-| yaml | ✓ | ✓ | ✓ | [YAML](https://yaml.org/) |
+| tsv | ✓ | ✓ | ✓ |[ Tab-Separated Values](https://en.wikipedia.org/wiki/Tab-separated_values) |
+| yaml | ✓ | ✓ | - | [YAML](https://yaml.org/) |
 
 
 ### Platforms
@@ -96,18 +95,3 @@ To run CLI testes use `make test_cli`, which uses [shUnit2](https://github.com/k
 ```
 TMPDIR="/usr/local/tmp" make test_cli
 ```
-
-## Troubleshooting
-
-### no such file or directory
-
-#### Example
-
-```text
-error opening resource at uri %q: error opening file for writing at path %q: open %s: no such file or directory
-```
-
-#### Solution
-
-This error typically occurs when a parent directory of an output file does not exist.  Use the `--output-mkdirs` command line flag to allow gss to create parent directories for output files as needed.
-
