@@ -65,8 +65,9 @@ func main() {
 	rootCommand := &cobra.Command{
 		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
 		DisableFlagsInUseLine: false,
-		Short:                 "gss",
-		Long:                  `gsss is a simple and fast program for serializing/deserializing data that supports following file formats: ` + strings.Join(gss.Formats, ", "),
+		Short:                 "gss is a simple tool for converting data between formats.",
+		Long:                  `gss is a simple tool for converting data between formats.
+Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -142,6 +143,16 @@ func main() {
 				}
 				fmt.Println("")
 			}
+			
+			
+      fi, err := os.Stdin.Stat()
+      if err != nil {
+        return errors.Wrap(err, "error stating stdin")
+      }
+      
+			if fi.Mode() & os.ModeNamedPipe == 0 {
+        return errors.Errorf("no data provided on stdin")
+      }
 
 			noStream := v.GetBool("no-stream")
 
@@ -307,8 +318,8 @@ func main() {
 	}))
 
 	if err := rootCommand.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: "+err.Error()+"\n")
-		fmt.Fprintf(os.Stderr, "Help: gss -h\n")
+		fmt.Fprintln(os.Stderr, "gss: "+err.Error())
+		fmt.Fprintln(os.Stderr, "Try gss --help for more information.")
 		os.Exit(1)
 	}
 }

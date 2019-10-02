@@ -10,49 +10,17 @@ Using cross compilers, this library can also be called by other languages, inclu
 
 **Formats**
 
-GSS supports the following formats.
-
-| Format | Description |
-| ---- | ------ |
-| bson | [Binary JSON](https://en.wikipedia.org/wiki/BSON) |
-| csv | [Comma-Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values) |
-| hcl | HashiCorp Configuration Language |
-| hcl2 | HashiCorp Configuration Language (version 2.x) |
-| json | [JSON](http://json.org/) |
-| jsonl | [JSON Lines](http://jsonlines.org/) |
-| properties | [Properties](https://en.wikipedia.org/wiki/.properties) |
-| tags | single-line key=value tags |
-| toml | [TOML](https://github.com/toml-lang/toml) |
-| tsv | Tab-Separated Values |
-| yaml | [YAML](https://yaml.org/) |
-
-`hcl` and `hcl2` implementation is fragile and very much in `alpha`.  The other formats are well-supported.
+GSS supports many common formats, including CSV, JSON, and YAML.  Pull requests to support other formats are welcome!  See the [Formats.md](docs/Formats.md) document for a full list of supported formats.
 
 **Packages**
 
-The main public api for GSS is in the `gss` package.  However, this library does ship with lower-level packages that can be imported directly as well.
-
-| Package | Purpose |
-| ---- | ------ |
-| bson | Binary JSON |
-| escaper | Escape/unescape strings |
-| gss | The main public API |
-| inspector | Reusable functions for inspecting objects |
-| iterator | Wrapper for iterable formats |
-| json | JSON |
-| jsonl | JSON Lines |
-| properties | Properties Files |
-| scanner | Scanning through a stream of bytes |
-| splitter | Creating custom bufio.SplitFunc |
-| sv | Separated-Values formats, i.e., CSV and TSV. |
-| toml | TOML |
-| yaml | YAML |
+The main public api for GSS is in the `gss` package.  However, this library does ship with internal packages under `/pkg/...` that can be imported and used directly.
 
 # Usage
 
 **CLI**
 
-The command line tool, `gss`, can be used to easily covert data between formats.  We currently support the following platforms.
+The command line tool, `gss`, can be used to easily read convert data between formats.  We currently support the following platforms.
 
 | GOOS | GOARCH |
 | ---- | ------ |
@@ -61,7 +29,7 @@ The command line tool, `gss`, can be used to easily covert data between formats.
 | windows | amd64 |
 | linux | arm64 |
 
-Pull requests to support other platforms are welcome!  See the [examples](#examples) section below for usage.
+Pull requests to support other platforms are welcome!  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
 
 **Go**
 
