@@ -66,10 +66,10 @@ func main() {
 		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
 		DisableFlagsInUseLine: false,
 		Short:                 "gss is a simple tool for converting data between formats.",
-		Long:                  `gss is a simple tool for converting data between formats.
+		Long: `gss is a simple tool for converting data between formats.
 Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
-		SilenceUsage:          true,
-		SilenceErrors:         true,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
@@ -143,16 +143,15 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				}
 				fmt.Println("")
 			}
-			
-			
-      fi, err := os.Stdin.Stat()
-      if err != nil {
-        return errors.Wrap(err, "error stating stdin")
-      }
-      
-			if fi.Mode() & os.ModeNamedPipe == 0 {
-        return errors.Errorf("no data provided on stdin")
-      }
+
+			fi, err := os.Stdin.Stat()
+			if err != nil {
+				return errors.Wrap(err, "error stating stdin")
+			}
+
+			if fi.Mode()&os.ModeNamedPipe == 0 {
+				return errors.Errorf("no data provided on stdin")
+			}
 
 			noStream := v.GetBool("no-stream")
 
