@@ -3,7 +3,7 @@
 The following file formats are supported.  Pull requests to support other formats are welcome!
 
 | Format | Read |  Write | Stream | Description |
-| ---- | ------ |  ------ |
+| ---- | ------ |  ------ | ------ | ------ |
 | bson | ✓ | ✓ | - | [Binary JSON](https://en.wikipedia.org/wiki/BSON) |
 | csv | ✓ | ✓ | ✓ | [Comma-Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values) |
 | fmt | - | ✓ | ✓ | [fmt](https://godoc.org/fmt) |
