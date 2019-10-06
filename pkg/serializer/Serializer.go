@@ -21,6 +21,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
@@ -248,8 +249,8 @@ func (s *Serializer) FormatSpecifier(formatSpecifier string) *Serializer {
 }
 
 // Fit sets the fit of the serializer.
-func (s *Serializer) Fit(fit bool) *Serializer {
-	s.fit = fit
+func (s *Serializer) Fit(f bool) *Serializer {
+	s.fit = f
 	return s
 }
 
@@ -573,6 +574,9 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		}
 		return buf.Bytes(), nil
 	case FormatFmt:
+		if s.fit {
+		  return []byte(fmt.Sprintf(s.formatSpecifier, fit.Fit(object))), nil
+		}
 		return []byte(fmt.Sprintf(s.formatSpecifier, object)), nil
 	case FormatGo:
 		// TODO:
@@ -581,6 +585,9 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		//if s.pretty {
 		//	return []byte(krpretty.Sprint(object)), nil
 		//}
+		if s.fit {
+		  return []byte(fmt.Sprintf("%#v", fit.Fit(object))), nil
+		}
 		return []byte(fmt.Sprintf("%#v", object)), nil
 	case FormatGob:
 		return gob.Marshal(object, s.fit)

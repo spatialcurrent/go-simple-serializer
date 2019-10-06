@@ -1,17 +1,40 @@
 # CLI
 
+- [Usage](#usage) - basic usage
 - [Formats](#formats) - list of supported file formats
 - [Platforms](#platforms) - list of supported platforms
 - [Releases](#releases) - where to find an executable
 - [Examples](#examples)  - detailed usage exampels
-- [Examples](#building) - how to build the CLI
+- [Building](#building) - how to build the CLI
 - [Testing](#testing) - test the CLI
 
 ## Usage
 
-The command line tool, `gss`, can be used to easily read and write compressed resources by uri.
+The command line tool, `gss`, can be used to easily convert data between formats.  gss reads from stdin and outputs to stdout.
 
-### Formats
+```shell
+gss -i INPUT_FORMAT -o OUTPUT_FORMAT [flags]
+```
+
+Using typical shell redirection, you can read from `INPUT_FILE` and write to `OUTPUT_FILE`.
+
+```shell
+gss -i INPUT_FORMAT -o OUTPUT_FORMAT [flags] < INPUT_FILE > OUTPUT_FILE
+```
+
+Or you could save the output to shell variable `output`.
+
+```shell
+output=$(echo "${input}" | gss -i INPUT_FORMAT -o OUTPUT_FORMAT [flags])
+```
+
+For more information use the help flag.
+
+```shell
+gss --help
+```
+
+## Formats
 
 The following file formats are supported.  Pull requests to support other formats are welcome!
 
@@ -32,7 +55,7 @@ The following file formats are supported.  Pull requests to support other format
 | yaml | ✓ | ✓ | - | [YAML](https://yaml.org/) |
 
 
-### Platforms
+## Platforms
 
 The following platforms are supported.  Pull requests to support other platforms are welcome!
 
@@ -60,7 +83,7 @@ The following platforms are supported.  Pull requests to support other platforms
 
 - `gss_windows_amd64.exe` - CLI for Windows on amd64
 
-# Examples
+## Examples
 
 `.gitignore` file to jsonl
 
@@ -80,7 +103,7 @@ Convert list of files to JSON Lines
 find . -name '*.go' | gss -i csv --input-header path -o jsonl
 ```
 
-# Building
+## Building
 
 Use `make build_cli` to build executables for Linux and Windows.
 

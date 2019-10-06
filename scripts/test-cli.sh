@@ -58,6 +58,21 @@ testJSONLFmt() {
   assertEquals "unexpected output" "$(echo -e "${expected}")" "${output}"
 }
 
+testJSONGo() {
+  local input='["a", "x"]'
+  local expected='[]interface {}{"a", "x"}'
+  local output=$(echo -e "${input}" | gss -i json -o go)
+  assertEquals "unexpected output" "$(echo -e "${expected}")" "${output}"
+}
+
+testJSONGoFit() {
+  local input='["a", "x"]'
+  local expected='[]string{"a", "x"}'
+  local output=$(echo -e "${input}" | gss -i json -o go --output-fit)
+  assertEquals "unexpected output" "$(echo -e "${expected}")" "${output}"
+}
+
+
 testHCLJSON() {
   local expected='{"data":[{"aws_caller_identity":[{"current":[{}]}]}]}'
   local output=$(echo 'data "aws_caller_identity" "current" {}' | gss -i  hcl -o json)
