@@ -10,7 +10,13 @@
 package toml
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
+)
+
+var (
+	DefaultType = reflect.TypeOf(map[string]interface{}{})
 )
 
 var (

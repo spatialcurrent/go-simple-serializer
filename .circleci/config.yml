@@ -26,6 +26,16 @@ jobs:
       - run: make test_go
       - run: make imports
       - run: git diff --exit-code
+  test_cli:
+    executor: base
+    steps:
+      - run: sudo chown -R circleci /go/src
+      - restore_cache:
+          keys:
+            - v1-go-src-{{ .Branch }}-{{ .Revision }}
+      - run: make deps_go_test
+      - run: make install
+      - run: make test_cli
   test_javascript:
     executor: base
     steps:
@@ -45,7 +55,7 @@ jobs:
             - v1-go-src-{{ .Branch }}-{{ .Revision }}
       - run: make deps_gopherjs
       - run: make deps_javascript
-      - run: npm run test:clean
+      - run: npm run build:clean
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_javascript
@@ -91,6 +101,9 @@ workflows:
     jobs:
       - pre_deps_golang
       - test_go:
+          requires:
+            - pre_deps_golang
+      - test_cli:
           requires:
             - pre_deps_golang
       - test_javascript:

@@ -14,6 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
 

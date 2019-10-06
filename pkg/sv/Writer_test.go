@@ -11,8 +11,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func TestWriteHeader(t *testing.T) {

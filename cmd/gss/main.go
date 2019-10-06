@@ -27,92 +27,49 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/formats"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/version"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/writer"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 var gitBranch string
 var gitCommit string
 
-func buildWriter(outputWriter io.Writer, outputFormat string, outputHeader []interface{}, outputKeySerializer stringify.Stringer, outputValueSerializer stringify.Stringer, outputLineSeparator string, outputPretty bool, outputSorted bool, outputReversed bool) (pipe.Writer, error) {
-	if outputFormat == "csv" || outputFormat == "tsv" {
-		separator, err := sv.FormatToSeparator(outputFormat)
-		if err != nil {
-			return nil, err
-		}
-		w := sv.NewWriter(
-			outputWriter,
-			separator,
-			outputHeader,
-			outputKeySerializer,
-			outputValueSerializer,
-			outputSorted,
-			outputReversed,
-		)
-		return w, nil
-	} else if outputFormat == "jsonl" {
-		return jsonl.NewWriter(outputWriter, outputLineSeparator, outputKeySerializer, outputPretty), nil
-	}
-	return nil, fmt.Errorf("invalid format %q", outputFormat)
-}
-
-func canStream(inputFormat string, outputFormat string, outputSorted bool) bool {
-	if !outputSorted {
-		if inputFormat == "csv" || inputFormat == "tsv" {
-			if outputFormat == "csv" || outputFormat == "tsv" || outputFormat == "jsonl" {
-				return true
-			}
-		} else if inputFormat == "jsonl" {
-			if outputFormat == "jsonl" {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func initFlags(flag *pflag.FlagSet, formats []string) {
-	cli.InitCliFlags(flag, formats)
-}
-
-func checkConfig(v *viper.Viper, formats []string) error {
-	if err := cli.CheckInput(v, formats); err != nil {
-		return err
-	}
-	if err := cli.CheckOutput(v, formats); err != nil {
-		return err
-	}
-	return nil
-}
+var (
+	mapStringInterfaceType      = reflect.TypeOf(map[string]interface{}{})
+	sliceMapStringInterfaceType = reflect.TypeOf([]map[string]interface{}{})
+)
 
 func main() {
 
-	formats := serializer.Formats
+	// Register gob types
+	gob.RegisterTypes()
 
 	rootCommand := &cobra.Command{
 		Use:                   "gss -i INPUT_FORMAT -o OUTPUT_FORMAT",
 		DisableFlagsInUseLine: false,
-		Short:                 "gss",
-		Long:                  `gss is a simple program for serializing/deserializing data.`,
-		SilenceUsage:          true,
-		SilenceErrors:         true,
+		Short:                 "gss is a simple tool for converting data between formats.",
+		Long: `gss is a simple tool for converting data between formats.
+Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			v := viper.New()
@@ -123,7 +80,7 @@ func main() {
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv()
 
-			if errorConfig := checkConfig(v, formats); errorConfig != nil {
+			if errorConfig := cli.CheckConfig(v, serializer.Formats); errorConfig != nil {
 				return errorConfig
 			}
 
@@ -140,6 +97,7 @@ func main() {
 			outputSorted := v.GetBool(cli.FlagOutputSorted)
 			outputReversed := v.GetBool(cli.FlagOutputReversed)
 
+			outputKeyValueSeparator := v.GetString(cli.FlagOutputKeyValueSeparator)
 			outputLineSeparator := v.GetString(cli.FlagOutputLineSeparator)
 
 			outputKeySerializer := stringify.NewStringer(
@@ -158,6 +116,8 @@ func main() {
 
 			outputPretty := v.GetBool(cli.FlagOutputPretty)
 
+			outputFit := v.GetBool(cli.FlagOutputFit)
+
 			outputLimit := v.GetInt(cli.FlagOutputLimit)
 
 			verbose := v.GetBool(cli.FlagVerbose)
@@ -166,7 +126,7 @@ func main() {
 				err := properties.Write(&properties.WriteInput{
 					Writer:            os.Stdout,
 					LineSeparator:     "\n",
-					KeyValueSeparator: "=",
+					KeyValueSeparator: ":",
 					Object:            v.AllSettings(),
 					KeySerializer:     stringify.NewDefaultStringer(),
 					ValueSerializer:   stringify.NewDefaultStringer(),
@@ -181,15 +141,40 @@ func main() {
 				if err != nil {
 					return errors.Wrap(err, "error writing viper settings")
 				}
+				fmt.Println("")
 			}
 
-			if canStream(inputFormat, outputFormat, outputSorted) {
+			fi, err := os.Stdin.Stat()
+			if err != nil {
+				return errors.Wrap(err, "error stating stdin")
+			}
+
+			if fi.Mode()&os.ModeNamedPipe == 0 {
+				return errors.Errorf("no data provided on stdin")
+			}
+
+			noStream := v.GetBool("no-stream")
+
+			if (!noStream) && gss.CanStream(inputFormat, outputFormat, outputSorted) {
+
+				if verbose {
+					fmt.Println("Streaming: yes")
+				}
 
 				p := pipe.NewBuilder()
 
+				var inputType reflect.Type
+				if inputFormat == "gob" {
+					inputType = mapStringInterfaceType
+				}
+
+				if verbose {
+					fmt.Println("Streaming Type:", inputType)
+				}
+
 				it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 					Reader:            os.Stdin,
-					Type:              reflect.TypeOf([]map[string]interface{}{}),
+					Type:              inputType,
 					Format:            inputFormat,
 					Header:            inputHeader,
 					ScannerBufferSize: v.GetInt(cli.FlagInputScannerBufferSize),
@@ -213,17 +198,20 @@ func main() {
 					p = p.InputLimit(inputLimit)
 				}
 
-				w, errorWriter := buildWriter(
-					os.Stdout,
-					outputFormat,
-					outputHeader,
-					outputKeySerializer,
-					outputValueSerializer,
-					outputLineSeparator,
-					outputPretty,
-					outputSorted,
-					outputReversed,
-				)
+				w, errorWriter := writer.NewWriter(&writer.NewWriterInput{
+					Writer:            os.Stdout,
+					Format:            outputFormat,
+					FormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),
+					Header:            outputHeader,
+					KeySerializer:     outputKeySerializer,
+					ValueSerializer:   outputValueSerializer,
+					KeyValueSeparator: outputKeyValueSeparator,
+					LineSeparator:     outputLineSeparator,
+					Fit:               outputFit,
+					Pretty:            outputPretty,
+					Sorted:            outputSorted,
+					Reversed:          outputReversed,
+				})
 				if errorWriter != nil {
 					return errors.Wrap(errorWriter, "error building output writer")
 				}
@@ -245,6 +233,11 @@ func main() {
 				return errors.Wrap(err, "error reading from stdin")
 			}
 
+			var inputType reflect.Type
+			if inputFormat == "gob" {
+				inputType = sliceMapStringInterfaceType
+			}
+
 			outputBytes, err := gss.Convert(&gss.ConvertInput{
 				InputBytes:              inputBytes,
 				InputFormat:             inputFormat,
@@ -260,7 +253,11 @@ func main() {
 				InputUnescapeSpace:      v.GetBool(cli.FlagInputUnescapeSpace),
 				InputUnescapeNewLine:    v.GetBool(cli.FlagInputUnescapeNewLine),
 				InputUnescapeEqual:      v.GetBool(cli.FlagInputUnescapeEqual),
+				InputTrim:               v.GetBool(cli.FlagInputTrim),
+				InputType:               inputType,
 				OutputFormat:            outputFormat,
+				OutputFormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),
+				OutputFit:               outputFit,
 				OutputHeader:            outputHeader,
 				OutputLimit:             outputLimit,
 				OutputPretty:            v.GetBool(cli.FlagOutputPretty),
@@ -268,8 +265,8 @@ func main() {
 				OutputReversed:          outputReversed,
 				OutputKeySerializer:     outputKeySerializer,
 				OutputValueSerializer:   outputValueSerializer,
-				OutputLineSeparator:     v.GetString(cli.FlagOutputLineSeparator),
-				OutputKeyValueSeparator: v.GetString(cli.FlagOutputKeyValueSeparator),
+				OutputLineSeparator:     outputLineSeparator,
+				OutputKeyValueSeparator: outputKeyValueSeparator,
 				OutputEscapePrefix:      v.GetString(cli.FlagOutputEscapePrefix),
 				OutputEscapeSpace:       v.GetBool(cli.FlagOutputEscapeSpace),
 				OutputEscapeNewLine:     v.GetBool(cli.FlagOutputEscapeNewLine),
@@ -289,7 +286,7 @@ func main() {
 			return nil
 		},
 	}
-	initFlags(rootCommand.Flags(), formats)
+	cli.InitFlags(rootCommand.Flags())
 
 	completionCommandLong := ""
 	if _, err := os.Stat("/etc/bash_completion.d/"); !os.IsNotExist(err) {
@@ -312,26 +309,16 @@ func main() {
 	}
 	rootCommand.AddCommand(completionCommand)
 
-	version := &cobra.Command{
-		Use:   "version",
-		Short: "print version information to stdout",
-		Long:  "print version information to stdout",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(gitBranch) > 0 {
-				fmt.Println("Branch: " + gitBranch)
-			}
-			if len(gitCommit) > 0 {
-				fmt.Println("Commit: " + gitCommit)
-			}
-			return nil
-		},
-	}
+	rootCommand.AddCommand(formats.NewCommand())
 
-	rootCommand.AddCommand(version)
+	rootCommand.AddCommand(version.NewCommand(&version.NewCommandInput{
+		GitBranch: gitBranch,
+		GitCommit: gitCommit,
+	}))
 
 	if err := rootCommand.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: "+err.Error()+"\n")
-		fmt.Fprintf(os.Stderr, "Help: gss -h\n")
+		fmt.Fprintln(os.Stderr, "gss: "+err.Error())
+		fmt.Fprintln(os.Stderr, "Try gss --help for more information.")
 		os.Exit(1)
 	}
 }

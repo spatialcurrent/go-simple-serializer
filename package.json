@@ -7,6 +7,7 @@
     "lint": "eslint js",
     "clean": "rm -fr dist/gss.mod.min.js",
     "build": "make dist/gss.mod.min.js",
+    "build:clean": "npm run clean && npm run build",
     "test": "./node_modules/.bin/jest",
     "test:clean": "npm run clean && npm run build && npm run test"
   },

@@ -11,8 +11,10 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"reflect"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
@@ -21,6 +23,7 @@ import (
 // returning a new object on each call of Next()
 // until it reaches the end and returns io.EOF.
 type Iterator struct {
+	Type         reflect.Type    // the type to unmarshal for each line
 	Scanner      scanner.Scanner // the scanner that splits the underlying stream of bytes
 	Comment      []byte          // The comment line prefix.  Can be any string.
 	Trim         bool            // Trim each input line before parsing into an object.
@@ -33,15 +36,16 @@ type Iterator struct {
 // Input for NewIterator function.
 type NewIteratorInput struct {
 	Reader            io.Reader
-	ScannerBufferSize int    // the initial buffer size for the scanner
-	SkipLines         int    // Skip a given number of lines at the beginning of the stream.
-	SkipBlanks        bool   // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	SkipComments      bool   // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	Comment           string // The comment line prefix. Can be any string.
-	Trim              bool   // Trim each input line before parsing into an object.
-	Limit             int    // Limit the number of objects to read and return from the underlying stream.
-	LineSeparator     byte   // The new line byte.
-	DropCR            bool   // Drop carriage returns at the end of lines.
+	Type              reflect.Type // the type to unmarshal for each line
+	ScannerBufferSize int          // the initial buffer size for the scanner
+	SkipLines         int          // Skip a given number of lines at the beginning of the stream.
+	SkipBlanks        bool         // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	SkipComments      bool         // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	Comment           string       // The comment line prefix. Can be any string.
+	Trim              bool         // Trim each input line before parsing into an object.
+	Limit             int          // Limit the number of objects to read and return from the underlying stream.
+	LineSeparator     byte         // The new line byte.
+	DropCR            bool         // Drop carriage returns at the end of lines.
 }
 
 // NewIterator returns a new JSON Lines (aka jsonl) Iterator base on the given input.
@@ -60,6 +64,7 @@ func NewIterator(input *NewIteratorInput) *Iterator {
 	}
 
 	return &Iterator{
+		Type:         input.Type,
 		Scanner:      s,
 		Comment:      []byte(input.Comment),
 		Trim:         input.Trim,
@@ -100,6 +105,13 @@ func (it *Iterator) Next() (interface{}, error) {
 				return it.Next()
 			}
 			return nil, nil
+		}
+		if it.Type != nil {
+			obj, err := json.UnmarshalType(line, it.Type)
+			if err != nil {
+				return obj, errors.Wrap(err, "error unmarshaling next JSON object")
+			}
+			return obj, nil
 		}
 		obj, err := json.Unmarshal(line)
 		if err != nil {

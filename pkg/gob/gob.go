@@ -5,13 +5,14 @@
 //
 // =================================================================
 
-package cli
+// Package gob provides support for reading and writing a stream of gob-encoded obejcts.
+package gob
 
-func stringSliceContains(slc []string, str string) bool {
-	for _, x := range slc {
-		if x == str {
-			return true
-		}
-	}
-	return false
-}
+import (
+	"github.com/pkg/errors"
+)
+
+var (
+	ErrMissingType = errors.New("missing type")
+	ErrInvalidType = errors.New("invalid type, expecting map or struct")
+)

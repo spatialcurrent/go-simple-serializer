@@ -10,8 +10,9 @@ package serializer
 import (
 	"testing"
 
-	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func TestSerializerSerializeBSON(t *testing.T) {
@@ -36,6 +37,14 @@ func TestSerializerCSVMap(t *testing.T) {
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
 	assert.Equal(t, "a,b,c\nx,y,z\n", string(out))
+}
+
+func TestSerializerCSVSliceString(t *testing.T) {
+	in := []string{"a", "b", "c"}
+	s := New(FormatCSV).Limit(NoLimit)
+	out, err := s.Serialize(in)
+	assert.NoError(t, err)
+	assert.Equal(t, "a,b,c\n", string(out))
 }
 
 func TestSerializerCSVSlice(t *testing.T) {

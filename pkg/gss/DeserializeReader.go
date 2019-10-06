@@ -8,11 +8,13 @@
 package gss
 
 import (
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"reflect"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
@@ -44,11 +46,16 @@ type DeserializeReaderInput struct {
 func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl", "tags":
+	case "csv", "tsv", "jsonl", "geojsonl", "tags":
+
+		var iteratorType reflect.Type
+		if input.Type != nil {
+			iteratorType = input.Type.Elem()
+		}
 		// These formats can be streamed.
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:        input.Reader,
-			Type:          input.Type,
+			Type:          iteratorType,
 			Format:        input.Format,
 			Header:        input.Header,
 			Comment:       input.Comment,
@@ -64,12 +71,25 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 		if errorIterator != nil {
 			return nil, errors.Wrap(errorIterator, "error creating iterator")
 		}
-		w := pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
-		errorRun := pipe.NewBuilder().Input(it).Output(w).Run()
+		p := pipe.NewBuilder().Input(it)
+		var w *pipe.SliceWriter
+		if input.Type != nil {
+			w = pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
+			p = p.Output(w)
+		} else {
+			w = pipe.NewSliceWriterWithValues([]interface{}{})
+			p = p.Output(w)
+		}
+		errorRun := p.Run()
 		if errorRun != nil {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}
 		return w.Values(), nil
+	case "gob":
+		obj := make([]interface{}, 0)
+		d := gob.NewDecoder(input.Reader)
+		err := d.Decode(obj)
+		return obj, err
 	case "bson", "hcl", "hcl2", "json", "properties", "toml", "yaml":
 		// These formats do not support streaming.
 		b, err := ioutil.ReadAll(input.Reader)

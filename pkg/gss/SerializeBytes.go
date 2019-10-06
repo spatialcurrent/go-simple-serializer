@@ -9,8 +9,10 @@ package gss
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
@@ -18,6 +20,8 @@ import (
 type SerializeBytesInput struct {
 	Object            interface{}
 	Format            string
+	FormatSpecifier   string
+	Fit               bool
 	Header            []interface{}
 	Limit             int
 	Pretty            bool
@@ -41,8 +45,11 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 	f := input.Format
 
 	switch f {
-	case "bson", "csv", "json", "jsonl", "properties", "go", "tags", "toml", "tsv", "yaml":
+	case "bson", "csv", "fmt", "go", "gob", "json", "jsonl", "properties", "tags", "toml", "tsv", "yaml":
 		s := serializer.New(f)
+		if f == serializer.FormatFmt {
+			s = s.FormatSpecifier(input.FormatSpecifier)
+		}
 		if f == serializer.FormatGo || f == serializer.FormatJSON || f == serializer.FormatJSONL {
 			s = s.Pretty(input.Pretty)
 		}
@@ -75,6 +82,11 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 		}
 		if f == "csv" || f == "jsonl" || f == "tags" || f == "tsv" {
 			s = s.Limit(input.Limit)
+		}
+		if f == "gob" {
+			s = s.
+				Fit(input.Fit).
+				Type(reflect.TypeOf(make([]interface{}, 0)))
 		}
 		return s.Serialize(input.Object)
 	case "hcl", "hcl2":

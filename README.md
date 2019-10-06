@@ -4,55 +4,23 @@
 
 # Description
 
-**go-simple-serializer** (aka GSS) is a simple library for serializing/deserializing objects that aims to decrease the burden on developers to support multiple serialization formats in their applications.  GSS supports a variety of operating systems, architectures, and use cases.  A CLI is released for Microsoft Windows, Linux distributions, and [Darwin](https://en.wikipedia.org/wiki/Darwin_%28operating_system%29) platforms.
+**go-simple-serializer** (aka GSS) is a simple library to easily convert data between formats that aims to decrease the burden on developers to support multiple serialization formats in their applications.  GSS supports a variety of operating systems, architectures, and use cases.  A CLI is released for Microsoft Windows, Linux distributions, and [Darwin](https://en.wikipedia.org/wiki/Darwin_%28operating_system%29) platforms.
 
 Using cross compilers, this library can also be called by other languages, including `C`, `C++`, `Python`, and `JavaScript`.  This library is cross compiled into a Shared Object file (`*.so`), which can be called by `C`, `C++`, and `Python` on Linux machines.  This library is also compiled to pure `JavaScript` using [GopherJS](https://github.com/gopherjs/gopherjs), which can be called by [Node.js](https://nodejs.org) and loaded in the browser.  See the examples folder for patterns that you can use.
 
 **Formats**
 
-GSS supports the following formats.
-
-| Format | Description |
-| ---- | ------ |
-| bson | [Binary JSON](https://en.wikipedia.org/wiki/BSON) |
-| csv | [Comma-Separated Values](https://en.wikipedia.org/wiki/Comma-separated_values) |
-| hcl | HashiCorp Configuration Language |
-| hcl2 | HashiCorp Configuration Language (version 2.x) |
-| json | [JSON](http://json.org/) |
-| jsonl | [JSON Lines](http://jsonlines.org/) |
-| properties | [Properties](https://en.wikipedia.org/wiki/.properties) |
-| tags | single-line key=value tags |
-| toml | [TOML](https://github.com/toml-lang/toml) |
-| tsv | Tab-Separated Values |
-| yaml | [YAML](https://yaml.org/) |
-
-`hcl` and `hcl2` implementation is fragile and very much in `alpha`.  The other formats are well-supported.
+GSS supports many common formats, including CSV, JSON, and YAML.  Pull requests to support other formats are welcome!  See the [Formats.md](docs/Formats.md) document for a full list of supported formats.
 
 **Packages**
 
-The main public api for GSS is in the `gss` package.  However, this library does ship with lower-level packages that can be imported directly as well.
-
-| Package | Purpose |
-| ---- | ------ |
-| bson | Binary JSON |
-| escaper | Escape/unescape strings |
-| gss | The main public API |
-| inspector | Reusable functions for inspecting objects |
-| iterator | Wrapper for iterable formats |
-| json | JSON |
-| jsonl | JSON Lines |
-| properties | Properties Files |
-| scanner | Scanning through a stream of bytes |
-| splitter | Creating custom bufio.SplitFunc |
-| sv | Separated-Values formats, i.e., CSV and TSV. |
-| toml | TOML |
-| yaml | YAML |
+The main public api for GSS is in the `gss` package.  However, this library does ship with internal packages under `/pkg/...` that can be imported and used directly.
 
 # Usage
 
 **CLI**
 
-The command line tool, `gss`, can be used to easily covert data between formats.  We currently support the following platforms.
+The command line tool, `gss`, can be used to easily convert data between formats.  We currently support the following platforms.
 
 | GOOS | GOARCH |
 | ---- | ------ |
@@ -61,7 +29,7 @@ The command line tool, `gss`, can be used to easily covert data between formats.
 | windows | amd64 |
 | linux | arm64 |
 
-Pull requests to support other platforms are welcome!  See the [examples](#examples) section below for usage.
+Pull requests to support other platforms are welcome!  See the [CLI.md](docs/CLI.md) document for detailed usage and examples.
 
 **Go**
 
@@ -195,6 +163,14 @@ The `make build_so` script is used to build a Shared Object (`*.go`), which can 
 The default destination for build artifacts is `go-simple-serializer/bin`, but you can change the destination with an environment variable.  For building on a Chromebook consider saving the artifacts in `/usr/local/go/bin`, e.g., `DEST=/usr/local/go/bin make build_cli`
 
 # Testing
+
+**CLI**
+
+To run CLI testes use `make test_cli`, which uses [shUnit2](https://github.com/kward/shunit2).  If you recive a `shunit2:FATAL Please declare TMPDIR with path on partition with exec permission.` error, you can modify the `TMPDIR` environment variable in line or with `export TMPDIR=<YOUR TEMP DIRECTORY HERE>`. For example:
+
+```
+TMPDIR="/usr/local/tmp" make test_cli
+```
 
 **Go**
 

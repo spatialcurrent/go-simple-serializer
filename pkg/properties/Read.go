@@ -13,6 +13,7 @@ import (
 	"unicode"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )

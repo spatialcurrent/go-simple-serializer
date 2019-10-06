@@ -33,7 +33,7 @@ function log(str) {
 describe('gss', () => {
 
   it('checks the available formats', () => {
-    expect(formats).toEqual(["bson", "csv", "go", "json", "jsonl", "properties", "tags", "toml", "tsv", "hcl", "hcl2", "yaml"]);
+    expect(formats).toEqual(["bson", "csv", "fmt", "go", "gob", "hcl", "json", "jsonl", "properties", "tags", "toml", "tsv", "yaml"]);
   });
 
 });

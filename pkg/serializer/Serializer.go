@@ -15,11 +15,11 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/hcl"
-
-	hcl2 "github.com/hashicorp/hcl2/hcl"
-	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
@@ -33,15 +33,16 @@ import (
 const (
 	FormatBSON       = "bson"       // Binary JSON
 	FormatCSV        = "csv"        // Comma-Separated Values
+	FormatFmt        = "fmt"        // Formatter
 	FormatGo         = "go"         // Native Golang print format
+	FormatGob        = "gob"        // Native Golang binary format
+	FormatHCL        = "hcl"        // HashiCorp Configuration Language
 	FormatJSON       = "json"       // JSON
 	FormatJSONL      = "jsonl"      // JSON Lines
 	FormatProperties = "properties" // Properties
 	FormatTags       = "tags"       // Tags (a=b c=d ...)
 	FormatTOML       = "toml"       // TOML
 	FormatTSV        = "tsv"        // Tab-Separated Values
-	FormatHCL        = "hcl"        // HashiCorp Configuration Language
-	FormatHCL2       = "hcl2"       // HashiCorp Configuration Language Version 2.x
 	FormatYAML       = "yaml"       // YAML
 
 	NoLimit = -1
@@ -51,15 +52,16 @@ var (
 	Formats = []string{
 		FormatBSON,
 		FormatCSV,
+		FormatFmt,
 		FormatGo,
+		FormatGob,
+		FormatHCL,
 		FormatJSON,
 		FormatJSONL,
 		FormatProperties,
 		FormatTags,
 		FormatTOML,
 		FormatTSV,
-		FormatHCL,
-		FormatHCL2,
 		FormatYAML,
 	}
 	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
@@ -99,7 +101,9 @@ var (
 
 // Serializer is a struct for serializing/deserializing objects.  This is the workhorse of the gss package.
 type Serializer struct {
-	format            string        // one of gss.Formats
+	format            string // one of gss.Formats
+	formatSpecifier   string
+	fit               bool
 	header            []interface{} // if formt as csv or tsv, the column names
 	comment           string        // the line comment prefix
 	lazyQuotes        bool          // if format is csv or tsv, allow LazyQuotes.
@@ -185,6 +189,15 @@ func NewWithOptions(format string, options ...map[string]interface{}) (*Serializ
 				case float64:
 					s = s.Trim(v > 0.0)
 				}
+			case "fit":
+				switch v := value.(type) {
+				case bool:
+					s = s.Fit(v)
+				case int:
+					s = s.Fit(v > 0)
+				case float64:
+					s = s.Fit(v > 0.0)
+				}
 			case "sorted":
 				switch v := value.(type) {
 				case bool:
@@ -226,6 +239,18 @@ func NewWithOptions(format string, options ...map[string]interface{}) (*Serializ
 // Format sets the format of the serializer.
 func (s *Serializer) Format(format string) *Serializer {
 	s.format = format
+	return s
+}
+
+// FormatSpecifier sets the format sepcifier of the serializer.
+func (s *Serializer) FormatSpecifier(formatSpecifier string) *Serializer {
+	s.formatSpecifier = formatSpecifier
+	return s
+}
+
+// Fit sets the fit of the serializer.
+func (s *Serializer) Fit(f bool) *Serializer {
+	s.fit = f
 	return s
 }
 
@@ -474,9 +499,26 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 				Limit:             s.limit,
 			})
 		}
+	case FormatGob:
+		if s.trim {
+			return gob.Read(&gob.ReadInput{
+				Type:   s.objectType,
+				Reader: bytes.NewReader(bytes.TrimSpace(b)),
+				Limit:  s.limit,
+			})
+		}
+		return gob.Read(&gob.ReadInput{
+			Type:   s.objectType,
+			Reader: bytes.NewReader(b),
+			Limit:  s.limit,
+		})
 	case FormatHCL:
-		ptr := reflect.New(s.objectType)
-		ptr.Elem().Set(reflect.MakeMap(s.objectType))
+		objectType := s.objectType
+		if objectType == nil {
+			objectType = reflect.TypeOf(map[string]interface{}{})
+		}
+		ptr := reflect.New(objectType)
+		ptr.Elem().Set(reflect.MakeMap(objectType))
 		obj, err := hcl.Parse(string(b))
 		if err != nil {
 			return nil, errors.Wrap(err, "Error parsing hcl")
@@ -485,12 +527,6 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 			return nil, errors.Wrap(err, "Error decoding hcl")
 		}
 		return ptr.Elem().Interface(), nil
-	case FormatHCL2:
-		file, diags := hclsyntax.ParseConfig(b, "<stdin>", hcl2.Pos{Byte: 0, Line: 1, Column: 1})
-		if diags.HasErrors() {
-			return nil, errors.Wrap(errors.New(diags.Error()), "Error parsing hcl2")
-		}
-		return &file.Body, nil
 	}
 	return nil, &ErrUnknownFormat{Name: s.format}
 }
@@ -537,6 +573,11 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			return make([]byte, 0), errors.Wrap(errWrite, "error writing separated values")
 		}
 		return buf.Bytes(), nil
+	case FormatFmt:
+		if s.fit {
+			return []byte(fmt.Sprintf(s.formatSpecifier, fit.Fit(object))), nil
+		}
+		return []byte(fmt.Sprintf(s.formatSpecifier, object)), nil
 	case FormatGo:
 		// TODO:
 		// Pretty output disabled until https://github.com/kr/pretty/issues/45 is fixed
@@ -544,7 +585,12 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		//if s.pretty {
 		//	return []byte(krpretty.Sprint(object)), nil
 		//}
+		if s.fit {
+			return []byte(fmt.Sprintf("%#v", fit.Fit(object))), nil
+		}
 		return []byte(fmt.Sprintf("%#v", object)), nil
+	case FormatGob:
+		return gob.Marshal(object, s.fit)
 	case FormatJSON:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {

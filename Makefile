@@ -55,18 +55,26 @@ deps_javascript:  ## Install dependencies for JavaScript tests
 # Go building, formatting, testing, and installing
 #
 
+.PHONY: fmt
 fmt:  ## Format Go source code
 	go fmt $$(go list ./... )
 
+.PHONY: imports
 imports: ## Update imports in Go source code
 	# If missing, install goimports with: go get golang.org/x/tools/cmd/goimports
-	goimports -w $$(find . -iname '*.go')
+	goimports -w -local github.com/spatialcurrent/go-simple-serializer,github.com/spatialcurrent/ $$(find . -iname '*.go')
 
+.PHONY: vet
 vet: ## Vet Go source code
 	go vet $$(go list ./...)
 
+.PHONY: test_go
 test_go: ## Run Go tests
 	bash scripts/test.sh
+	
+.PHONY: test_cli
+test_cli: ## Run CLI tests
+	bash scripts/test-cli.sh
 
 build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
 

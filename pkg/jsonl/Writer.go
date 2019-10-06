@@ -12,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -55,7 +56,7 @@ func (w *Writer) WriteObject(obj interface{}) error {
 	return nil
 }
 
-// WriteObjects formats and writes the given objets to the underlying writer as JSON lines
+// WriteObjects formats and writes the given objects to the underlying writer as JSON lines
 // and separates the objects using the writer's line separator.
 func (w *Writer) WriteObjects(objects interface{}) error {
 	value := reflect.ValueOf(objects)

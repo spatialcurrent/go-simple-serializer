@@ -9,26 +9,68 @@
 package cli
 
 import (
-	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
-)
-
-var (
-	ErrMissingKeyValueSeparator = errors.New("missing key-value separator")
-	ErrMissingLineSeparator     = errors.New("missing line separator")
-	ErrMissingEscapePrefix      = errors.New("missing escape prefix")
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/input"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/output"
 )
 
 const (
-	FlagVerbose string = "verbose"
+	FlagNoStream string = "no-stream"
+	FlagVerbose  string = "verbose"
 )
 
-// Initialize cli flags
-func InitCliFlags(flag *pflag.FlagSet, formats []string) {
+const (
+	FlagInputURI               = input.FlagInputURI
+	FlagInputCompression       = input.FlagInputCompression
+	FlagInputFormat            = input.FlagInputFormat
+	FlagInputHeader            = input.FlagInputHeader
+	FlagInputLimit             = input.FlagInputLimit
+	FlagInputComment           = input.FlagInputComment
+	FlagInputLazyQuotes        = input.FlagInputLazyQuotes
+	FlagInputTrim              = input.FlagInputTrim
+	FlagInputReaderBufferSize  = input.FlagInputReaderBufferSize
+	FlagInputScannerBufferSize = input.FlagInputScannerBufferSize
+	FlagInputSkipLines         = input.FlagInputSkipLines
+	FlagInputLineSeparator     = input.FlagInputLineSeparator
+	FlagInputKeyValueSeparator = input.FlagInputKeyValueSeparator
+	FlagInputDropCR            = input.FlagInputDropCR
+	FlagInputEscapePrefix      = input.FlagInputEscapePrefix
+	FlagInputUnescapeColon     = input.FlagInputUnescapeColon
+	FlagInputUnescapeEqual     = input.FlagInputUnescapeEqual
+	FlagInputUnescapeSpace     = input.FlagInputUnescapeSpace
+	FlagInputUnescapeNewLine   = input.FlagInputUnescapeNewLine
+	FlagInputType              = input.FlagInputType
+)
 
-	InitInputFlags(flag, formats)
-
-	InitOutputFlags(flag, formats)
-
-	flag.BoolP(FlagVerbose, "v", false, "verbose output")
-}
+const (
+	FlagOutputURI               = output.FlagOutputURI
+	FlagOutputCompression       = output.FlagOutputCompression
+	FlagOutputFormat            = output.FlagOutputFormat
+	FlagOutputFormatSpecifier   = output.FlagOutputFormatSpecifier
+	FlagOutputFit               = output.FlagOutputFit
+	FlagOutputPretty            = output.FlagOutputPretty
+	FlagOutputHeader            = output.FlagOutputHeader
+	FlagOutputLimit             = output.FlagOutputLimit
+	FlagOutputAppend            = output.FlagOutputAppend
+	FlagOutputOverwrite         = output.FlagOutputOverwrite
+	FlagOutputBufferMemory      = output.FlagOutputBufferMemory
+	FlagOutputMkdirs            = output.FlagOutputMkdirs
+	FlagOutputPassphrase        = output.FlagOutputPassphrase
+	FlagOutputSalt              = output.FlagOutputSalt
+	FlagOutputDecimal           = output.FlagOutputDecimal
+	FlagOutputKeyLower          = output.FlagOutputKeyLower
+	FlagOutputKeyUpper          = output.FlagOutputKeyUpper
+	FlagOutputValueLower        = output.FlagOutputValueLower
+	FlagOutputValueUpper        = output.FlagOutputValueUpper
+	FlagOutputNoDataValue       = output.FlagOutputNoDataValue
+	FlagOutputLineSeparator     = output.FlagOutputLineSeparator
+	FlagOutputKeyValueSeparator = output.FlagOutputKeyValueSeparator
+	FlagOutputExpandHeader      = output.FlagOutputExpandHeader
+	FlagOutputEscapePrefix      = output.FlagOutputEscapePrefix
+	FlagOutputEscapeColon       = output.FlagOutputEscapeColon
+	FlagOutputEscapeEqual       = output.FlagOutputEscapeEqual
+	FlagOutputEscapeNewLine     = output.FlagOutputEscapeNewLine
+	FlagOutputEscapeSpace       = output.FlagOutputEscapeSpace
+	FlagOutputSorted            = output.FlagOutputSorted
+	FlagOutputReversed          = output.FlagOutputReversed
+	FlagOutputType              = output.FlagOutputType
+)
