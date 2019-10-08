@@ -31,6 +31,12 @@ import (
 )
 
 const (
+	NoSkip    = 0  // used as SkipLines parameter to indicate no skipping when reading
+	NoLimit   = -1 // used to indicate that there is no limit on reading or writing, depending on context.
+	NoComment = "" // used to indicate that there is no comment prefix to consider.
+)
+
+const (
 	FormatBSON       = "bson"       // Binary JSON
 	FormatCSV        = "csv"        // Comma-Separated Values
 	FormatFmt        = "fmt"        // Formatter
@@ -44,8 +50,6 @@ const (
 	FormatTOML       = "toml"       // TOML
 	FormatTSV        = "tsv"        // Tab-Separated Values
 	FormatYAML       = "yaml"       // YAML
-
-	NoLimit = -1
 )
 
 var (
@@ -137,7 +141,9 @@ type Serializer struct {
 // New returns a new serializer with the given format.
 func New(format string) *Serializer {
 	return &Serializer{
-		format: format,
+		format:    format,
+		skipLines: NoSkip,
+		limit:     NoLimit,
 	}
 }
 
