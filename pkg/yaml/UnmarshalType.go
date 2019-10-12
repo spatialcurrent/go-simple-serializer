@@ -28,6 +28,11 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
+	// If the kind of the output type is interface{}, then simply use Unmarshal.
+	if outputType.Kind() == reflect.Interface {
+		return Unmarshal(b)
+	}
+
 	if bytes.Equal(b, True) {
 		if outputType.Kind() != reflect.Bool {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Bool}}

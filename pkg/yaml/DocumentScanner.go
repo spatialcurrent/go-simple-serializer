@@ -62,6 +62,7 @@ func (d *DocumentScanner) Scan() bool {
 	for d.scanner.Scan() {
 		b := d.scanner.Bytes()
 		if bytes.Equal(b, BoundaryMarker) {
+			//d.document = append(d.document, '\n')
 			return true
 		}
 		d.document = append(d.document, b...)

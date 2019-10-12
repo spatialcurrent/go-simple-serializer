@@ -30,7 +30,6 @@ var gitCommit string
 
 func main() {}
 
-//lint:ignore ST1020
 //export Version
 func Version() *C.char {
 	var b strings.Builder
@@ -43,7 +42,6 @@ func Version() *C.char {
 	return C.CString(b.String())
 }
 
-//lint:ignore ST1020
 //export Convert
 func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, outputPretty *C.char, outputSorted *C.char, outputString **C.char) *C.char {
 
