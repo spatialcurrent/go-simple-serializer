@@ -16,6 +16,13 @@ import (
 )
 
 var (
+	True           = []byte("true")
+	False          = []byte("false")
+	Null           = []byte("null")
+	BoundaryMarker = []byte("---\n")
+)
+
+var (
 	ErrEmptyInput  = errors.New("empty input")
 	ErrInvalidRune = errors.New("invalid rune")
 )

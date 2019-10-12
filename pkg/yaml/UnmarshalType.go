@@ -8,6 +8,8 @@
 package yaml
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -16,6 +18,8 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
+
+	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
@@ -27,19 +31,44 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
-	switch string(b) {
-	case "true":
+	if bytes.Equal(b, True) {
 		if outputType.Kind() != reflect.Bool {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Bool}}
 		}
 		return true, nil
-	case "false":
+	}
+	if bytes.Equal(b, False) {
 		if outputType.Kind() != reflect.Bool {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Bool}}
 		}
 		return false, nil
-	case "null":
+	}
+	if bytes.Equal(b, Null) {
 		return nil, nil
+	}
+
+	if bytes.HasPrefix(b, BoundaryMarker) {
+		if outputType.Kind() != reflect.Slice {
+			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Slice}}
+		}
+		s := bufio.NewScanner(bytes.NewReader(b))
+		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		out := reflect.MakeSlice(outputType, 0, 0)
+		i := 0
+		for s.Scan() {
+			if d := s.Bytes(); len(d) > 0 {
+				obj, err := UnmarshalType(d, outputType.Elem())
+				if err != nil {
+					return out.Interface(), errors.Wrapf(err, "error scanning document %d", i)
+				}
+				out = reflect.Append(out, reflect.ValueOf(obj))
+				i++
+			}
+		}
+		if err := s.Err(); err != nil {
+			return out.Interface(), errors.Wrap(err, fmt.Sprintf("error scanning YAML %q", string(b)))
+		}
+		return out.Interface(), nil
 	}
 
 	first, _ := utf8.DecodeRune(b)
@@ -56,7 +85,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeSlice(outputType, 0, 0))
 		err := goyaml.Unmarshal(b, ptr.Interface())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return ptr.Elem().Interface(), nil
 	case '{':
@@ -67,7 +96,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(outputType))
 		err := goyaml.Unmarshal(b, ptr.Interface())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return ptr.Elem().Interface(), nil
 	case '"':
@@ -77,7 +106,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		obj := ""
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return obj, nil
 	}
@@ -109,5 +138,6 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		}
 		return f, nil
 	}
+
 	return string(b), nil
 }
