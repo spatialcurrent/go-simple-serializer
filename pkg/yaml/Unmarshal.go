@@ -8,6 +8,8 @@
 package yaml
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,6 +17,8 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
+
+	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
@@ -37,13 +41,38 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
-	switch string(b) {
-	case "true":
+	if bytes.Equal(b, True) {
 		return true, nil
-	case "false":
+	}
+	if bytes.Equal(b, False) {
 		return false, nil
-	case "null":
+	}
+	if bytes.Equal(b, Null) {
 		return nil, nil
+	}
+
+	if bytes.HasPrefix(b, BoundaryMarker) {
+		s := bufio.NewScanner(bytes.NewReader(b))
+		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		obj := make([]interface{}, 0)
+		i := 0
+		for s.Scan() {
+			if d := s.Bytes(); len(d) > 0 {
+				if (len(d) == 1 && d[0] == '\n') || (len(d) == 2 && d[0] == '\n' && d[1] == '\r') {
+					continue
+				}
+				element, err := Unmarshal(d)
+				if err != nil {
+					return obj, errors.Wrapf(err, "error scanning document %d", i)
+				}
+				obj = append(obj, element)
+				i++
+			}
+		}
+		if err := s.Err(); err != nil {
+			return obj, errors.Wrap(err, fmt.Sprintf("error scanning YAML %q", string(b)))
+		}
+		return obj, nil
 	}
 
 	first, _ := utf8.DecodeRune(b)
@@ -56,21 +85,21 @@ func Unmarshal(b []byte) (interface{}, error) {
 		obj := make([]interface{}, 0)
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return obj, nil
 	case '{':
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return obj, nil
 	case '"':
 		obj := ""
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q", string(b)))
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return obj, nil
 	}
