@@ -34,7 +34,7 @@ type Iterator interface {
 	Next() (interface{}, error) // Returns the next object or error if any.  When input is exhausted, returns (nil, io.EOF).
 }
 
-// Input for NewIterator function.
+// NewIteratorInput provides the input parameters for the NewIterator function.
 type NewIteratorInput struct {
 	Reader            io.Reader     // the underlying reader
 	Format            string        // the format

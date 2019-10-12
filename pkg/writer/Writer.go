@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-// Package iterator provides an easy API to create an iterator to read objects from a file.
+// Package writer provides an easy API to create a writer to write objects to a file.
 // Depends on the following packages in go-simple-serializer.
 //	- github.com/spatialcurrent/go-simple-serializer/pkg/jsonl
 //	- github.com/spatialcurrent/go-simple-serializer/pkg/sv
@@ -31,7 +31,7 @@ var (
 	ErrMissingLineSeparator     = errors.New("missing line separator")
 )
 
-// Parameters for NewWriter function.
+// NewWriterInput includes the parameters for NewWriter function.
 type NewWriterInput struct {
 	Writer            io.Writer
 	Format            string

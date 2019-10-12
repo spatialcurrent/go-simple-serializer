@@ -34,7 +34,7 @@ func ExampleIterator_jsonl() {
 		SkipBlanks:        false,
 		SkipComments:      false,
 		KeyValueSeparator: "=",
-		LineSeparator:     []byte("\n")[0],
+		LineSeparator:     "\n",
 		DropCR:            true,
 	})
 	if err != nil {
@@ -79,7 +79,7 @@ func ExampleIterator_tags() {
 		SkipBlanks:        false,
 		SkipComments:      false,
 		KeyValueSeparator: "=",
-		LineSeparator:     []byte("\n")[0],
+		LineSeparator:     "\n",
 		DropCR:            true,
 	})
 	if err != nil {

@@ -8,7 +8,6 @@
 package yaml
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"strconv"
@@ -17,8 +16,6 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
-
-	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
@@ -52,8 +49,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 	}
 
 	if bytes.HasPrefix(b, BoundaryMarker) {
-		s := bufio.NewScanner(bytes.NewReader(b))
-		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		s := NewDocumentScanner(bytes.NewReader(b), true)
 		obj := make([]interface{}, 0)
 		i := 0
 		for s.Scan() {

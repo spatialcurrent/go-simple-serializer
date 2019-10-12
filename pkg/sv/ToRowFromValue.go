@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ToRow converts an object into a row of strings and returns an error, if any.
+// ToRowFromValue converts an object into a row of strings and returns an error, if any.
 func ToRowFromValue(objectValue reflect.Value, columns []interface{}, valueSerializer func(object interface{}) (string, error)) ([]string, error) {
 	for reflect.TypeOf(objectValue.Interface()).Kind() == reflect.Ptr {
 		objectValue = objectValue.Elem()

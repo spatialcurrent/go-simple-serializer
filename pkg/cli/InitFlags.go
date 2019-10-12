@@ -14,7 +14,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/output"
 )
 
-// Initialize cli flags
+// InitFlags initializes the command line flags.
 func InitFlags(flag *pflag.FlagSet) {
 
 	input.InitInputFlags(flag)

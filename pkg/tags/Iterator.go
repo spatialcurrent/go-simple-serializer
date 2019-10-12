@@ -32,7 +32,7 @@ type Iterator struct {
 	Count             int    // The current count of the number of objects read.
 }
 
-// Input for NewIterator function.
+// NewIteratorInput provides the input parameters for the NewIterator function.
 type NewIteratorInput struct {
 	Reader            io.Reader
 	Type              reflect.Type

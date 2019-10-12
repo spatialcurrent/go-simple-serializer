@@ -8,7 +8,6 @@
 package yaml
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"reflect"
@@ -18,8 +17,6 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
-
-	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
@@ -51,8 +48,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		if outputType.Kind() != reflect.Slice {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Slice}}
 		}
-		s := bufio.NewScanner(bytes.NewReader(b))
-		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		s := NewDocumentScanner(bytes.NewReader(b), true)
 		out := reflect.MakeSlice(outputType, 0, 0)
 		i := 0
 		for s.Scan() {

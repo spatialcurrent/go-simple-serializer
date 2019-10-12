@@ -12,11 +12,12 @@ import (
 	"io"
 )
 
+// Encoder wraps the gob.Encoder from the standard library.
 type Encoder struct {
 	*gob.Encoder
 }
 
-// Encoder returns a new gob encoder given the underlying writer.
+// NewEncoder returns a new gob encoder given the underlying writer.
 func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{
 		Encoder: gob.NewEncoder(w),

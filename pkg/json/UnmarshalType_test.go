@@ -50,6 +50,12 @@ func TestUnmarshalTypeArrayFloat64(t *testing.T) {
 	assert.Equal(t, obj, []float64{1.0, 2.0, 3.0})
 }
 
+func TestUnmarshalTypeMapInterface(t *testing.T) {
+	obj, err := UnmarshalType([]byte("{\"a\":1,\"b\":2,\"c\":3}"), reflect.ValueOf([]interface{}{}).Type().Elem())
+	assert.NoError(t, err)
+	assert.Equal(t, obj, map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0})
+}
+
 func TestUnmarshalTypeMapStringInterface(t *testing.T) {
 	obj, err := UnmarshalType([]byte("{\"a\":1,\"b\":2,\"c\":3}"), reflect.TypeOf(map[string]interface{}{}))
 	assert.NoError(t, err)

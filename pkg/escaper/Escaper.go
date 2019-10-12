@@ -38,7 +38,7 @@ func (e *Escaper) Clone() *Escaper {
 	}
 }
 
-// The escape prefix to use for escaping substrings.
+// Prefix sets the escape prefix to use for escaping substrings.
 // The escaper will also escape the prefix itself.
 // Any string can be used.
 func (e *Escaper) Prefix(prefix string) *Escaper {

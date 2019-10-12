@@ -92,7 +92,7 @@ func DeserializeBytes(input *DeserializeBytesInput) (interface{}, error) {
 	case "gob":
 		obj := make([]interface{}, 0)
 		d := gob.NewDecoder(bytes.NewReader(input.Bytes))
-		err := d.Decode(obj)
+		err := d.Decode(&obj)
 		return obj, err
 	case "hcl":
 		ptr := reflect.New(input.Type)

@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-// Package contains a writer for writing objects as formatted lines by wrapping the "fmt" package in the standard library.
+// Package fmt contains a writer for writing objects as formatted lines by wrapping the "fmt" package in the standard library.
 // This package has a minimal API and should not replace general use of the standard library package.
 package fmt
 

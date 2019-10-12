@@ -14,5 +14,13 @@ import (
 )
 
 func TestCanStreamCSVJSONL(t *testing.T) {
-	assert.True(t, CanStream("csv", "jsonl"))
+	assert.True(t, CanStream("csv", "jsonl", false))
+}
+
+func TestCanStreamJSONLJSONL(t *testing.T) {
+	assert.True(t, CanStream("jsonl", "jsonl", false))
+}
+
+func TestCanStreamJSONLJSON(t *testing.T) {
+	assert.False(t, CanStream("jsonl", "json", false))
 }
