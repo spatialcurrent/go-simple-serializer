@@ -33,7 +33,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return Unmarshal(b)
 	}
 
-	if bytes.Equal(b, True) {
+	if bytes.Equal(b, Y) || bytes.Equal(b, True) {
 		if outputType.Kind() != reflect.Bool {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Bool}}
 		}
@@ -113,6 +113,19 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 	}
 
 	if strings.Contains(string(b), "\n") {
+		if k := outputType.Kind(); k != reflect.Map {
+			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map}}
+		}
+		ptr := reflect.New(outputType)
+		ptr.Elem().Set(reflect.MakeMap(outputType))
+		err := goyaml.Unmarshal(b, ptr.Interface())
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+		}
+		return ptr.Elem().Interface(), nil
+	}
+
+	if _, _, ok := parseKeyValue(b); ok {
 		if k := outputType.Kind(); k != reflect.Map {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map}}
 		}

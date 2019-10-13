@@ -18,6 +18,20 @@ import (
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
 )
 
+func parseKeyValue(line []byte) ([]byte, []byte, bool) {
+	for i, c := range line {
+		if c == ':' {
+			if i == 0 {
+				return make([]byte, 0), make([]byte, 0), false
+			}
+			if line[i-1] != '\\' && (i+1 < len(line) && line[i+1] == ' ') {
+				return line[0:i], line[i+2:], true
+			}
+		}
+	}
+	return make([]byte, 0), make([]byte, 0), false
+}
+
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
 // This package is useful when your program needs to parse data,
 // that you have no a priori awareness of its structure or type.
@@ -38,7 +52,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
-	if bytes.Equal(b, True) {
+	if bytes.Equal(b, Y) || bytes.Equal(b, True) {
 		return true, nil
 	}
 	if bytes.Equal(b, False) {
@@ -54,9 +68,9 @@ func Unmarshal(b []byte) (interface{}, error) {
 		i := 0
 		for s.Scan() {
 			if d := s.Bytes(); len(d) > 0 {
-				if (len(d) == 1 && d[0] == '\n') || (len(d) == 2 && d[0] == '\n' && d[1] == '\r') {
-					continue
-				}
+				//if (len(d) == 1 && d[0] == '\n') || (len(d) == 2 && d[0] == '\n' && d[1] == '\r') {
+				//	continue
+				//}
 				element, err := Unmarshal(d)
 				if err != nil {
 					return obj, errors.Wrapf(err, "error scanning document %d", i)
@@ -100,7 +114,9 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	if strings.Contains(string(b), "\n") {
+	str := string(b)
+
+	if strings.Contains(str, "\n") {
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
@@ -109,13 +125,26 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	i, err := strconv.Atoi(string(b))
+	k, v, ok := parseKeyValue(b)
+	if ok {
+		mv, err := Unmarshal(v)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML value %q", v))
+		}
+		m := map[string]interface{}{}
+		m[string(k)] = mv
+		return m, nil
+	}
+
+	i, err := strconv.Atoi(str)
 	if err == nil {
 		return i, nil
 	}
-	f, err := strconv.ParseFloat(string(b), 64)
+
+	f, err := strconv.ParseFloat(str, 64)
 	if err == nil {
 		return f, nil
 	}
-	return string(b), nil
+
+	return str, nil
 }

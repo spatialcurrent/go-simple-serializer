@@ -66,3 +66,9 @@ func TestUnmarshalFloat(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, obj, 123.456)
 }
+
+func TestUnmarshalKeyValue(t *testing.T) {
+	obj, err := Unmarshal([]byte("foo: bar"))
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"foo": "bar"}, obj)
+}

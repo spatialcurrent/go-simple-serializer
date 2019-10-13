@@ -20,6 +20,7 @@ var (
 	False          = []byte("false")
 	Null           = []byte("null")
 	BoundaryMarker = []byte("---")
+	Y              = []byte("y")
 )
 
 var (
