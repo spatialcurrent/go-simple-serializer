@@ -68,9 +68,6 @@ func Unmarshal(b []byte) (interface{}, error) {
 		i := 0
 		for s.Scan() {
 			if d := s.Bytes(); len(d) > 0 {
-				//if (len(d) == 1 && d[0] == '\n') || (len(d) == 2 && d[0] == '\n' && d[1] == '\r') {
-				//	continue
-				//}
 				element, err := Unmarshal(d)
 				if err != nil {
 					return obj, errors.Wrapf(err, "error scanning document %d", i)
