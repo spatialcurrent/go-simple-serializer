@@ -138,7 +138,14 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return f, nil
+	case reflect.String:
+		str := strings.TrimSpace(string(b))
+		if len(str) > 0 {
+			return str, nil
+		}
+		// if empty string, then return nil
+		return nil, nil
 	}
 
-	return strings.TrimSpace(string(b)), nil
+	return nil, errors.Errorf("could not unmarshal YAML %q into type %v", string(b), outputType)
 }

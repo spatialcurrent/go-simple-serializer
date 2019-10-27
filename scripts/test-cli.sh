@@ -80,7 +80,7 @@ testHCLJSON() {
 }
 
 testYAMLJSON() {
-  local expected='[{"a":"x"},{"b":"y"},"foo"]'
+  local expected='[{"a":"x"},{"b":"y"},"foo",null]'
   local output=$(echo -e '---\na: x\n---\nb: "y"\n---\nfoo\n---\n' | gss -i  yaml -o json)
   assertEquals "unexpected output" "${expected}" "${output}"
 }

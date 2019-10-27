@@ -118,5 +118,10 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return f, nil
 	}
 
-	return strings.TrimSpace(str), nil
+	str = strings.TrimSpace(str)
+	if len(str) > 0 {
+		return str, nil
+	}
+	// if empty string, then return nil
+	return nil, nil
 }
