@@ -15,17 +15,17 @@ import (
 )
 
 func TestDocumentScanner(t *testing.T) {
-	in := []byte("hello\n---\nbeautiful\n---\nworld\n---\n")
+	in := []byte("hello\nperson\n---\nbeautiful\n---\nworld\n---\n")
 	d := NewDocumentScanner(bytes.NewReader(in), true)
 
 	require.True(t, d.Scan())
-	require.Equal(t, "hello", d.Text())
+	require.Equal(t, "hello\nperson\n", d.Text())
 
 	require.True(t, d.Scan())
-	require.Equal(t, "beautiful", d.Text())
+	require.Equal(t, "beautiful\n", d.Text())
 
 	require.True(t, d.Scan())
-	require.Equal(t, "world", d.Text())
+	require.Equal(t, "world\n", d.Text())
 
 	require.False(t, d.Scan())
 }
