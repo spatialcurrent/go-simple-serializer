@@ -125,7 +125,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return ptr.Elem().Interface(), nil
 	}
 
-	if _, _, ok := parseKeyValue(b); ok {
+	if _, _, ok := ParseKeyValue(b); ok {
 		if k := outputType.Kind(); k != reflect.Map {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map}}
 		}

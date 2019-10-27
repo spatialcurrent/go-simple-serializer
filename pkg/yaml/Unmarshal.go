@@ -18,20 +18,6 @@ import (
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
 )
 
-func parseKeyValue(line []byte) ([]byte, []byte, bool) {
-	for i, c := range line {
-		if c == ':' {
-			if i == 0 {
-				return make([]byte, 0), make([]byte, 0), false
-			}
-			if line[i-1] != '\\' && (i+1 < len(line) && line[i+1] == ' ') {
-				return line[0:i], line[i+2:], true
-			}
-		}
-	}
-	return make([]byte, 0), make([]byte, 0), false
-}
-
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
 // This package is useful when your program needs to parse data,
 // that you have no a priori awareness of its structure or type.
@@ -122,7 +108,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	k, v, ok := parseKeyValue(b)
+	k, v, ok := ParseKeyValue(b)
 	if ok {
 		mv, err := Unmarshal(v)
 		if err != nil {
