@@ -19,7 +19,8 @@ var (
 	True           = []byte("true")
 	False          = []byte("false")
 	Null           = []byte("null")
-	BoundaryMarker = []byte("---\n")
+	BoundaryMarker = []byte("---")
+	Y              = []byte("y")
 )
 
 var (

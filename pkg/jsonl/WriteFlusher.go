@@ -11,7 +11,7 @@ import (
 	"io"
 )
 
-// WriterFlusher is a simple interface that wraps io.Writer and Flusher.
+// WriteFlusher is a simple interface that wraps io.Writer and Flusher.
 type WriteFlusher interface {
 	io.Writer
 	Flusher

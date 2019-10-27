@@ -8,7 +8,7 @@
 # =================================================================
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-#set -eu
+set -euo pipefail
 cd $DIR/..
 pkgs=$(go list ./... | grep -v /vendor/ | tr "\n" " ")
 echo "******************"
@@ -28,7 +28,8 @@ echo "Running ineffassign"
 find . -name '*.go' | xargs ineffassign
 echo "******************"
 echo "Running staticcheck"
-staticcheck -checks all ${pkgs}
+staticcheck -checks 'all' $(go list ./... | grep -v /vendor/ | grep -v /plugins/ | tr "\n" " ")
+staticcheck -checks 'all,-ST1020' $(go list ./... | grep /plugins/ | tr "\n" " ")
 echo "******************"
 echo "Running misspell"
 misspell -locale US -error *.md *.go

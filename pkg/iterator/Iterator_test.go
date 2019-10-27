@@ -36,7 +36,7 @@ func TestIteratorJsonl(t *testing.T) {
 		Trim:          true,
 		SkipBlanks:    false,
 		SkipComments:  false,
-		LineSeparator: []byte("\n")[0],
+		LineSeparator: "\n",
 		DropCR:        true,
 	})
 	require.NoError(t, err)
@@ -107,7 +107,7 @@ func TestIteratorTags(t *testing.T) {
 
 	it, err := NewIterator(&NewIteratorInput{
 		Reader:            strings.NewReader(text),
-		Type:              reflect.TypeOf([]map[string]interface{}{}),
+		Type:              reflect.TypeOf(map[string]interface{}{}),
 		Format:            "tags",
 		SkipLines:         0,
 		Comment:           "",
@@ -115,7 +115,7 @@ func TestIteratorTags(t *testing.T) {
 		SkipBlanks:        false,
 		SkipComments:      false,
 		KeyValueSeparator: "=",
-		LineSeparator:     []byte("\n")[0],
+		LineSeparator:     "\n",
 		DropCR:            true,
 	})
 	require.NoError(t, err)

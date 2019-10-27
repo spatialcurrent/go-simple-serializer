@@ -24,6 +24,11 @@ func UnmarshalType(b []byte, keyValueSeparator rune, outputType reflect.Type) (i
 		return nil, ErrEmptyInput
 	}
 
+	// If the kind of the output type is interface{}, then simply use Unmarshal.
+	if outputType.Kind() == reflect.Interface {
+		return Unmarshal(b, keyValueSeparator)
+	}
+
 	first, _ := utf8.DecodeRune(b)
 	if first == utf8.RuneError {
 		return nil, ErrInvalidRune

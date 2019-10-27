@@ -7,7 +7,7 @@
 
 package gss
 
-// ErrIncompatibleFormats is used when an unknown format is provided.
+// ErrUnknownFormat is used when an unknown format is provided.
 type ErrUnknownFormat struct {
 	Name string // the name of the unknown format
 }

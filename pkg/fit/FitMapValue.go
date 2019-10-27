@@ -18,14 +18,61 @@ func FitMapValue(in reflect.Value) reflect.Value {
 		return in
 	}
 
-	out := reflect.MakeMap(in.Type())
+	keyTypes := map[string]reflect.Type{}
+	valueTypes := map[string]reflect.Type{}
 
-	it := in.MapRange()
+	m := reflect.MakeMap(in.Type())
 
-	for it.Next() {
-		out.SetMapIndex(it.Key(), FitValue(reflect.ValueOf(it.Value().Interface())))
+	for it := in.MapRange(); it.Next(); {
+		k := reflect.ValueOf(it.Key().Interface())
+		v := FitValue(reflect.ValueOf(it.Value().Interface()))
+		keyTypes[k.Type().Name()] = k.Type()
+		valueTypes[v.Type().Name()] = v.Type()
+		m.SetMapIndex(k, v)
 	}
 
-	return out
+	if len(keyTypes) == 1 {
+		var keyType reflect.Type
+		for _, v := range keyTypes {
+			keyType = v
+		}
+		if len(valueTypes) == 1 {
+			// If 1 key type and 1 value type.
+			var valueType reflect.Type
+			for _, v := range valueTypes {
+				valueType = v
+			}
+			if in.Type().Key().AssignableTo(keyType) && in.Type().Elem().AssignableTo(valueType) {
+				return m
+			}
+			out := reflect.MakeMap(reflect.MapOf(keyType, valueType))
+			for it := m.MapRange(); it.Next(); {
+				out.SetMapIndex(reflect.ValueOf(it.Key().Interface()), reflect.ValueOf(it.Value().Interface()))
+			}
+			return out
+		}
+		// If 1 key type, but multiple value types.
+		out := reflect.MakeMap(reflect.MapOf(keyType, in.Type().Elem()))
+		for it := m.MapRange(); it.Next(); {
+			out.SetMapIndex(reflect.ValueOf(it.Key().Interface()), reflect.ValueOf(it.Value().Interface()))
+		}
+		return out
 
+	}
+
+	// If more than 1 key type, but only 1 value type.
+	if len(valueTypes) == 1 {
+		var valueType reflect.Type
+		for _, v := range valueTypes {
+			valueType = v
+		}
+		out := reflect.MakeMap(reflect.MapOf(in.Type().Key(), valueType))
+		for it := m.MapRange(); it.Next(); {
+			out.SetMapIndex(reflect.ValueOf(it.Key().Interface()), reflect.ValueOf(it.Value().Interface()))
+		}
+		return out
+	}
+
+	// If more than 1 key type and more than 1 value type.
+	return m
 }

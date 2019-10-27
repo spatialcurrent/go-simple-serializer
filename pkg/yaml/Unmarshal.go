@@ -8,7 +8,6 @@
 package yaml
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"strconv"
@@ -17,8 +16,6 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
-
-	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
@@ -41,7 +38,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
-	if bytes.Equal(b, True) {
+	if bytes.Equal(b, Y) || bytes.Equal(b, True) {
 		return true, nil
 	}
 	if bytes.Equal(b, False) {
@@ -52,15 +49,11 @@ func Unmarshal(b []byte) (interface{}, error) {
 	}
 
 	if bytes.HasPrefix(b, BoundaryMarker) {
-		s := bufio.NewScanner(bytes.NewReader(b))
-		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		s := NewDocumentScanner(bytes.NewReader(b), true)
 		obj := make([]interface{}, 0)
 		i := 0
 		for s.Scan() {
 			if d := s.Bytes(); len(d) > 0 {
-				if (len(d) == 1 && d[0] == '\n') || (len(d) == 2 && d[0] == '\n' && d[1] == '\r') {
-					continue
-				}
 				element, err := Unmarshal(d)
 				if err != nil {
 					return obj, errors.Wrapf(err, "error scanning document %d", i)
@@ -104,7 +97,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	if strings.Contains(string(b), "\n") {
+	if _, _, ok := ParseKeyValue(b); ok {
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
@@ -113,13 +106,22 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	i, err := strconv.Atoi(string(b))
+	str := string(b)
+
+	i, err := strconv.Atoi(str)
 	if err == nil {
 		return i, nil
 	}
-	f, err := strconv.ParseFloat(string(b), 64)
+
+	f, err := strconv.ParseFloat(str, 64)
 	if err == nil {
 		return f, nil
 	}
-	return string(b), nil
+
+	str = strings.TrimSpace(str)
+	if len(str) > 0 {
+		return str, nil
+	}
+	// if empty string, then return nil
+	return nil, nil
 }

@@ -88,7 +88,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 	case "gob":
 		obj := make([]interface{}, 0)
 		d := gob.NewDecoder(input.Reader)
-		err := d.Decode(obj)
+		err := d.Decode(&obj)
 		return obj, err
 	case "bson", "hcl", "hcl2", "json", "properties", "toml", "yaml":
 		// These formats do not support streaming.

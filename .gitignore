@@ -1,5 +1,6 @@
 bin
 dist
+temp
 vendor
 Gopkg.lock
 *.so

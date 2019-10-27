@@ -285,13 +285,13 @@ func (s *Serializer) SkipLines(skipLines int) *Serializer {
 	return s
 }
 
-// Comment sets the comment of the serializer.
+// SkipBlanks sets whether to skip blank lines.
 func (s *Serializer) SkipBlanks(skipBlanks bool) *Serializer {
 	s.skipBlanks = skipBlanks
 	return s
 }
 
-// Comment sets the comment of the serializer.
+// SkipComments sets whether to skip commented lines.
 func (s *Serializer) SkipComments(skipComments bool) *Serializer {
 	s.skipComments = skipComments
 	return s
@@ -359,19 +359,19 @@ func (s *Serializer) EscapeSpace(escapeSpace bool) *Serializer {
 	return s
 }
 
-// EscapeSpace enables/disables escaping the new line character.
+// EscapeNewLine enables/disables escaping the new line character.
 func (s *Serializer) EscapeNewLine(escapeNewLine bool) *Serializer {
 	s.escapeNewLine = escapeNewLine
 	return s
 }
 
-// EscapeSpace enables/disables escaping the equal character.
+// EscapeEqual enables/disables escaping the equal character.
 func (s *Serializer) EscapeEqual(escapeEqual bool) *Serializer {
 	s.escapeEqual = escapeEqual
 	return s
 }
 
-// EscapeSpace enables/disables escaping the colon character.
+// EscapeColon enables/disables escaping the colon character.
 func (s *Serializer) EscapeColon(escapeColon bool) *Serializer {
 	s.escapeColon = escapeColon
 	return s

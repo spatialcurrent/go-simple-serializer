@@ -8,7 +8,6 @@
 package yaml
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"reflect"
@@ -18,8 +17,6 @@ import (
 
 	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
-
-	"github.com/spatialcurrent/go-simple-serializer/pkg/splitter"
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
@@ -31,7 +28,12 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return nil, ErrEmptyInput
 	}
 
-	if bytes.Equal(b, True) {
+	// If the kind of the output type is interface{}, then simply use Unmarshal.
+	if outputType.Kind() == reflect.Interface {
+		return Unmarshal(b)
+	}
+
+	if bytes.Equal(b, Y) || bytes.Equal(b, True) {
 		if outputType.Kind() != reflect.Bool {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Bool}}
 		}
@@ -51,8 +53,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		if outputType.Kind() != reflect.Slice {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Slice}}
 		}
-		s := bufio.NewScanner(bytes.NewReader(b))
-		s.Split(splitter.ScanDocuments(BoundaryMarker, true))
+		s := NewDocumentScanner(bytes.NewReader(b), true)
 		out := reflect.MakeSlice(outputType, 0, 0)
 		i := 0
 		for s.Scan() {
@@ -111,7 +112,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return obj, nil
 	}
 
-	if strings.Contains(string(b), "\n") {
+	if _, _, ok := ParseKeyValue(b); ok {
 		if k := outputType.Kind(); k != reflect.Map {
 			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map}}
 		}
@@ -137,7 +138,14 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
 		}
 		return f, nil
+	case reflect.String:
+		str := strings.TrimSpace(string(b))
+		if len(str) > 0 {
+			return str, nil
+		}
+		// if empty string, then return nil
+		return nil, nil
 	}
 
-	return string(b), nil
+	return nil, errors.Errorf("could not unmarshal YAML %q into type %v", string(b), outputType)
 }

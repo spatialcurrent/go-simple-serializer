@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Iterator is used to iterate over a table of separated values.
 type Iterator struct {
 	Reader *csv.Reader
 	Type   reflect.Type
@@ -23,7 +24,7 @@ type Iterator struct {
 	count  int
 }
 
-// Input for NewIterator function.
+// NewIteratorInput provides the input parameters for NewIterator function.
 type NewIteratorInput struct {
 	Reader     io.Reader
 	Type       reflect.Type // required
@@ -35,6 +36,7 @@ type NewIteratorInput struct {
 	Limit      int
 }
 
+// NewIterator returns a new iterator for iterating over a table of separated values.
 func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 
 	if input.Type == nil || input.Type.Kind() != reflect.Map {

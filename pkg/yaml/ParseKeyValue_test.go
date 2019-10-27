@@ -5,7 +5,7 @@
 //
 // =================================================================
 
-package gss
+package yaml
 
 import (
 	"testing"
@@ -13,14 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCanStreamCSVJSONL(t *testing.T) {
-	assert.True(t, CanStream("csv", "jsonl", false))
-}
-
-func TestCanStreamJSONLJSONL(t *testing.T) {
-	assert.True(t, CanStream("jsonl", "jsonl", false))
-}
-
-func TestCanStreamJSONLJSON(t *testing.T) {
-	assert.False(t, CanStream("jsonl", "json", false))
+func TestParseKeyValue(t *testing.T) {
+	key, value, ok := ParseKeyValue([]byte("a: b\n"))
+	assert.Equal(t, "a", string(key))
+	assert.Equal(t, "b", string(value))
+	assert.True(t, ok)
 }
