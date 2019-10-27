@@ -97,9 +97,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	str := string(b)
-
-	if strings.Contains(str, "\n") {
+	if _, _, ok := ParseKeyValue(b); ok {
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
@@ -108,16 +106,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return obj, nil
 	}
 
-	k, v, ok := ParseKeyValue(b)
-	if ok {
-		mv, err := Unmarshal(v)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML value %q", v))
-		}
-		m := map[string]interface{}{}
-		m[string(k)] = mv
-		return m, nil
-	}
+	str := string(b)
 
 	i, err := strconv.Atoi(str)
 	if err == nil {
@@ -129,5 +118,5 @@ func Unmarshal(b []byte) (interface{}, error) {
 		return f, nil
 	}
 
-	return str, nil
+	return strings.TrimSpace(str), nil
 }
