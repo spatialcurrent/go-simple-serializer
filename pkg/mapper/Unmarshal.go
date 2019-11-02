@@ -15,9 +15,33 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )
 
+func unmarshalFieldValue(mapValue reflect.Value, target reflect.Value) error {
+	// if field implements Unmarshaler interface.
+	if target.Type().Implements(reflect.TypeOf((*Unmarshaler)(nil)).Elem()) {
+		value := reflect.New(target.Type().Elem())
+		result := value.MethodByName("UnmarshalMap").Call([]reflect.Value{mapValue})
+		err := result[0].Interface()
+		if err != nil {
+			return err.(error)
+		}
+		target.Set(value)
+		return nil
+	}
+
+	if !mapValue.Type().AssignableTo(target.Type()) {
+		// If the raw value is not assignable, then try with the fitted value.
+		if fitted := fit.FitValue(mapValue); fitted.Type().AssignableTo(target.Type()) {
+			target.Set(fitted)
+			return nil
+		}
+		return errors.Errorf("value %#v (%q) not assignable to field type %q", mapValue.Interface(), mapValue.Type(), target.Type())
+	}
+	target.Set(mapValue)
+	return nil
+}
+
 // Unmarshal unmarshaling the source data into the target converting maps to structs as indicated by struct tags.
 func Unmarshal(data interface{}, v interface{}) error {
-
 	// If inputs implements the Marshaler interface.
 	if unmarshaler, ok := v.(Unmarshaler); ok {
 		return unmarshaler.UnmarshalMap(data)
@@ -82,21 +106,17 @@ func Unmarshal(data interface{}, v interface{}) error {
 						key = tagValue.Name
 					}
 				}
+
 				mv := sourceValue.MapIndex(reflect.ValueOf(key))
 				if !mv.IsValid() {
 					// if key was not found
 					continue
 				}
-				v := reflect.ValueOf(mv.Interface())
-				if !v.Type().AssignableTo(f.Type) {
-					// If the raw value is not assignable, then try with the fitted value.
-					if fitted := fit.FitValue(v); fitted.Type().AssignableTo(f.Type) {
-						fv.Set(fitted)
-						continue
-					}
-					return errors.Errorf("key %q found, but value %#v (%s) not assignable to field %q with type %q", key, v, v, f.Name, f.Type)
+				// unmarshal the concrete map value into the field
+				err = unmarshalFieldValue(reflect.ValueOf(mv.Interface()), fv)
+				if err != nil {
+					return errors.Wrapf(err, "key %q found, but could not assign to field %q", key, f.Name)
 				}
-				fv.Set(v)
 			}
 			return nil
 		}
