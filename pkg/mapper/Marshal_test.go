@@ -1,0 +1,72 @@
+// =================================================================
+//
+// Copyright (C) 2019 Spatial Current, Inc. - All Rights Reserved
+// Released as open source under the MIT License.  See LICENSE file.
+//
+// =================================================================
+
+package mapper
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+type testMarshaler string
+
+func (t testMarshaler) MarshalMap() (interface{}, error) {
+	return map[string]interface{}{"value": string(t)}, nil
+}
+
+func TestMarshalString(t *testing.T) {
+	out, err := Marshal("hello world")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello world", out)
+}
+
+func TestMarshalMapStringInterace(t *testing.T) {
+	m, err := Marshal(map[string]interface{}{"foo": "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"foo": "bar"}, m)
+}
+
+func TestMarshalMapInterfaceFloat(t *testing.T) {
+	m, err := Marshal(map[interface{}]float64{"yo": 1.2})
+	assert.NoError(t, err)
+	assert.Equal(t, map[interface{}]float64{"yo": 1.2}, m)
+}
+
+func TestMarshalMapStringString(t *testing.T) {
+	m, err := Marshal(map[string]string{"foo": "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"foo": "bar"}, m)
+}
+
+func TestMarshalMapStruct(t *testing.T) {
+	m, err := Marshal(struct{ Foo string }{Foo: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"Foo": "bar"}, m)
+}
+
+func TestMarshalMapStructTagged(t *testing.T) {
+	m, err := Marshal(struct {
+		Foo string `map:"foo"`
+	}{Foo: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"foo": "bar"}, m)
+}
+
+func TestMarshalMapStructMarshaler(t *testing.T) {
+	m, err := Marshal(testMarshaler("bar"))
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"value": "bar"}, m)
+}
+
+func TestMarshalMapStructMarshalerInside(t *testing.T) {
+	m, err := Marshal(map[string]interface{}{
+		"foo": testMarshaler("bar"),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"foo": map[string]interface{}{"value": "bar"}}, m)
+}
