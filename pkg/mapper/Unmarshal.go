@@ -16,6 +16,18 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )
 
+func unmarshalEmptySlice(source reflect.Value, target reflect.Value) bool {
+	sourceKind := source.Type().Kind()
+	targetKind := target.Type().Kind()
+	if (sourceKind == reflect.Array || sourceKind == reflect.Slice) && (targetKind == reflect.Slice) {
+		if source.Len() == 0 {
+			target.Set(reflect.MakeSlice(target.Type(), 0, 0))
+			return true
+		}
+	}
+	return false
+}
+
 func unmarshalFieldValue(mapValue reflect.Value, target reflect.Value) error {
 	// if field implements Unmarshaler interface.
 	if target.Type().Implements(reflect.TypeOf((*Unmarshaler)(nil)).Elem()) {
@@ -37,6 +49,11 @@ func unmarshalFieldValue(mapValue reflect.Value, target reflect.Value) error {
 			}
 			return UnmarshalValue(mapValue, target)
 		}
+	}
+
+	// Attempt to unmarshal as an empty slice
+	if unmarshalEmptySlice(mapValue, target) {
+		return nil
 	}
 
 	if !mapValue.Type().AssignableTo(target.Type()) {
