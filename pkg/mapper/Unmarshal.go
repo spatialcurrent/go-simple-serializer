@@ -8,6 +8,7 @@
 package mapper
 
 import (
+	//"fmt"
 	"github.com/pkg/errors"
 	"reflect"
 
@@ -28,6 +29,16 @@ func unmarshalFieldValue(mapValue reflect.Value, target reflect.Value) error {
 		return nil
 	}
 
+	// If target is a pointer to a struct, then recurse.
+	if target.Type().Kind() == reflect.Ptr {
+		if target.Type().Elem().Kind() == reflect.Struct {
+			if !target.Elem().IsValid() {
+				target.Set(reflect.New(target.Type().Elem()))
+			}
+			return UnmarshalValue(mapValue, target)
+		}
+	}
+
 	if !mapValue.Type().AssignableTo(target.Type()) {
 		// If the raw value is not assignable, then try with the fitted value.
 		if fitted := fit.FitValue(mapValue); fitted.Type().AssignableTo(target.Type()) {
@@ -42,20 +53,21 @@ func unmarshalFieldValue(mapValue reflect.Value, target reflect.Value) error {
 
 // Unmarshal unmarshaling the source data into the target converting maps to structs as indicated by struct tags.
 func Unmarshal(data interface{}, v interface{}) error {
-	// If inputs implements the Marshaler interface.
 	if unmarshaler, ok := v.(Unmarshaler); ok {
 		return unmarshaler.UnmarshalMap(data)
 	}
+	return UnmarshalValue(reflect.ValueOf(data), reflect.ValueOf(v))
+}
 
-	sourceValue := reflect.ValueOf(data)
+func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error {
+	//fmt.Println(fmt.Sprintf("UnmarshalValue(%#v, %#v)", sourceValue, targetValue))
+
 	sourceType := sourceValue.Type()
 	sourceKind := sourceType.Kind()
 
-	// Chase pointers to concerete value
-	targetValue := reflect.ValueOf(v)
-	for reflect.TypeOf(targetValue.Interface()).Kind() == reflect.Ptr {
-		targetValue = targetValue.Elem()
-	}
+	//for reflect.TypeOf(targetValue.Interface()).Kind() == reflect.Ptr {
+	//	targetValue = targetValue.Elem()
+	//}
 	targetType := targetValue.Type()
 	targetKind := targetType.Kind()
 
@@ -79,47 +91,59 @@ func Unmarshal(data interface{}, v interface{}) error {
 		return nil
 	}
 
-	if targetKind == reflect.Struct {
-		if sourceKind == reflect.Map {
-			if !reflect.TypeOf("").AssignableTo(sourceType.Key()) {
-				return errors.Errorf("string is not assignable to source map key %q", sourceType.Key())
-			}
-			for i := 0; i < targetValue.NumField(); i++ {
-				f := targetType.Field(i)   // field
-				fv := targetValue.Field(i) // field value
-				if f.Anonymous {
-					continue
-				}
-				if !fv.CanSet() {
-					continue
-				}
-				tagValue, err := tagger.Lookup(f.Tag, "map")
-				if err != nil {
-					return errors.Wrapf(err, "error unmarshaling struct tag value %q", f.Tag)
-				}
-				key := f.Name
-				if tagValue != nil {
-					if tagValue.Ignore {
-						continue
-					}
-					if len(tagValue.Name) > 0 {
-						key = tagValue.Name
-					}
+	// If target is a pointer
+	if targetKind == reflect.Ptr {
+
+		targetElemValue := targetValue.Elem()
+		targetElemType := targetValue.Type().Elem()
+		targetElemKind := targetElemType.Kind()
+
+		// If target element is a struct
+		if targetElemKind == reflect.Struct {
+			if sourceKind == reflect.Map {
+				if !reflect.TypeOf("").AssignableTo(sourceType.Key()) {
+					return errors.Errorf("string is not assignable to source map key %q", sourceType.Key())
 				}
 
-				mv := sourceValue.MapIndex(reflect.ValueOf(key))
-				if !mv.IsValid() {
-					// if key was not found
-					continue
+				// Iterate throught the struct fields
+				for i := 0; i < targetElemValue.NumField(); i++ {
+					f := targetElemType.Field(i)   // field
+					fv := targetElemValue.Field(i) // field value
+					if f.Anonymous {
+						continue
+					}
+					if !fv.CanSet() {
+						continue
+					}
+					tagValue, err := tagger.Lookup(f.Tag, "map")
+					if err != nil {
+						return errors.Wrapf(err, "error unmarshaling struct tag value %q", f.Tag)
+					}
+					key := f.Name
+					if tagValue != nil {
+						if tagValue.Ignore {
+							continue
+						}
+						if len(tagValue.Name) > 0 {
+							key = tagValue.Name
+						}
+					}
+
+					mv := sourceValue.MapIndex(reflect.ValueOf(key))
+					if !mv.IsValid() {
+						// if key was not found
+						continue
+					}
+					// unmarshal the concrete map value into the field
+					err = unmarshalFieldValue(reflect.ValueOf(mv.Interface()), fv)
+					if err != nil {
+						return errors.Wrapf(err, "key %q found, but could not assign to field %q", key, f.Name)
+					}
 				}
-				// unmarshal the concrete map value into the field
-				err = unmarshalFieldValue(reflect.ValueOf(mv.Interface()), fv)
-				if err != nil {
-					return errors.Wrapf(err, "key %q found, but could not assign to field %q", key, f.Name)
-				}
+				return nil
 			}
-			return nil
 		}
+
 	}
 
 	return nil
