@@ -18,6 +18,17 @@ func Marshal(object interface{}) (interface{}, error) {
 
 	v := reflect.ValueOf(object)
 
+	// If value is not valid or nil, return nil.
+	if !v.IsValid() {
+		return nil, nil
+	}
+
+	// If value is a pointer and nil, then return nil
+	if k := v.Kind(); (k == reflect.Ptr || k == reflect.Map) && v.IsNil() {
+		return nil, nil
+	}
+
+	// Chase pointers
 	for reflect.TypeOf(v.Interface()).Kind() == reflect.Ptr {
 		v = v.Elem()
 	}

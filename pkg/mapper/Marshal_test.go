@@ -19,6 +19,12 @@ func (t testMarshaler) MarshalMap() (interface{}, error) {
 	return map[string]interface{}{"value": string(t)}, nil
 }
 
+func TestMarshalNil(t *testing.T) {
+	out, err := Marshal(nil)
+	assert.NoError(t, err)
+	assert.Nil(t, out)
+}
+
 func TestMarshalString(t *testing.T) {
 	out, err := Marshal("hello world")
 	assert.NoError(t, err)

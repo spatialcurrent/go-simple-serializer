@@ -8,7 +8,6 @@
 package mapper
 
 import (
-	//"fmt"
 	"github.com/pkg/errors"
 	"reflect"
 
@@ -17,8 +16,8 @@ import (
 )
 
 func unmarshalEmptySlice(source reflect.Value, target reflect.Value) bool {
-	sourceKind := source.Type().Kind()
-	targetKind := target.Type().Kind()
+	sourceKind := source.Kind()
+	targetKind := target.Kind()
 	if (sourceKind == reflect.Array || sourceKind == reflect.Slice) && (targetKind == reflect.Slice) {
 		if source.Len() == 0 {
 			target.Set(reflect.MakeSlice(target.Type(), 0, 0))
@@ -77,7 +76,6 @@ func Unmarshal(data interface{}, v interface{}) error {
 }
 
 func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error {
-	//fmt.Println(fmt.Sprintf("UnmarshalValue(%#v, %#v)", sourceValue, targetValue))
 
 	sourceType := sourceValue.Type()
 	sourceKind := sourceType.Kind()
@@ -151,6 +149,15 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 						// if key was not found
 						continue
 					}
+
+					// If source value is nil, then set target to its zero value.
+					if k := mv.Kind(); k == reflect.Map || k == reflect.Interface {
+						if mv.IsNil() {
+							fv.Set(reflect.Zero(fv.Type()))
+							continue
+						}
+					}
+
 					// unmarshal the concrete map value into the field
 					err = unmarshalFieldValue(reflect.ValueOf(mv.Interface()), fv)
 					if err != nil {
