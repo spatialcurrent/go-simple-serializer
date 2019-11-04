@@ -62,8 +62,8 @@ func Marshal(object interface{}) (interface{}, error) {
 
 		out := make(map[string]interface{}, in.NumField())
 		for i := 0; i < in.NumField(); i++ {
-			f := t.Field(i)               // field
-			fv := in.Field(i).Interface() // field value
+			f := t.Field(i)   // field
+			fv := in.Field(i) // field value
 
 			tagValue, err := tagger.Lookup(f.Tag, "map")
 			if err != nil {
@@ -82,8 +82,26 @@ func Marshal(object interface{}) (interface{}, error) {
 				omitEmpty = tagValue.OmitEmpty
 			}
 
+			// If value is not valid or nil, return nil.
+			if !fv.IsValid() {
+				if omitEmpty {
+					continue
+				}
+				out[key] = fv
+				continue
+			}
+
+			// If value is a pointer and nil, then return nil
+			if k := fv.Kind(); (k == reflect.Ptr || k == reflect.Map) && fv.IsNil() {
+				if omitEmpty {
+					continue
+				}
+				out[key] = fv
+				continue
+			}
+
 			// Marshal the underlying value
-			mfv, err := Marshal(fv)
+			mfv, err := Marshal(fv.Interface())
 			if err != nil {
 				return nil, errors.Wrapf(err, "error marshaling value for field %v", f.Name)
 			}
