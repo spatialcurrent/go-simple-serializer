@@ -31,6 +31,26 @@ func TestMarshalString(t *testing.T) {
 	assert.Equal(t, "hello world", out)
 }
 
+func TestMarshalStringPointer(t *testing.T) {
+	foo := "foo"
+	out, err := Marshal(&foo)
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", out)
+}
+
+func TestMarshalSliceString(t *testing.T) {
+	out, err := Marshal([]string{"foo", "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"foo", "bar"}, out)
+}
+
+func TestMarshalSliceStringPointer(t *testing.T) {
+	foo := "foo"
+	out, err := Marshal([]*string{&foo})
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"foo"}, out)
+}
+
 func TestMarshalMapStringInterace(t *testing.T) {
 	m, err := Marshal(map[string]interface{}{"foo": "bar"})
 	assert.NoError(t, err)

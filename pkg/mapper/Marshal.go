@@ -14,6 +14,10 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )
 
+// Marshal recursively marshals the given object using the following rules:
+//  - if implements Marshaler intereface, then uses the MarshalMap method,
+//  - deferences pointers
+//  - converts structs to maps
 func Marshal(object interface{}) (interface{}, error) {
 
 	v := reflect.ValueOf(object)
@@ -40,11 +44,52 @@ func Marshal(object interface{}) (interface{}, error) {
 		return marshaler.MarshalMap()
 	}
 
+	// If input is a slice of pointers to literals.
+	switch slc := object.(type) {
+	case []string:
+		return slc, nil
+	case []*string:
+		out := make([]string, 0, len(slc))
+		for i := 0; i < len(slc); i++ {
+			out = append(out, *slc[i])
+		}
+		return out, nil
+	case []int:
+		return slc, nil
+	case []*int:
+		out := make([]int, 0, len(slc))
+		for i := 0; i < len(slc); i++ {
+			out = append(out, *slc[i])
+		}
+		return out, nil
+	case []float64:
+		return slc, nil
+	case []*float64:
+		out := make([]float64, 0, len(slc))
+		for i := 0; i < len(slc); i++ {
+			out = append(out, *slc[i])
+		}
+		return out, nil
+	}
+
 	in := reflect.ValueOf(c) // sets value to concerete type
 	t := v.Type()
 	k := t.Kind()
 
-	// If input is of kind map
+	// If input is of kind slice.
+	if k == reflect.Slice {
+		out := make([]interface{}, 0)
+		for i := 0; i < v.Len(); i++ {
+			element, err := Marshal(v.Index(i).Interface())
+			if err != nil {
+				return nil, errors.Wrapf(err, "error marshaling %#v", v.Index(i).Interface())
+			}
+			out = append(out, element)
+		}
+		return out, nil
+	}
+
+	// If input is of kind map.
 	if k == reflect.Map {
 		out := reflect.MakeMapWithSize(t, v.Len())
 		for it := in.MapRange(); it.Next(); {
@@ -57,7 +102,7 @@ func Marshal(object interface{}) (interface{}, error) {
 		return out.Interface(), nil
 	}
 
-	// If input is of kind struct
+	// If input is of kind struct.
 	if k == reflect.Struct {
 
 		out := make(map[string]interface{}, in.NumField())
@@ -114,6 +159,12 @@ func Marshal(object interface{}) (interface{}, error) {
 			out[key] = mfv
 		}
 		return out, nil
+	}
+
+	// If the concerete type of the input is a string, int, or float64.
+	switch k {
+	case reflect.String, reflect.Int, reflect.Float64:
+		return in.Interface(), nil
 	}
 
 	return object, nil
