@@ -44,7 +44,7 @@ func Marshal(object interface{}) (interface{}, error) {
 		return marshaler.MarshalMap()
 	}
 
-	// If input is a slice of pointers to literals.
+	// If input is a slice of literals or pointers to literals.
 	switch slc := object.(type) {
 	case []string:
 		return slc, nil
@@ -161,11 +161,6 @@ func Marshal(object interface{}) (interface{}, error) {
 		return out, nil
 	}
 
-	// If the concerete type of the input is a string, int, or float64.
-	switch k {
-	case reflect.String, reflect.Int, reflect.Float64:
-		return in.Interface(), nil
-	}
-
-	return object, nil
+	// return concerete value
+	return c, nil
 }

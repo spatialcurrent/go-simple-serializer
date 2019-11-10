@@ -6,3 +6,14 @@
 // =================================================================
 
 package mapper
+
+type testStruct struct {
+	A string   `map:"a"`
+	B string   `map:"b,omitempty"`
+	C string   `map:"-"`
+	D []string `map:"d,omitempty"`
+}
+
+type testObjects struct {
+	Objects []*testStruct `map:"objects"`
+}

@@ -5,7 +5,9 @@
 //
 // =================================================================
 
-// Package mapper provides a simple api for serializing objects to maps.
+// Package mapper provides a simple api for serializing structs to maps and pointers to their concerete types.
+// This package is useful for providing a single execution path for serializing to file formats.
+// For example, using map struct tags, you can provide a single representation to JSON, YAML, and TOML serializers.
 package mapper
 
 type Marshaler interface {
