@@ -8,8 +8,9 @@
 package tagger
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // Lookup lookups and parses a struct tag key-value pair if found.

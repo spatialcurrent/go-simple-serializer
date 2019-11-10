@@ -8,8 +8,9 @@
 package mapper
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // UnmarshalSlice unmarshals the given array or slice into the value, and returns an error, if any.

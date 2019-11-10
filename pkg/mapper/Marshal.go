@@ -8,8 +8,9 @@
 package mapper
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )

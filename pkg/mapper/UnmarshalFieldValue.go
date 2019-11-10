@@ -8,14 +8,14 @@
 package mapper
 
 import (
-	//"fmt"
-	"github.com/pkg/errors"
-	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 	"reflect"
+
+	"github.com/pkg/errors"
+
+	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
 )
 
 func UnmarshalFieldValue(source reflect.Value, target reflect.Value) error {
-	//fmt.Println(fmt.Sprintf("UnmarshalFieldValue(%#v, %#v)\n", source, target))
 
 	targetType := target.Type()
 	targetKind := target.Kind()
