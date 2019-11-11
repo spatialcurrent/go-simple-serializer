@@ -28,14 +28,14 @@ func Marshal(object interface{}) (interface{}, error) {
 		return nil, nil
 	}
 
-	// If value is a pointer and nil, then return nil
-	if k := v.Kind(); (k == reflect.Ptr || k == reflect.Map) && v.IsNil() {
-		return nil, nil
+	// Chase pointers
+	for v.IsValid() && reflect.ValueOf(v.Interface()).Kind() == reflect.Ptr {
+		v = v.Elem()
 	}
 
-	// Chase pointers
-	for reflect.TypeOf(v.Interface()).Kind() == reflect.Ptr {
-		v = v.Elem()
+	// If value is nil and a a pointer, slice or map, then return nil
+	if k := v.Kind(); (k == reflect.Ptr || k == reflect.Slice || k == reflect.Map) && v.IsNil() {
+		return nil, nil
 	}
 
 	c := v.Interface()
@@ -137,8 +137,9 @@ func Marshal(object interface{}) (interface{}, error) {
 				continue
 			}
 
-			// If value is a pointer and nil, then return nil
-			if k := fv.Kind(); (k == reflect.Ptr || k == reflect.Map) && fv.IsNil() {
+			// If value is nil
+			if k := fv.Kind(); (k == reflect.Ptr || k == reflect.Map || k == reflect.Slice) && fv.IsNil() {
+				// If omitempty struct tag attribute was present, then skip.
 				if omitEmpty {
 					continue
 				}

@@ -72,7 +72,11 @@ func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 	} else {
 		for i := 0; i < source.Len(); i++ {
 			v := reflect.New(targetType.Elem())
-			v.Elem().Set(reflect.Zero(targetType.Elem()))
+			if targetType.Elem().Kind() == reflect.Map {
+				v.Elem().Set(reflect.MakeMap(targetType.Elem()))
+			} else {
+				v.Elem().Set(reflect.Zero(targetType.Elem()))
+			}
 			err := UnmarshalValue(reflect.ValueOf(source.Index(i).Interface()), v.Elem())
 			if err != nil {
 				return errors.Wrapf(err, "error unmarshaling slice value %d", i)

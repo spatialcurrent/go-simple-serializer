@@ -21,7 +21,7 @@ type testStruct struct {
 }
 
 func testLookup(t *testing.T, in string, key string, expected *Value) {
-	v, err := Lookup(in, key)
+	v, err := Lookup(reflect.StructTag(in), key)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, v)
 	out, err := v.MarshalText()
