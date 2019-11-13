@@ -14,12 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testStruct struct {
-	A string `name:"a"`
-	B string `name:"b,omitempty"`
-	C string `name:"-"`
-}
-
 func testLookup(t *testing.T, in string, key string, expected *Value) {
 	v, err := Lookup(reflect.StructTag(in), key)
 	assert.NoError(t, err)

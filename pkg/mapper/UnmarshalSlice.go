@@ -21,7 +21,7 @@ func UnmarshalSlice(data interface{}, v interface{}) error {
 	return UnmarshalSliceValue(reflect.ValueOf(data), reflect.ValueOf(v))
 }
 
-// UnmarshalSlice unmarshals the given array or slice value into the pointer to slice value, and returns an error, if any.
+// UnmarshalSliceValue unmarshals the given array or slice value into the pointer to slice value, and returns an error, if any.
 func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 
 	sourceKind := source.Kind()

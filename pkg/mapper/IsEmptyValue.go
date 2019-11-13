@@ -11,7 +11,7 @@ import (
 	"reflect"
 )
 
-// IsEmpty returns true if the value is "empty".
+// IsEmptyValue returns true if the value is "empty".
 //  - If the type is nil, then returns true.
 //  - If the kind is bool, and the value is false, then returns true.
 //  - If the value is an integer, unsigned integer, or float, and the value if zero, then returns true.
