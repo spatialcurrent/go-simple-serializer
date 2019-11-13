@@ -22,16 +22,6 @@ func Unmarshal(data interface{}, v interface{}) error {
 
 func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error {
 
-	sourceType := sourceValue.Type()
-	sourceKind := sourceType.Kind()
-
-	if sourceKind == reflect.Interface {
-		return errors.Errorf("source %v (%T) is of kind interface", sourceValue, sourceValue)
-	}
-
-	//for reflect.TypeOf(targetValue.Interface()).Kind() == reflect.Ptr {
-	//	targetValue = targetValue.Elem()
-	//}
 	targetType := targetValue.Type()
 	targetKind := targetType.Kind()
 
@@ -48,6 +38,29 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 		return errors.Errorf("target %#v (%v) cannot be set", targetValue.Interface(), targetValue.Type())
 	}
 
+	// If source value is not valid, then set the targetValue to it's zero value.
+	// This can occur, when given a "reflect.ValueOf(nil)"" sourceValue.
+	if !sourceValue.IsValid() {
+		targetValue.Set(reflect.New(targetValue.Type()).Elem())
+		return nil
+	}
+
+	sourceType := sourceValue.Type()
+	sourceKind := sourceType.Kind()
+
+	// If source is of kind pointer, then dereference the source value.
+	if sourceKind == reflect.Ptr {
+		return UnmarshalValue(sourceValue.Elem(), targetValue)
+	}
+
+	if sourceKind == reflect.Interface {
+		if !sourceValue.CanInterface() {
+			return errors.Errorf("source %v (%v) is of kind interface", sourceValue, sourceValue.Type())
+		}
+		// Re-value the object
+		return UnmarshalValue(reflect.ValueOf(sourceValue.Interface()), targetValue)
+	}
+
 	// If target implements the unmarshaler interface
 	if reflect.PtrTo(targetType).Implements(reflect.TypeOf((*Unmarshaler)(nil)).Elem()) {
 		outValue := reflect.New(targetType)
@@ -60,29 +73,14 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 		return nil
 	}
 
+	// If target is a slice
 	if targetKind == reflect.Slice {
 		return UnmarshalSliceValue(sourceValue, targetValue)
 	}
 
 	// If target is a map
 	if targetKind == reflect.Map {
-		if sourceKind == reflect.Map {
-			if !sourceType.Key().AssignableTo(targetType.Key()) {
-				return errors.Errorf("source map key %q is not assignable to target map key %q", sourceType.Key(), targetType.Key())
-			}
-			for it := sourceValue.MapRange(); it.Next(); {
-				v := reflect.New(targetType.Elem())
-				err := Unmarshal(it.Value().Interface(), v.Interface())
-				if err != nil {
-					return errors.Wrapf(err, "error unmarshaling %#v", it.Value().Interface())
-				}
-				if t := reflect.TypeOf(v); !t.AssignableTo(targetType.Elem()) {
-					return errors.Errorf("source map value %v is not assignable to target map value %v", t, targetType.Elem())
-				}
-				targetValue.SetMapIndex(it.Key(), v)
-			}
-		}
-		return nil
+		return UnmarshalMapValue(sourceValue, targetValue)
 	}
 
 	// If target is a struct
