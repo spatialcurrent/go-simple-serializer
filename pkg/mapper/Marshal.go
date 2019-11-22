@@ -92,7 +92,7 @@ func Marshal(object interface{}) (interface{}, error) {
 
 	// If input is of kind map.
 	if k == reflect.Map {
-		out := reflect.MakeMapWithSize(t, v.Len())
+		out := reflect.MakeMapWithSize(reflect.MapOf(t.Key(), interfaceType), v.Len())
 		for it := in.MapRange(); it.Next(); {
 			v, err := Marshal(it.Value().Interface())
 			if err != nil {

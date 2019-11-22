@@ -10,6 +10,10 @@
 // For example, using map struct tags, you can provide a single representation to JSON, YAML, and TOML serializers.
 package mapper
 
+import (
+	"reflect"
+)
+
 type Marshaler interface {
 	MarshalMap() (interface{}, error)
 }
@@ -17,3 +21,5 @@ type Marshaler interface {
 type Unmarshaler interface {
 	UnmarshalMap(data interface{}) error
 }
+
+var interfaceType = reflect.TypeOf([]interface{}{}).Elem()
