@@ -73,6 +73,48 @@ func Marshal(object interface{}) (interface{}, error) {
 		return out, nil
 	}
 
+	// If input is a map of literals to literals.
+	switch m := object.(type) {
+	case map[int]float64:
+		return m, nil
+	case map[int]*float64:
+		return m, nil
+	case map[int]int:
+		return m, nil
+	case map[int]*int:
+		return m, nil
+	case map[int]string:
+		return m, nil
+	case map[int]*string:
+		return m, nil
+
+	case map[string]float64:
+		return m, nil
+	case map[string]*float64:
+		return m, nil
+	case map[string]int:
+		return m, nil
+	case map[string]*int:
+		return m, nil
+	case map[string]string:
+		return m, nil
+	case map[string]*string:
+		return m, nil
+
+	case map[interface{}]float64:
+		return m, nil
+	case map[interface{}]*float64:
+		return m, nil
+	case map[interface{}]int:
+		return m, nil
+	case map[interface{}]*int:
+		return m, nil
+	case map[interface{}]string:
+		return m, nil
+	case map[interface{}]*string:
+		return m, nil
+	}
+
 	in := reflect.ValueOf(c) // sets value to concerete type
 	t := v.Type()
 	k := t.Kind()

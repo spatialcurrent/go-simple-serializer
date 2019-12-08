@@ -15,4 +15,20 @@ import (
 
 func TestIsEmptyString(t *testing.T) {
 	assert.True(t, IsEmpty(""))
+	assert.False(t, IsEmpty("hello world"))
+}
+
+func TestIsEmptySlice(t *testing.T) {
+	assert.True(t, IsEmpty([]string{}))
+	assert.False(t, IsEmpty([]string{"hello world"}))
+}
+
+func TestIsEmptyMap(t *testing.T) {
+	assert.True(t, IsEmpty(map[string]string{}))
+	assert.False(t, IsEmpty(map[string]string{"hello": "world"}))
+}
+
+func TestIsEmptyInt(t *testing.T) {
+	assert.True(t, IsEmpty(0))
+	assert.False(t, IsEmpty(1))
 }
