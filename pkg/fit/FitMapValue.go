@@ -26,8 +26,8 @@ func FitMapValue(in reflect.Value) reflect.Value {
 	for it := in.MapRange(); it.Next(); {
 		k := reflect.ValueOf(it.Key().Interface())
 		v := FitValue(reflect.ValueOf(it.Value().Interface()))
-		keyTypes[k.Type().Name()] = k.Type()
-		valueTypes[v.Type().Name()] = v.Type()
+		keyTypes[k.Type().PkgPath()+"."+k.Type().String()] = k.Type()
+		valueTypes[v.Type().PkgPath()+"."+v.Type().String()] = v.Type()
 		m.SetMapIndex(k, v)
 	}
 
@@ -57,7 +57,6 @@ func FitMapValue(in reflect.Value) reflect.Value {
 			out.SetMapIndex(reflect.ValueOf(it.Key().Interface()), reflect.ValueOf(it.Value().Interface()))
 		}
 		return out
-
 	}
 
 	// If more than 1 key type, but only 1 value type.

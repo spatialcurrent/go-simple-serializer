@@ -113,16 +113,29 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 	}
 
 	if _, _, ok := ParseKeyValue(b); ok {
-		if k := outputType.Kind(); k != reflect.Map {
-			return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map}}
+		k := outputType.Kind()
+
+		if k == reflect.Map {
+			ptr := reflect.New(outputType)
+			ptr.Elem().Set(reflect.MakeMap(outputType))
+			err := goyaml.Unmarshal(b, ptr.Interface())
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q into map", string(b)))
+			}
+			return ptr.Elem().Interface(), nil
 		}
-		ptr := reflect.New(outputType)
-		ptr.Elem().Set(reflect.MakeMap(outputType))
-		err := goyaml.Unmarshal(b, ptr.Interface())
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+
+		if k == reflect.Struct {
+			ptr := reflect.New(outputType)
+			ptr.Elem().Set(reflect.Zero(outputType))
+			err := goyaml.Unmarshal(b, ptr.Interface())
+			if err != nil {
+				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q into struct", string(b)))
+			}
+			return ptr.Elem().Interface(), nil
 		}
-		return ptr.Elem().Interface(), nil
+
+		return nil, &ErrInvalidKind{Value: outputType, Expected: []reflect.Kind{reflect.Map, reflect.Struct}}
 	}
 
 	switch outputType.Kind() {

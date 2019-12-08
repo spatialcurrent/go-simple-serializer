@@ -141,9 +141,10 @@ type Serializer struct {
 // New returns a new serializer with the given format.
 func New(format string) *Serializer {
 	return &Serializer{
-		format:    format,
-		skipLines: NoSkip,
-		limit:     NoLimit,
+		format:        format,
+		skipLines:     NoSkip,
+		limit:         NoLimit,
+		lineSeparator: "\n",
 	}
 }
 
