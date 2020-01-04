@@ -20,6 +20,7 @@ import (
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/rapid"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 )
@@ -108,6 +109,13 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:             input.Limit,
 			LineSeparator:     []byte(input.LineSeparator)[0],
 			DropCR:            input.DropCR,
+		})
+		return it, nil
+	case "rapid":
+		it := rapid.NewIterator(&rapid.NewIteratorInput{
+			Type:   input.Type,
+			Reader: input.Reader,
+			Limit:  input.Limit,
 		})
 		return it, nil
 	case "tags":

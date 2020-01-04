@@ -21,6 +21,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/fmt"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/rapid"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -90,6 +91,8 @@ func NewWriter(input *NewWriterInput) (pipe.Writer, error) {
 			input.Pretty,
 		)
 		return w, nil
+	case "rapid":
+		return rapid.NewWriter(input.Writer), nil
 	case "tags":
 		if len(input.KeyValueSeparator) == 0 {
 			return nil, ErrMissingKeyValueSeparator

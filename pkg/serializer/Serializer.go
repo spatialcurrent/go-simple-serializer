@@ -11,11 +11,11 @@ package serializer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/hcl"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
@@ -23,6 +23,7 @@ import (
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/properties"
+	"github.com/spatialcurrent/go-simple-serializer/pkg/rapid"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tags"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/toml"
@@ -46,6 +47,7 @@ const (
 	FormatJSON       = "json"       // JSON
 	FormatJSONL      = "jsonl"      // JSON Lines
 	FormatProperties = "properties" // Properties
+	FormatRapid      = "rapid"      // Rapid
 	FormatTags       = "tags"       // Tags (a=b c=d ...)
 	FormatTOML       = "toml"       // TOML
 	FormatTSV        = "tsv"        // Tab-Separated Values
@@ -63,6 +65,7 @@ var (
 		FormatJSON,
 		FormatJSONL,
 		FormatProperties,
+		FormatRapid,
 		FormatTags,
 		FormatTOML,
 		FormatTSV,
@@ -456,7 +459,7 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 			LazyQuotes: s.lazyQuotes,
 			Limit:      s.limit,
 		})
-	case FormatJSONL, FormatProperties, FormatTags:
+	case FormatJSONL, FormatProperties, FormatRapid, FormatTags:
 		if len(s.lineSeparator) == 0 {
 			return nil, ErrMissingLineSeparator
 		}
@@ -474,6 +477,13 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 				SkipComments:      s.skipComments,
 				Limit:             s.limit,
 				Trim:              s.trim,
+			})
+		case FormatRapid:
+			return rapid.Read(&rapid.ReadInput{
+				Type:   s.objectType,
+				Reader: bytes.NewReader(b),
+				DropCR: s.dropCR,
+				Limit:  s.limit,
 			})
 		case FormatProperties:
 			return properties.Read(&properties.ReadInput{
@@ -528,10 +538,10 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(objectType))
 		obj, err := hcl.Parse(string(b))
 		if err != nil {
-			return nil, errors.Wrap(err, "Error parsing hcl")
+			return nil, fmt.Errorf("error parsing hcl: %w", err)
 		}
 		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-			return nil, errors.Wrap(err, "Error decoding hcl")
+			return nil, fmt.Errorf("error decoding hcl: %w", err)
 		}
 		return ptr.Elem().Interface(), nil
 	}
@@ -555,7 +565,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	case FormatBSON:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return bson.Marshal(o)
 	case FormatCSV, FormatTSV:
@@ -577,7 +587,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:           s.limit,
 		})
 		if errWrite != nil {
-			return make([]byte, 0), errors.Wrap(errWrite, "error writing separated values")
+			return make([]byte, 0), fmt.Errorf("error writing separated values: %w", errWrite)
 		}
 		return buf.Bytes(), nil
 	case FormatFmt:
@@ -601,7 +611,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	case FormatJSON:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return json.Marshal(o, s.pretty)
 	case FormatJSONL:
@@ -624,9 +634,11 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			EscapeEqual:       s.escapeEqual,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing properties")
+			return make([]byte, 0), fmt.Errorf("error writing properties: %w", err)
 		}
 		return buf.Bytes(), nil
+	case FormatRapid:
+		return rapid.Marshal(object, s.limit)
 	case FormatTags:
 		if len(s.keyValueSeparator) == 0 {
 			return nil, ErrMissingKeyValueSeparator
@@ -646,13 +658,13 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:             s.limit,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing tags")
+			return make([]byte, 0), fmt.Errorf("error writing tags: %w", err)
 		}
 		return buf.Bytes(), nil
 	case FormatTOML, FormatYAML:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return MarshalFuncs[s.format](o)
 	}

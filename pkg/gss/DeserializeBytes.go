@@ -48,7 +48,7 @@ type DeserializeBytesInput struct {
 func DeserializeBytes(input *DeserializeBytesInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl", "geojsonl", "tags":
+	case "csv", "tsv", "jsonl", "geojsonl", "rapid", "tags":
 		it, errorIterator := iterator.NewIterator(&iterator.NewIteratorInput{
 			Reader:            bytes.NewReader(input.Bytes),
 			Type:              input.Type,

@@ -46,7 +46,7 @@ type DeserializeReaderInput struct {
 func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 
 	switch input.Format {
-	case "csv", "tsv", "jsonl", "geojsonl", "tags":
+	case "csv", "tsv", "jsonl", "geojsonl", "rapid", "tags":
 
 		var iteratorType reflect.Type
 		if input.Type != nil {
@@ -85,7 +85,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			return w.Values(), errors.Wrap(errorRun, "error deserializing")
 		}
 		return w.Values(), nil
-	case "gob":
+	case serializer.FormatGob:
 		obj := make([]interface{}, 0)
 		d := gob.NewDecoder(input.Reader)
 		err := d.Decode(&obj)
