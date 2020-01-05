@@ -25,6 +25,30 @@ func NewDictionary() *Dictionary {
 	}
 }
 
+func (d *Dictionary) Cap() int {
+	return cap(d.keys)
+}
+
+func (d *Dictionary) Reset() {
+	d.keys = d.keys[:0]
+	//d.boolKeys = map[bool]int{}
+	for k := range d.boolKeys {
+		delete(d.boolKeys, k)
+	}
+	//d.stringKeys = map[string]int{}
+	for k := range d.stringKeys {
+		delete(d.stringKeys, k)
+	}
+	//d.intKeys = map[int]int{}
+	for k := range d.intKeys {
+		delete(d.intKeys, k)
+	}
+	//d.float64Keys = map[float64]int{}
+	for k := range d.float64Keys {
+		delete(d.float64Keys, k)
+	}
+}
+
 func (d *Dictionary) Keys() []interface{} {
 	return d.keys
 }
@@ -84,7 +108,7 @@ func (d *Dictionary) AddKey(key interface{}) int {
 }
 
 func (d *Dictionary) AddChain(chain ...interface{}) []int {
-	indicies := make([]int, 0)
+	indicies := make([]int, 0, len(chain))
 	for _, v := range chain {
 		if i := d.GetIndex(v); i != -1 {
 			indicies = append(indicies, i)
@@ -181,7 +205,7 @@ func (d *Dictionary) GetIndex(key interface{}) int {
 }
 
 func (d *Dictionary) GetChain(indicies []int) ([]interface{}, bool) {
-	chain := make([]interface{}, 0)
+	chain := make([]interface{}, 0, len(indicies))
 	for _, i := range indicies {
 		if i >= len(d.keys) {
 			return chain, false
