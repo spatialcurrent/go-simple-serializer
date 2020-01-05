@@ -33,13 +33,13 @@ func NewIterator(r io.ByteReader, prefix []byte, subs [][]byte, delim []byte) *I
 	}
 }
 
-func (e *Iterator) unescape(in []byte) []byte {
+func (it *Iterator) unescape(in []byte) []byte {
 	out := in
-	if len(e.prefix) > 0 {
-		for _, sub := range e.subs {
-			out = bytes.Replace(out, append(e.prefix, sub...), sub, -1)
+	if len(it.prefix) > 0 {
+		for _, sub := range it.subs {
+			out = bytes.Replace(out, append(it.prefix, sub...), sub, -1)
 		}
-		out = bytes.Replace(out, append(e.prefix, e.prefix...), e.prefix, -1) // unescape the prefix itself
+		out = bytes.Replace(out, append(it.prefix, it.prefix...), it.prefix, -1) // unescape the prefix itself
 	}
 	return out
 }
