@@ -25,7 +25,7 @@ type Iterator struct {
 // NewIteratorInput provides the input parameters for the NewIterator function.
 type NewIteratorInput struct {
 	Type   reflect.Type // the type to unmarshal for each line
-	Reader io.Reader
+	Reader io.ByteReader
 	Limit  int  // Limit the number of objects to read and return from the underlying stream.
 	DropCR bool // Drop carriage returns at the end of lines.
 }
@@ -34,7 +34,7 @@ type NewIteratorInput struct {
 func NewIterator(input *NewIteratorInput) *Iterator {
 	return &Iterator{
 		Type:    input.Type,
-		Decoder: NewDecoder(input.Reader, '\n', input.DropCR),
+		Decoder: NewDecoder(input.Reader),
 		Limit:   input.Limit,
 		Count:   0,
 	}

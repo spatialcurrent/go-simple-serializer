@@ -16,9 +16,9 @@ import (
 
 // ReadInput provides the input for the Read function.
 type ReadInput struct {
-	Type   reflect.Type // the output type
-	Reader io.Reader    // the underlying reader
-	DropCR bool         // drop carriage return
+	Type   reflect.Type  // the output type
+	Reader io.ByteReader // the underlying reader
+	DropCR bool          // drop carriage return
 	Limit  int
 }
 

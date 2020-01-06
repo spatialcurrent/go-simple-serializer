@@ -13,6 +13,7 @@
 package iterator
 
 import (
+	"bufio"
 	"io"
 	"reflect"
 
@@ -114,7 +115,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 	case "rapid":
 		it := rapid.NewIterator(&rapid.NewIteratorInput{
 			Type:   input.Type,
-			Reader: input.Reader,
+			Reader: bufio.NewReader(input.Reader),
 			Limit:  input.Limit,
 		})
 		return it, nil
