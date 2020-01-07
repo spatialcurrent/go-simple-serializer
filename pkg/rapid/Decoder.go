@@ -8,11 +8,13 @@
 package rapid
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
 
 type Decoder struct {
+	reader         io.ByteReader
 	literalDecoder *LiteralDecoder
 	count          int
 	eof            bool
@@ -21,6 +23,7 @@ type Decoder struct {
 //func NewDecoder(r io.Reader, separator byte, dropCR bool) *Decoder {
 func NewDecoder(r io.ByteReader) *Decoder {
 	return &Decoder{
+		reader:         r,
 		literalDecoder: NewLiteralDecoder(r),
 		count:          0,
 		eof:            false,
@@ -28,6 +31,7 @@ func NewDecoder(r io.ByteReader) *Decoder {
 }
 
 func (d *Decoder) Reset(r io.ByteReader) {
+	d.reader = r
 	d.literalDecoder.Reset(r)
 	d.count = 0
 }
@@ -36,6 +40,20 @@ func (d *Decoder) Decode(v interface{}) error {
 
 	if d.eof {
 		return io.EOF
+	}
+
+	if d.count == 0 {
+		h := make([]byte, 0, len(MagicNumber))
+		for i := 0; i < len(MagicNumber); i++ {
+			b, err := d.reader.ReadByte()
+			if err != nil {
+				return fmt.Errorf("error reading magic number byte %d: %w", i, err)
+			}
+			h = append(h, b)
+		}
+		if !bytes.Equal(h, MagicNumber) {
+			return fmt.Errorf("invalid magic number, expecting \"% x\" but found \"% x\"", MagicNumber, h)
+		}
 	}
 
 	err := d.literalDecoder.Decode(v)

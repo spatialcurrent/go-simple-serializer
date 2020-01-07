@@ -15,31 +15,36 @@ import (
 )
 
 type Encoder struct {
-	writer         io.Writer
-	literalEncoder *LiteralEncoder
-	count          int
+	writer             io.Writer
+	literalEncoder     *LiteralEncoder
+	magicNumberWritten bool
+	count              int
 }
 
 func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{
-		writer:         w,
-		literalEncoder: NewLiteralEncoder(w),
-		count:          0,
+		writer:             w,
+		literalEncoder:     NewLiteralEncoder(w),
+		magicNumberWritten: false,
+		count:              0,
 	}
 }
 
 func (e *Encoder) Reset(w io.Writer) {
 	e.writer = w
 	e.literalEncoder.Reset(w)
+	e.magicNumberWritten = false
 	e.count = 0
 }
 
 func (e *Encoder) Encode(v interface{}) error {
-	/*if e.count > 0 {
-		if _, err := fmt.Fprint(e.writer, "\n"); err != nil {
-			return fmt.Errorf("error encoding new line: %w", err)
+	if !e.magicNumberWritten {
+		_, err := e.writer.Write(MagicNumber)
+		if err != nil {
+			return fmt.Errorf("error writing magic number: %w", err)
 		}
-	}*/
+		e.magicNumberWritten = true
+	}
 	err := e.literalEncoder.Encode(fit.Fit(v))
 	if err != nil {
 		return fmt.Errorf("error encoding value %#v: %w", v, err)
