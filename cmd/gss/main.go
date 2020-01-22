@@ -26,13 +26,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -54,7 +54,9 @@ var gitCommit string
 
 var (
 	mapStringInterfaceType      = reflect.TypeOf(map[string]interface{}{})
+	mapStringStringType         = reflect.TypeOf(map[string]string{})
 	sliceMapStringInterfaceType = reflect.TypeOf([]map[string]interface{}{})
+	sliceMapStringStringType    = reflect.TypeOf([]map[string]string{})
 )
 
 func main() {
@@ -139,18 +141,18 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					EscapeNewLine:     true,
 				})
 				if err != nil {
-					return errors.Wrap(err, "error writing viper settings")
+					return fmt.Errorf("error writing viper settings: %w", err)
 				}
 				fmt.Println("")
 			}
 
 			fi, err := os.Stdin.Stat()
 			if err != nil {
-				return errors.Wrap(err, "error stating stdin")
+				return fmt.Errorf("error stating stdin: %w", err)
 			}
 
 			if fi.Mode()&os.ModeNamedPipe == 0 {
-				return errors.Errorf("no data provided on stdin")
+				return errors.New("no data provided on stdin")
 			}
 
 			noStream := v.GetBool("no-stream")
@@ -166,6 +168,8 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				var inputType reflect.Type
 				if inputFormat == "gob" {
 					inputType = mapStringInterfaceType
+				} else if inputFormat == "csv" || inputFormat == "tsv" {
+					inputType = mapStringStringType
 				}
 
 				if verbose {
@@ -186,11 +190,11 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					LineSeparator:     inputLineSeparator,
 					DropCR:            v.GetBool(cli.FlagInputDropCR),
 				})
-				if it == nil {
-					return errors.New(fmt.Sprintf("error building input iterator with format %q", inputFormat))
-				}
 				if errorIterator != nil {
-					return errors.Wrap(errorIterator, "error creating input iterator")
+					return fmt.Errorf("error creating input iterator: %w", errorIterator)
+				}
+				if it == nil {
+					return fmt.Errorf("error building input iterator with format %q", inputFormat)
 				}
 				p = p.Input(it)
 
@@ -213,7 +217,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					Reversed:          outputReversed,
 				})
 				if errorWriter != nil {
-					return errors.Wrap(errorWriter, "error building output writer")
+					return fmt.Errorf("error building output writer: %w", errorWriter)
 				}
 				p = p.Output(w)
 
@@ -221,21 +225,22 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					p = p.OutputLimit(outputLimit)
 				}
 
-				errorRun := p.Run()
-				if errorRun != nil {
-					return errors.Wrap(errorRun, "error piping data")
+				if err := p.Run(); err != nil {
+					return fmt.Errorf("error piping data: %w", err)
 				}
 				return nil
 			}
 
 			inputBytes, err := ioutil.ReadAll(os.Stdin)
 			if err != nil {
-				return errors.Wrap(err, "error reading from stdin")
+				return fmt.Errorf("error reading from stdin: %w", err)
 			}
 
 			var inputType reflect.Type
 			if inputFormat == "gob" {
 				inputType = sliceMapStringInterfaceType
+			} else if inputFormat == "csv" || inputFormat == "tsv" {
+				inputType = sliceMapStringStringType
 			}
 
 			outputBytes, err := gss.Convert(&gss.ConvertInput{
@@ -273,7 +278,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				OutputEscapeEqual:       v.GetBool(cli.FlagOutputEscapeEqual),
 			})
 			if err != nil {
-				return errors.Wrap(err, "error converting")
+				return fmt.Errorf("error converting: %w", err)
 			}
 			switch outputFormat {
 			case serializer.FormatCSV, serializer.FormatJSONL, serializer.FormatProperties, serializer.FormatTags, serializer.FormatTOML, serializer.FormatTSV, serializer.FormatYAML:
