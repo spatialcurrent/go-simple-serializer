@@ -66,7 +66,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 	}
 
 	switch input.Format {
-	case "gob", "csv", "tsv":
+	case "csv", "gob", "tsv":
 		if input.Type == nil {
 			return nil, fmt.Errorf("format %q requires type: %w", input.Format, ErrMissingType)
 		}
