@@ -18,6 +18,18 @@ testFormats() {
   assertEquals "unexpected formats" "${expectedFormats}" "${formats}"
 }
 
+testCSVJSON() {
+  local expected='[{"hello":"world"}]'
+  local output=$(printf 'hello\nworld' | gss -i csv -o json)
+  assertEquals "unexpected output" "$(echo -e "${expected}")" "${output}"
+}
+
+testCSVJSONL() {
+  local expected='{"hello":"world"}'
+  local output=$(printf 'hello\nworld' | gss -i csv -o jsonl)
+  assertEquals "unexpected output" "$(echo -e "${expected}")" "${output}"
+}
+
 testJSONCSV() {
   local expected='hello\nworld'
   local output=$(echo '{"hello":"world"}' | gss -i json -o csv)
