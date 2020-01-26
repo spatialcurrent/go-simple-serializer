@@ -54,7 +54,9 @@ var gitCommit string
 
 var (
 	mapStringInterfaceType      = reflect.TypeOf(map[string]interface{}{})
+	mapStringStringType         = reflect.TypeOf(map[string]string{})
 	sliceMapStringInterfaceType = reflect.TypeOf([]map[string]interface{}{})
+	sliceMapStringStringType    = reflect.TypeOf([]map[string]string{})
 )
 
 func main() {
@@ -150,7 +152,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 			}
 
 			if fi.Mode()&os.ModeNamedPipe == 0 {
-				return errors.Errorf("no data provided on stdin")
+				return errors.New("no data provided on stdin")
 			}
 
 			noStream := v.GetBool("no-stream")
@@ -166,6 +168,8 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				var inputType reflect.Type
 				if inputFormat == "gob" {
 					inputType = mapStringInterfaceType
+				} else if inputFormat == "csv" || inputFormat == "tsv" {
+					inputType = mapStringStringType
 				}
 
 				if verbose {
@@ -186,11 +190,11 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					LineSeparator:     inputLineSeparator,
 					DropCR:            v.GetBool(cli.FlagInputDropCR),
 				})
+				if errorIterator != nil {
+					return errors.Wrap(errorIterator, "error creating input iterator: %w")
+				}
 				if it == nil {
 					return errors.New(fmt.Sprintf("error building input iterator with format %q", inputFormat))
-				}
-				if errorIterator != nil {
-					return errors.Wrap(errorIterator, "error creating input iterator")
 				}
 				p = p.Input(it)
 
@@ -198,7 +202,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					p = p.InputLimit(inputLimit)
 				}
 
-				w, errorWriter := writer.NewWriter(&writer.NewWriterInput{
+				w, errWriter := writer.NewWriter(&writer.NewWriterInput{
 					Writer:            os.Stdout,
 					Format:            outputFormat,
 					FormatSpecifier:   v.GetString(cli.FlagOutputFormatSpecifier),
@@ -212,8 +216,8 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					Sorted:            outputSorted,
 					Reversed:          outputReversed,
 				})
-				if errorWriter != nil {
-					return errors.Wrap(errorWriter, "error building output writer")
+				if errWriter != nil {
+					return errors.Wrap(errWriter, "error building output writer")
 				}
 				p = p.Output(w)
 
@@ -221,9 +225,8 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					p = p.OutputLimit(outputLimit)
 				}
 
-				errorRun := p.Run()
-				if errorRun != nil {
-					return errors.Wrap(errorRun, "error piping data")
+				if errRun := p.Run(); errRun != nil {
+					return errors.Wrap(errRun, "error piping data")
 				}
 				return nil
 			}
@@ -236,6 +239,8 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 			var inputType reflect.Type
 			if inputFormat == "gob" {
 				inputType = sliceMapStringInterfaceType
+			} else if inputFormat == "csv" || inputFormat == "tsv" {
+				inputType = sliceMapStringStringType
 			}
 
 			outputBytes, err := gss.Convert(&gss.ConvertInput{
