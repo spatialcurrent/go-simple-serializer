@@ -8,6 +8,7 @@
 package jsonl
 
 import (
+	"bytes"
 	"io"
 	"reflect"
 
@@ -23,6 +24,7 @@ type Writer struct {
 	separator     string    // the separator stirng to use, e.g, null byte or \n.
 	keySerializer stringify.Stringer
 	pretty        bool // write pretty output
+	buffer        *bytes.Buffer
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
@@ -32,6 +34,7 @@ func NewWriter(w io.Writer, separator string, keySerializer stringify.Stringer, 
 		separator:     separator,
 		keySerializer: keySerializer,
 		pretty:        pretty,
+		buffer:        &bytes.Buffer{},
 	}
 }
 
@@ -66,11 +69,23 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 		k = value.Type().Kind()
 	}
 	if k == reflect.Array || k == reflect.Slice {
+		defer w.buffer.Reset()
+		//defer func() { w.buffer = &bytes.Buffer{} }()
+		bw := &Writer{
+			writer:        w.buffer,
+			separator:     w.separator,
+			keySerializer: w.keySerializer,
+			pretty:        w.pretty,
+		}
 		for i := 0; i < value.Len(); i++ {
-			err := w.WriteObject(value.Index(i).Interface())
+			err := bw.WriteObject(value.Index(i).Interface())
 			if err != nil {
 				return errors.Wrap(err, "error writing object")
 			}
+		}
+		_, err := w.writer.Write(w.buffer.Bytes())
+		if err != nil {
+			return errors.Wrap(err, "error writing objects from buffer to underlying writer")
 		}
 	}
 	return nil
