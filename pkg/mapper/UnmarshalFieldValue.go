@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/spatialcurrent/go-simple-serializer/pkg/fit"
+	"github.com/spatialcurrent/go-fit/pkg/fit"
 )
 
 func UnmarshalFieldValue(source reflect.Value, target reflect.Value) error {

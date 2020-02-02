@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"reflect"
 
-	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
+	pkgfit "github.com/spatialcurrent/go-fit/pkg/fit"
 )
 
 // Marshal formats an object into a slice of gob-encoded bytes.
