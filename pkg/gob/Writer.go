@@ -13,7 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	pkgfit "github.com/spatialcurrent/go-simple-serializer/pkg/fit"
+	pkgfit "github.com/spatialcurrent/go-fit/pkg/fit"
 )
 
 // Writer formats and writes objects to the underlying writer as gob-encoded items.
