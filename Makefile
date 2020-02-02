@@ -68,10 +68,14 @@ imports: ## Update imports in Go source code
 vet: ## Vet Go source code
 	go vet $$(go list ./...)
 
+.PHONY: benchmarks
+benchmarks:
+	go test -run XXX -benchmem -bench . github.com/spatialcurrent/go-simple-serializer/pkg/... | grep ns/op
+
 .PHONY: test_go
 test_go: ## Run Go tests
 	bash scripts/test.sh
-	
+
 .PHONY: test_cli
 test_cli: ## Run CLI tests
 	bash scripts/test-cli.sh
