@@ -58,6 +58,7 @@ test_go: bin/errcheck bin/misspell bin/staticcheck bin/shadow ## Run Go tests
 test_cli: bin/gss ## Run CLI tests
 	bash scripts/test-cli.sh
 
+.PHONY: install
 install:  ## Install the CLI on current platform
 	go install github.com/spatialcurrent/go-simple-serializer/cmd/gss
 
