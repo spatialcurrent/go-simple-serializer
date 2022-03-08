@@ -13,8 +13,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -94,7 +92,7 @@ func Write(input *WriteInput) error {
 		for i, key := range keys {
 			keyString, errorKey := keySerializer(key)
 			if errorKey != nil {
-				return errors.Wrap(errorKey, "error serializing property key")
+				return fmt.Errorf("error serializing property key: %w", errorKey)
 			}
 			if strings.Contains(keyString, kvSeparator) {
 				switch kvSeparator {
@@ -114,7 +112,7 @@ func Write(input *WriteInput) error {
 			}
 			valueString, errorValue := valueSerializer(m.MapIndex(reflect.ValueOf(key)).Interface())
 			if errorValue != nil {
-				return errors.Wrap(errorValue, "error serializing property value")
+				return fmt.Errorf("error serializing property value: %w", errorValue)
 			}
 			line := e.Escape(keyString) + kvSeparator + e.Escape(valueString)
 			if i < m.Len()-1 {
@@ -122,7 +120,7 @@ func Write(input *WriteInput) error {
 			}
 			_, errorWrite := outputWriter.Write([]byte(line))
 			if errorWrite != nil {
-				return errors.Wrap(errorWrite, "error writing property to output writer")
+				return fmt.Errorf("error writing property to output writer: %w", errorWrite)
 			}
 		}
 		return nil
@@ -134,11 +132,11 @@ func Write(input *WriteInput) error {
 		for i, fieldName := range fieldNames {
 			keyString, errorKey := keySerializer(fieldName)
 			if errorKey != nil {
-				return errors.Wrap(errorKey, "error serializing property key")
+				return fmt.Errorf("error serializing property key: %w", errorKey)
 			}
 			fieldValue, errorValue := valueSerializer(s.FieldByName(fieldName).Interface())
 			if errorValue != nil {
-				return errors.Wrap(errorValue, "error serializing property value")
+				return fmt.Errorf("error serializing property value: %w", errorValue)
 			}
 			// don't need to escape field name since go field names are already valid
 			line := keyString + kvSeparator + e.Escape(fieldValue)
@@ -147,7 +145,7 @@ func Write(input *WriteInput) error {
 			}
 			_, errorWrite := outputWriter.Write([]byte(line))
 			if errorWrite != nil {
-				return errors.Wrap(errorWrite, "error writing property to output writer")
+				return fmt.Errorf("error writing property to output writer: %w", errorWrite)
 			}
 		}
 		return nil

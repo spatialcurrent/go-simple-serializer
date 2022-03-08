@@ -9,11 +9,10 @@ package gss
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
@@ -69,7 +68,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			DropCR:        input.DropCR,
 		})
 		if errorIterator != nil {
-			return nil, errors.Wrap(errorIterator, "error creating iterator")
+			return nil, fmt.Errorf("error creating iterator: %w", errorIterator)
 		}
 		p := pipe.NewBuilder().Input(it)
 		var w *pipe.SliceWriter
@@ -82,7 +81,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 		}
 		errorRun := p.Run()
 		if errorRun != nil {
-			return w.Values(), errors.Wrap(errorRun, "error deserializing")
+			return w.Values(), fmt.Errorf("error deserializing: %w", errorRun)
 		}
 		return w.Values(), nil
 	case "gob":
@@ -97,7 +96,7 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 			if err == io.EOF {
 				return nil, io.EOF
 			}
-			return nil, errors.Wrap(err, "error reading bytes from reader")
+			return nil, fmt.Errorf("error reading bytes from reader: %w", err)
 		}
 
 		// Set up Serializer
@@ -121,10 +120,10 @@ func DeserializeReader(input *DeserializeReaderInput) (interface{}, error) {
 		// Deserialize bytes into object
 		obj, err := s.Deserialize(b)
 		if err != nil {
-			return nil, errors.Wrap(err, "error deserializing object")
+			return nil, fmt.Errorf("error deserializing object: %w", err)
 		}
 		return obj, nil
 	}
 
-	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")
+	return nil, fmt.Errorf("could not deserialize bytes: %w", &ErrUnknownFormat{Name: input.Format})
 }

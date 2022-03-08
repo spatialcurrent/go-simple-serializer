@@ -8,10 +8,9 @@
 package gob
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
@@ -39,20 +38,20 @@ func Write(input *WriteInput) error {
 	if inputObjectKind == reflect.Array || inputObjectKind == reflect.Slice {
 		it, errorIterator := pipe.NewSliceIterator(inputObject)
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		p = p.Input(it)
 	} else {
 		it, errorIterator := pipe.NewSliceIterator([]interface{}{inputObject})
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		p = p.Input(it)
 	}
 	w := NewWriter(input.Writer, input.Fit)
 	errorRun := p.Output(w).Run()
 	if errorRun != nil {
-		return errors.Wrap(errorRun, "error serializing gob")
+		return fmt.Errorf("error serializing gob: %w", errorRun)
 	}
 	return nil
 }

@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -30,21 +29,21 @@ func NewCommand() *cobra.Command {
 
 			err := v.BindPFlags(cmd.Flags())
 			if err != nil {
-				return errors.Wrap(err, "error binding flags")
+				return fmt.Errorf("error binding flags: %w", err)
 			}
 			v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 			v.AutomaticEnv() // set environment variables to overwrite config
 
 			err = CheckFormatsConfig(v)
 			if err != nil {
-				return errors.Wrap(err, "error with configuration")
+				return fmt.Errorf("error with configuration: %w", err)
 			}
 
 			f := v.GetString(FlagFormat)
 
 			b, err := serializer.New(f).LineSeparator("\n").Serialize(gss.Formats)
 			if err != nil {
-				return errors.Wrapf(err, "error serializing formats with format %q", f)
+				return fmt.Errorf("error serializing formats with format %q: %w", f, err)
 			}
 
 			fmt.Print(string(b))

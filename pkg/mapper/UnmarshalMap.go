@@ -8,9 +8,8 @@
 package mapper
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // UnmarshalMap unmarshals the given map into the value, and returns an error, if any.
@@ -33,15 +32,15 @@ func UnmarshalMapValue(sourceValue reflect.Value, targetValue reflect.Value) err
 	}
 
 	if !targetValue.CanAddr() {
-		return errors.Errorf("target %#v (%T) is not addressable", targetValue, targetValue)
+		return fmt.Errorf("target %#v (%T) is not addressable", targetValue, targetValue)
 	}
 
 	if !targetValue.CanSet() {
-		return errors.Errorf("target %#v (%T) cannot be set", targetValue, targetValue)
+		return fmt.Errorf("target %#v (%T) cannot be set", targetValue, targetValue)
 	}
 
 	if targetKind != reflect.Map {
-		return errors.Errorf("target element is of type %v, expecting kind of map", targetType)
+		return fmt.Errorf("target element is of type %v, expecting kind of map", targetType)
 	}
 
 	if !sourceValue.IsValid() {
@@ -59,7 +58,7 @@ func UnmarshalMapValue(sourceValue reflect.Value, targetValue reflect.Value) err
 
 	// Only accept map input
 	if sourceKind != reflect.Map {
-		return errors.Errorf("source is of type %v, expecting kind of map", sourceValue.Type())
+		return fmt.Errorf("source is of type %v, expecting kind of map", sourceValue.Type())
 	}
 
 	if sourceValue.Len() == 0 {
@@ -68,7 +67,7 @@ func UnmarshalMapValue(sourceValue reflect.Value, targetValue reflect.Value) err
 	}
 
 	if !sourceType.Key().AssignableTo(targetType.Key()) {
-		return errors.Errorf("source map key %q is not assignable to target map key %q", sourceType.Key(), targetType.Key())
+		return fmt.Errorf("source map key %q is not assignable to target map key %q", sourceType.Key(), targetType.Key())
 	}
 
 	// create the output slice
@@ -78,7 +77,7 @@ func UnmarshalMapValue(sourceValue reflect.Value, targetValue reflect.Value) err
 		v := reflect.New(targetType.Elem())
 		err := UnmarshalValue(it.Value(), v.Elem())
 		if err != nil {
-			return errors.Wrapf(err, "error unmarshaling %#v", it.Value().Interface())
+			return fmt.Errorf("error unmarshaling %#v: %W", it.Value().Interface(), err)
 		}
 		out.SetMapIndex(it.Key(), v.Elem())
 	}

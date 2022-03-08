@@ -8,9 +8,8 @@
 package mapper
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // UnmarshalSlice unmarshals the given array or slice into the value, and returns an error, if any.
@@ -28,7 +27,7 @@ func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 
 	// Only accept array or slice input
 	if sourceKind != reflect.Array && sourceKind != reflect.Slice {
-		return errors.Errorf("source is of type %v, expecting kind of array or slice", source.Type())
+		return fmt.Errorf("source is of type %v, expecting kind of array or slice", source.Type())
 	}
 
 	targetType := target.Type()
@@ -40,15 +39,15 @@ func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 	}
 
 	if !target.CanAddr() {
-		return errors.Errorf("target %#v (%T) is not addressable", target, target)
+		return fmt.Errorf("target %#v (%T) is not addressable", target, target)
 	}
 
 	if !target.CanSet() {
-		return errors.Errorf("target %#v (%T) cannot be set", target, target)
+		return fmt.Errorf("target %#v (%T) cannot be set", target, target)
 	}
 
 	if targetKind != reflect.Slice {
-		return errors.Errorf("target element is of type %v, expecting kind of slice", targetType)
+		return fmt.Errorf("target element is of type %v, expecting kind of slice", targetType)
 	}
 
 	if source.Len() == 0 {
@@ -65,7 +64,7 @@ func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 			v.Elem().Set(reflect.Zero(targetType.Elem().Elem()))
 			err := UnmarshalValue(reflect.ValueOf(source.Index(i).Interface()), v.Elem())
 			if err != nil {
-				return errors.Wrapf(err, "error unmarshaling slice value %d", i)
+				return fmt.Errorf("error unmarshaling slice value %d: %w", i, err)
 			}
 			out = reflect.Append(out, v)
 		}
@@ -79,7 +78,7 @@ func UnmarshalSliceValue(source reflect.Value, target reflect.Value) error {
 			}
 			err := UnmarshalValue(reflect.ValueOf(source.Index(i).Interface()), v.Elem())
 			if err != nil {
-				return errors.Wrapf(err, "error unmarshaling slice value %d", i)
+				return fmt.Errorf("error unmarshaling slice value %d: %w", i, err)
 			}
 			out = reflect.Append(out, v.Elem())
 		}

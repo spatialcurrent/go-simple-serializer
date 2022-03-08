@@ -8,7 +8,9 @@
 package output
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -37,16 +39,16 @@ func CheckOutputConfig(v *viper.Viper, formats []string) error {
 	}
 	if len(v.GetString(FlagOutputEscapePrefix)) == 0 {
 		if v.GetBool(FlagOutputEscapeColon) {
-			return errors.Wrap(ErrMissingOutputEscapePrefix, "escaping colon requires an escape prefix")
+			return fmt.Errorf("escaping colon requires an escape prefix: %w", ErrMissingOutputEscapePrefix)
 		}
 		if v.GetBool(FlagOutputEscapeEqual) {
-			return errors.Wrap(ErrMissingOutputEscapePrefix, "escaping equal requires an escape prefix")
+			return fmt.Errorf("escaping equal requires an escape prefix: %w", ErrMissingOutputEscapePrefix)
 		}
 		if v.GetBool(FlagOutputEscapeSpace) {
-			return errors.Wrap(ErrMissingOutputEscapePrefix, "escaping space requires an escape prefix")
+			return fmt.Errorf("escaping space requires an escape prefix: %w", ErrMissingOutputEscapePrefix)
 		}
 		if v.GetBool(FlagOutputEscapeNewLine) {
-			return errors.Wrap(ErrMissingOutputEscapePrefix, "escaping new line requires an escape prefix")
+			return fmt.Errorf("escaping new line requires an escape prefix: %w", ErrMissingOutputEscapePrefix)
 		}
 	}
 	if v.GetBool(FlagOutputKeyLower) && v.GetBool(FlagOutputKeyUpper) {

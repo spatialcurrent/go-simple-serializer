@@ -9,9 +9,9 @@ package toml
 
 import (
 	"bytes"
+	"fmt"
 
 	bstoml "github.com/BurntSushi/toml"
-	"github.com/pkg/errors" // import the BurntSushi toml library as bstoml
 )
 
 // Marshal formats an object into a slice of bytes of TOML.
@@ -22,7 +22,7 @@ func Marshal(obj interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := bstoml.NewEncoder(buf).Encode(obj)
 	if err != nil {
-		return make([]byte, 0), errors.Wrap(err, "error marshaling TOML bytes")
+		return make([]byte, 0), fmt.Errorf("error marshaling TOML bytes: %w", err)
 	}
 	return buf.Bytes(), nil
 }

@@ -1,51 +1,39 @@
-version: 2.1
+# =================================================================
+#
+# Copyright (C) 2022 Spatial Current, Inc. - All Rights Reserved
+# Released as open source under the MIT License.  See LICENSE file.
+#
+# =================================================================
+
+version: "2.1"
+
 executors:
-  base:
+  # `main` uses the `cimg/go:1.17` docker image.
+  main:
     docker:
-      - image: circleci/golang:1.12-node
-    working_directory: /go/src/github.com/spatialcurrent/go-simple-serializer
+      - image: cimg/go:1.17
+
 jobs:
-  pre_deps_golang:
-    executor: base
+
+  # `test_go` tests the source code.
+  test_go:
+    executor: main
     steps:
       - checkout
-      - run: make deps_go
-      - run: sudo chown -R circleci /go/src
-      - save_cache:
-          key: v1-go-src-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - /go/src
-  test_go:
-    executor: base
-    steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_go_test
-      - run: make test_go
+      - run: make fmt
       - run: make imports
+      - run: make test_go
       - run: git diff --exit-code
+
+  # `test_cli` tests the executable.
   test_cli:
-    executor: base
+    executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_go_test
-      - run: make install
+      - checkout
+      - run: make tidy
+      - run: make bin/gss
       - run: make test_cli
-  test_javascript:
-    executor: base
-    steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_gopherjs
-      - run: make deps_javascript
-      - run: npm run test:clean
+
   examples:
     executor: base
     steps:
@@ -58,32 +46,41 @@ jobs:
       - run: npm run build:clean
       - run: make run_example_c
       - run: make run_example_cpp
-      - run: make run_example_javascript
       - run: make run_example_python
-  build_cli:
-    executor: base
+
+  # `build` builds the executables
+  build:
+    executor: main
     steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: go get github.com/inconshreveable/mousetrap # for windows CLI builds
-      - run: make build_cli
+      - checkout
+
+      # Update apt cache
+      - run: sudo apt-get update
+
+      # Tidy dependencies
+      - run: make tidy
+
+      # Build Executeables
+      - run: make build_release
+
+      # Remove gox
+      - run: rm -f bin/gox
+
       - store_artifacts:
           path: bin
           destination: /
-  build_javascript:
-    executor: base
-    steps:
-      - run: sudo chown -R circleci /go/src
-      - restore_cache:
-          keys:
-            - v1-go-src-{{ .Branch }}-{{ .Revision }}
-      - run: make deps_gopherjs
-      - run: make build_javascript
-      - store_artifacts:
-          path: dist
-          destination: /
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - gss_darwin_amd64
+            - gss_darwin_arm64
+            - gss_linux_386
+            - gss_linux_amd64
+            - gss_linux_arm
+            - gss_linux_arm64
+            - gss_windows_386.exe
+            - gss_windows_amd64.exe
+
   build_so:
     executor: base
     steps:
@@ -96,6 +93,7 @@ jobs:
       - store_artifacts:
           path: bin
           destination: /
+
 workflows:
   main:
     jobs:

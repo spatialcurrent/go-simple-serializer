@@ -11,8 +11,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // ToRowFromValue converts an object into a row of strings and returns an error, if any.
@@ -28,13 +26,13 @@ func ToRowFromValue(objectValue reflect.Value, columns []interface{}, valueSeria
 			if v := objectValue.MapIndex(reflect.ValueOf(key)); v.IsValid() && (v.Type().Kind() == reflect.String || !v.IsNil()) {
 				str, err := valueSerializer(v.Interface())
 				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
+					return row, fmt.Errorf("error serializing value: %w", err)
 				}
 				row[j] = str
 			} else {
 				str, err := valueSerializer(nil)
 				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
+					return row, fmt.Errorf("error serializing value: %w", err)
 				}
 				row[j] = str
 			}
@@ -45,13 +43,13 @@ func ToRowFromValue(objectValue reflect.Value, columns []interface{}, valueSeria
 			if f := objectValue.FieldByNameFunc(func(match string) bool { return strings.ToLower(match) == columnLowerCase }); f.IsValid() && (f.Type().Kind() == reflect.String || !f.IsNil()) {
 				str, err := valueSerializer(f.Interface())
 				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
+					return row, fmt.Errorf("error serializing value: %w", err)
 				}
 				row[j] = str
 			} else {
 				str, err := valueSerializer(nil)
 				if err != nil {
-					return row, errors.Wrap(err, "error serializing value")
+					return row, fmt.Errorf("error serializing value: %w", err)
 				}
 				row[j] = str
 			}

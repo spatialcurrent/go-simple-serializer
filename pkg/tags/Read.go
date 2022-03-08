@@ -8,10 +8,9 @@
 package tags
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
@@ -50,7 +49,7 @@ func Read(input *ReadInput) (interface{}, error) {
 		DropCR:            input.DropCR,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating interator")
+		return nil, fmt.Errorf("error creating interator: %w", err)
 	}
 	output := reflect.MakeSlice(inputType, 0, 0).Interface()
 	w := pipe.NewSliceWriterWithValues(output)

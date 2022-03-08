@@ -8,10 +8,9 @@
 package tags
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -51,7 +50,7 @@ func Write(input *WriteInput) error {
 		}
 		it, errorIterator := pipe.NewSliceIterator(inputObject)
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		w := NewWriter(
 			input.Writer,
@@ -66,7 +65,7 @@ func Write(input *WriteInput) error {
 		)
 		errorRun := p.Input(it).Output(w).Run()
 		if errorRun != nil {
-			return errors.Wrap(errorRun, "error serializing arry or slice as tags")
+			return fmt.Errorf("error serializing arry or slice as tags: %w", errorRun)
 		}
 		return nil
 	}
@@ -83,12 +82,12 @@ func Write(input *WriteInput) error {
 		input.Sorted,
 		input.Reversed)
 	if errMarshal != nil {
-		return errors.Wrap(errMarshal, "error serializing to tags")
+		return fmt.Errorf("error serializing to tags: %w", errMarshal)
 	}
 
 	_, errWrite := input.Writer.Write(b)
 	if errWrite != nil {
-		return errors.Wrap(errWrite, "error writing to underlying writer")
+		return fmt.Errorf("error writing to underlying writer: %w", errWrite)
 	}
 
 	return nil

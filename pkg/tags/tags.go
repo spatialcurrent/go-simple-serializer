@@ -13,9 +13,8 @@
 package tags
 
 import (
+	"errors"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 const (

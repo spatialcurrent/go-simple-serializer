@@ -9,10 +9,9 @@ package tags
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
@@ -22,7 +21,7 @@ import (
 func marshalTag(keyValueSeparator []byte, keySerializer stringify.Stringer, valueSerializer stringify.Stringer, e *escaper.Escaper, objectValue reflect.Value, key interface{}) ([]byte, error) {
 	keyString, errKeyString := keySerializer(key)
 	if errKeyString != nil {
-		return make([]byte, 0), errors.Wrap(errKeyString, "error serializing tag key")
+		return make([]byte, 0), fmt.Errorf("error serializing tag key: %w", errKeyString)
 	}
 
 	out := &bytes.Buffer{}
@@ -35,12 +34,12 @@ func marshalTag(keyValueSeparator []byte, keySerializer stringify.Stringer, valu
 
 	_, err := out.Write(keyValueSeparator)
 	if err != nil {
-		return make([]byte, 0), errors.Wrap(err, "error writing key-value separator")
+		return make([]byte, 0), fmt.Errorf("error writing key-value separator: %w", err)
 	}
 
 	value, valueStringError := valueSerializer(objectValue.MapIndex(reflect.ValueOf(key)).Interface())
 	if valueStringError != nil {
-		return make([]byte, 0), errors.Wrap(valueStringError, "error serializing tag value")
+		return make([]byte, 0), fmt.Errorf("error serializing tag value: %w", valueStringError)
 	}
 
 	if len(value) > 0 {
@@ -101,16 +100,16 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 					objectValue,
 					key)
 				if err != nil {
-					return make([]byte, 0), errors.Wrap(err, "error serializing tag")
+					return make([]byte, 0), fmt.Errorf("error serializing tag: %w", err)
 				}
 				_, err = out.Write(b)
 				if err != nil {
-					return make([]byte, 0), errors.Wrap(err, "error writing tag")
+					return make([]byte, 0), fmt.Errorf("error writing tag: %w", err)
 				}
 				if i < len(allKeys)-1 {
 					_, err = out.WriteRune(space)
 					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error writing space")
+						return make([]byte, 0), fmt.Errorf("error writing space: %w", err)
 					}
 				}
 			}
@@ -125,16 +124,16 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 					objectValue,
 					key)
 				if err != nil {
-					return make([]byte, 0), errors.Wrap(err, "error serializing tag")
+					return make([]byte, 0), fmt.Errorf("error serializing tag: %w", err)
 				}
 				_, err = out.Write(b)
 				if err != nil {
-					return make([]byte, 0), errors.Wrap(err, "error writing tag")
+					return make([]byte, 0), fmt.Errorf("error writing tag: %w", err)
 				}
 				if i < len(allKeys)-1 {
 					_, err = out.WriteRune(space)
 					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error writing space")
+						return make([]byte, 0), fmt.Errorf("error writing space: %w", err)
 					}
 				}
 			}
@@ -164,19 +163,19 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 			for i, fieldName := range allFieldNames {
 				keyString, errKeyString := keySerializer(fieldName)
 				if errKeyString != nil {
-					return out.Bytes(), errors.Wrap(errKeyString, "error serializing tag key")
+					return out.Bytes(), fmt.Errorf("error serializing tag key: %w", errKeyString)
 				}
 				_, err := out.WriteString(keyString)
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error writing tag key")
+					return out.Bytes(), fmt.Errorf("error writing tag key: %w", err)
 				}
 				_, err = out.WriteString(keyValueSeparator)
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error writing key-value separator")
+					return out.Bytes(), fmt.Errorf("error writing key-value separator: %w", err)
 				}
 				value, err := valueSerializer(objectValue.FieldByName(fieldName).Interface())
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error serializing tag value")
+					return out.Bytes(), fmt.Errorf("error serializing tag value: %w", err)
 				}
 				if len(value) > 0 {
 					if strings.Contains(value, " ") {
@@ -188,7 +187,7 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 				if i < len(allFieldNames)-1 {
 					_, err = out.WriteRune(space)
 					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error writing space")
+						return make([]byte, 0), fmt.Errorf("error writing space: %w", err)
 					}
 				}
 			}
@@ -199,19 +198,19 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 			for i, fieldName := range fieldNames {
 				keyString, errKeyString := keySerializer(fieldName)
 				if errKeyString != nil {
-					return out.Bytes(), errors.Wrap(errKeyString, "error serializing tag key")
+					return out.Bytes(), fmt.Errorf("error serializing tag key: %w", errKeyString)
 				}
 				_, err := out.WriteString(keyString)
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error writing tag key")
+					return out.Bytes(), fmt.Errorf("error writing tag key: %w", err)
 				}
 				_, err = out.WriteString(keyValueSeparator)
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error writing key-value separator")
+					return out.Bytes(), fmt.Errorf("error writing key-value separator: %w", err)
 				}
 				value, err := valueSerializer(objectValue.FieldByName(fieldName).Interface())
 				if err != nil {
-					return out.Bytes(), errors.Wrap(err, "error serializing tag value")
+					return out.Bytes(), fmt.Errorf("error serializing tag value: %w", err)
 				}
 				if len(value) > 0 {
 					if strings.Contains(value, " ") {
@@ -223,7 +222,7 @@ func Marshal(object interface{}, keys []interface{}, expandKeys bool, keyValueSe
 				if i < len(fieldNames)-1 {
 					_, err = out.WriteRune(space)
 					if err != nil {
-						return make([]byte, 0), errors.Wrap(err, "error writing space")
+						return make([]byte, 0), fmt.Errorf("error writing space: %w", err)
 					}
 				}
 			}

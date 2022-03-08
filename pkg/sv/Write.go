@@ -13,8 +13,6 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/pkg/errors"
-
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -48,7 +46,9 @@ func Write(input *WriteInput) error {
 			Sorted:    input.Sorted, // if sorted and no specific wilcard position
 			Reversed:  input.Reversed,
 		})
-		return errors.Wrap(errWriteTable, "error writing table to underlying writer")
+		if errWriteTable != nil {
+			return fmt.Errorf("error writing table to underlying writer: %w", errWriteTable)
+		}
 	}
 
 	inputObject := input.Object
@@ -105,7 +105,7 @@ func Write(input *WriteInput) error {
 			}
 			row, err := ToRowFromValue(inputObjectValue, header, valueSerializer)
 			if err != nil {
-				return errors.Wrap(err, "error serializing object to row")
+				return fmt.Errorf("error serializing object to row: %w", err)
 			}
 			rows = append(rows, row)
 		case reflect.Array, reflect.Slice:
@@ -119,7 +119,7 @@ func Write(input *WriteInput) error {
 					header, knownKeys = ExpandHeader(header, knownKeys, concerete(inputObjectValue.Index(i)), input.Sorted, input.Reversed)
 					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
 					if err != nil {
-						return errors.Wrap(err, "error serializing object to row")
+						return fmt.Errorf("error serializing object to row: %w", err)
 					}
 					rows = append(rows, row)
 				}
@@ -132,7 +132,7 @@ func Write(input *WriteInput) error {
 				for i := 0; i < inputObjectValue.Len() && (input.Limit < 0 || i <= input.Limit); i++ {
 					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
 					if err != nil {
-						return errors.Wrap(err, "error serializing object to row")
+						return fmt.Errorf("error serializing object to row: %w", err)
 					}
 					rows = append(rows, row)
 				}
@@ -143,7 +143,7 @@ func Write(input *WriteInput) error {
 					header, knownKeys = ExpandHeader(header, knownKeys, concerete(inputObjectValue.Index(i)), input.Sorted, input.Reversed)
 					row, err := ToRowFromValue(concerete(inputObjectValue.Index(i)), header, valueSerializer)
 					if err != nil {
-						return errors.Wrap(err, "error serializing object to row")
+						return fmt.Errorf("error serializing object to row: %w", err)
 					}
 					rows = append(rows, row)
 				}
@@ -151,7 +151,7 @@ func Write(input *WriteInput) error {
 		}
 		outputHeader, errStringifyHeader := stringify.StringifySlice(header, keySerializer)
 		if errStringifyHeader != nil {
-			return errors.Wrapf(errStringifyHeader, "error stringifying header %q", header)
+			return fmt.Errorf("error stringifying header %q: %w", header, errStringifyHeader)
 		}
 		errWriteTable := WriteTable(&WriteTableInput{
 			Writer:    input.Writer,
@@ -161,7 +161,9 @@ func Write(input *WriteInput) error {
 			Sorted:    input.Sorted && !wildcard, // if sorted and no specific wilcard position
 			Reversed:  input.Reversed,
 		})
-		return errors.Wrap(errWriteTable, "error writing table to underlying writer")
+		if errWriteTable != nil {
+			return fmt.Errorf("error writing table to underlying writer: %w", errWriteTable)
+		}
 	}
 
 	// if streaming and not expanding header.
@@ -169,7 +171,7 @@ func Write(input *WriteInput) error {
 	if inputObjectKind == reflect.Array || inputObjectKind == reflect.Slice {
 		it, errorIterator := pipe.NewSliceIterator(inputObject)
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		p = p.Input(it)
 		p = p.Output(NewWriter(
@@ -183,7 +185,7 @@ func Write(input *WriteInput) error {
 		))
 		errorRun := p.Run()
 		if errorRun != nil {
-			return errors.Wrap(errorRun, "error serializing separated values")
+			return fmt.Errorf("error serializing separated values: %w", errorRun)
 		}
 		return nil
 	}
@@ -200,12 +202,12 @@ func Write(input *WriteInput) error {
 
 	errorWrite := w.WriteObject(inputObject)
 	if errorWrite != nil {
-		return errors.Wrap(errorWrite, "error serializing separated values")
+		return fmt.Errorf("error serializing separated values: %w", errorWrite)
 	}
 
 	errorFlush := w.Flush()
 	if errorFlush != nil {
-		return errors.Wrap(errorFlush, "error serializing separated values")
+		return fmt.Errorf("error serializing separated values: %w", errorFlush)
 	}
 
 	return nil

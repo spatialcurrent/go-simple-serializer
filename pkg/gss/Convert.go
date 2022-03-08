@@ -8,9 +8,8 @@
 package gss
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -108,7 +107,7 @@ func Convert(input *ConvertInput) ([]byte, error) {
 
 	obj, err := in.Deserialize(input.InputBytes)
 	if err != nil {
-		return make([]byte, 0), errors.Wrap(err, "error deserializing input")
+		return make([]byte, 0), fmt.Errorf("error deserializing input: %w", err)
 	}
 
 	out := serializer.New(input.OutputFormat).
@@ -130,7 +129,7 @@ func Convert(input *ConvertInput) ([]byte, error) {
 
 	b, err := out.Serialize(obj)
 	if err != nil {
-		return make([]byte, 0), errors.Wrap(err, "error serializing output")
+		return make([]byte, 0), fmt.Errorf("error serializing output: %w", err)
 	}
 
 	return b, nil

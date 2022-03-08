@@ -15,7 +15,6 @@ import (
 	"strings"
 	"unicode/utf8" // utf8 is used to decode the first rune in the string
 
-	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
 )
 
@@ -60,14 +59,14 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			if d := s.Bytes(); len(d) > 0 {
 				obj, err := UnmarshalType(d, outputType.Elem())
 				if err != nil {
-					return out.Interface(), errors.Wrapf(err, "error scanning document %d", i)
+					return out.Interface(), fmt.Errorf("error scanning document %d: %w", i, err)
 				}
 				out = reflect.Append(out, reflect.ValueOf(obj))
 				i++
 			}
 		}
 		if err := s.Err(); err != nil {
-			return out.Interface(), errors.Wrap(err, fmt.Sprintf("error scanning YAML %q", string(b)))
+			return out.Interface(), fmt.Errorf("error scanning YAML %q: %w", string(b), err)
 		}
 		return out.Interface(), nil
 	}
@@ -86,7 +85,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeSlice(outputType, 0, 0))
 		err := goyaml.Unmarshal(b, ptr.Interface())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %W", string(b), err)
 		}
 		return ptr.Elem().Interface(), nil
 	case '{':
@@ -97,7 +96,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(outputType))
 		err := goyaml.Unmarshal(b, ptr.Interface())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return ptr.Elem().Interface(), nil
 	case '"':
@@ -107,7 +106,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		obj := ""
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	}
@@ -120,7 +119,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			ptr.Elem().Set(reflect.MakeMap(outputType))
 			err := goyaml.Unmarshal(b, ptr.Interface())
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q into map", string(b)))
+				return nil, fmt.Errorf("error unmarshaling YAML %q into map: %w", string(b), err)
 			}
 			return ptr.Elem().Interface(), nil
 		}
@@ -130,7 +129,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			ptr.Elem().Set(reflect.Zero(outputType))
 			err := goyaml.Unmarshal(b, ptr.Interface())
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q into struct", string(b)))
+				return nil, fmt.Errorf("error unmarshaling YAML %q into struct: %w", string(b), err)
 			}
 			return ptr.Elem().Interface(), nil
 		}
@@ -142,13 +141,13 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 	case reflect.Int:
 		i, err := strconv.Atoi(string(b))
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return i, nil
 	case reflect.Float64:
 		f, err := strconv.ParseFloat(string(b), 64)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return f, nil
 	case reflect.String:
@@ -160,5 +159,5 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		return nil, nil
 	}
 
-	return nil, errors.Errorf("could not unmarshal YAML %q into type %v", string(b), outputType)
+	return nil, fmt.Errorf("could not unmarshal YAML %q into type %v", string(b), outputType)
 }

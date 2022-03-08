@@ -9,10 +9,10 @@ package sv
 
 import (
 	"encoding/csv"
+	"errors"
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // Iterator is used to iterate over a table of separated values.
@@ -59,7 +59,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 			if err == io.EOF {
 				return nil, err
 			}
-			return nil, errors.Wrap(err, "error skipping lines")
+			return nil, fmt.Errorf("error skipping lines: %w", err)
 		}
 	}
 
@@ -70,7 +70,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 			if err == io.EOF {
 				return nil, err
 			}
-			return nil, errors.Wrap(err, "error reading header")
+			return nil, fmt.Errorf("error reading header: %w", err)
 		}
 		header = make([]interface{}, 0, len(h))
 		for _, str := range h {
@@ -97,7 +97,7 @@ func (it *Iterator) Next() (interface{}, error) {
 		if err == io.EOF {
 			return nil, err
 		}
-		return nil, errors.Wrap(err, "error reading next line")
+		return nil, fmt.Errorf("error reading next line: %w", err)
 	}
 	m := reflect.MakeMap(it.Type)
 	for i, h := range it.header {

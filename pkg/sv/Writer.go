@@ -13,8 +13,6 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/pkg/errors"
-
 	"github.com/spatialcurrent/go-simple-serializer/pkg/inspector"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -67,13 +65,13 @@ func (w *Writer) WriteHeader() error {
 	// Stringify columns into strings
 	h, err := stringify.StringifySlice(w.columns, w.keySerializer)
 	if err != nil {
-		return errors.Wrap(err, "error stringifying columns")
+		return fmt.Errorf("error stringifying columns: %w", err)
 	}
 
 	// Write header to writer
 	err = w.writer.Write(h)
 	if err != nil {
-		return errors.Wrap(err, "error writing header")
+		return fmt.Errorf("error writing header: %w", err)
 	}
 	return nil
 }
@@ -102,20 +100,20 @@ func (w *Writer) WriteObject(obj interface{}) error {
 			}
 		}
 		if len(w.columns) == 0 {
-			return errors.New(fmt.Sprintf("could not infer the header from the given value with type %T", obj))
+			return fmt.Errorf("could not infer the header from the given value with type %T", obj)
 		}
 		err := w.WriteHeader()
 		if err != nil {
-			return errors.Wrap(err, "error writing header")
+			return fmt.Errorf("error writing header: %w", err)
 		}
 	}
 	row, errorRow := w.ToRow(obj)
 	if errorRow != nil {
-		return errors.Wrap(errorRow, "error serializing object as row")
+		return fmt.Errorf("error serializing object as row: %w", errorRow)
 	}
 	errorWrite := w.writer.Write(row)
 	if errorWrite != nil {
-		return errors.Wrap(errorWrite, "error writing object")
+		return fmt.Errorf("error writing object: %w", errorWrite)
 	}
 	return nil
 }
@@ -131,7 +129,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 		for i := 0; i < value.Len(); i++ {
 			err := w.WriteObject(value.Index(i).Interface())
 			if err != nil {
-				return errors.Wrap(err, "error writing object")
+				return fmt.Errorf("error writing object: %w", err)
 			}
 		}
 	}
@@ -147,7 +145,7 @@ func (w *Writer) Flush() error {
 	if flusher, ok := w.underlying.(Flusher); ok {
 		err := flusher.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -158,7 +156,7 @@ func (w *Writer) Close() error {
 	if closer, ok := w.underlying.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

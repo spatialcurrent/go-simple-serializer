@@ -13,13 +13,13 @@
 //
 //  inputObject, err := gss.DeserializeString(string(inputBytesPlain), inputFormat, inputHeader, inputComment, inputLazyQuotes, inputLimit, inputType, verbose)
 //  if err != nil {
-//    fmt.Println(errors.Wrap(err, "error deserializing input using format "+inputFormat))
+//    fmt.Println(fmt.Errorf("error deserializing input using format %s: %w", inputFormat, err))
 //    os.Exit(1)
 //  }
 //  ...
 //  str, err := gss.SerializeString(object, "json", header, -1)
 //  if err != nil {
-//    return "", errors.Wrap(err, "error serializing object")
+//    return "", fmt.Errorf("error serializing object: %w", err)
 //  }
 //
 // Usage with options
@@ -43,7 +43,7 @@
 //  for inputLine := range inputLines {
 //    inputObject, err := options.DeserializeBytes(inputLine, verbose)
 //    if err != nil {
-//      errorsChannel <- errors.Wrap(err, "error deserializing input using format "+objectFormat)
+//      errorsChannel <- fmt.Errorf("error deserializing input using format %s: %w", objectFormat, err)
 //      continue
 //    }
 //    ...
@@ -55,7 +55,7 @@
 package gss
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )

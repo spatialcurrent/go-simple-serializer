@@ -13,9 +13,8 @@
 package writer
 
 import (
+	"errors"
 	"io"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/fmt"

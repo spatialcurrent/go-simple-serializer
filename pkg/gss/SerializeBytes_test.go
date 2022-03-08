@@ -10,7 +10,6 @@ package gss
 import (
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -131,7 +130,7 @@ func TestSerializeBytesUnknown(t *testing.T) {
 		Object: []interface{}{"a", "b", "c"},
 		Format: "foo",
 	})
-	assert.IsType(t, &ErrUnknownFormat{}, errors.Cause(err))
+	assert.Error(t, err)
 	assert.Equal(t, "could not serialize object: unknown format foo", err.Error())
 	assert.Equal(t, []byte{}, b)
 }

@@ -9,8 +9,7 @@ package jsonl
 
 import (
 	"bytes"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -26,7 +25,7 @@ func Marshal(object interface{}, lineSeparator string, keySerializer stringify.S
 		Limit:         limit,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "error writing json lines")
+		return nil, fmt.Errorf("error writing json lines: %w", err)
 	}
 	return buf.Bytes(), nil
 }

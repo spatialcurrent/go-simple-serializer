@@ -11,11 +11,11 @@ package serializer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/hcl"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-fit/pkg/fit"
 
@@ -529,10 +529,10 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(objectType))
 		obj, err := hcl.Parse(string(b))
 		if err != nil {
-			return nil, errors.Wrap(err, "Error parsing hcl")
+			return nil, fmt.Errorf("Error parsing hcl: %w", err)
 		}
 		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-			return nil, errors.Wrap(err, "Error decoding hcl")
+			return nil, fmt.Errorf("Error decoding hcl: %w", err)
 		}
 		return ptr.Elem().Interface(), nil
 	}
@@ -556,7 +556,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	case FormatBSON:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return bson.Marshal(o)
 	case FormatCSV, FormatTSV:
@@ -578,7 +578,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:           s.limit,
 		})
 		if errWrite != nil {
-			return make([]byte, 0), errors.Wrap(errWrite, "error writing separated values")
+			return make([]byte, 0), fmt.Errorf("error writing separated values: %w", errWrite)
 		}
 		return buf.Bytes(), nil
 	case FormatFmt:
@@ -602,7 +602,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 	case FormatJSON:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return json.Marshal(o, s.pretty)
 	case FormatJSONL:
@@ -625,7 +625,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			EscapeEqual:       s.escapeEqual,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing properties")
+			return make([]byte, 0), fmt.Errorf("error writing properties: %w", err)
 		}
 		return buf.Bytes(), nil
 	case FormatTags:
@@ -647,13 +647,13 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:             s.limit,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing tags")
+			return make([]byte, 0), fmt.Errorf("error writing tags: %w", err)
 		}
 		return buf.Bytes(), nil
 	case FormatTOML, FormatYAML:
 		o, err := stringify.StringifyMapKeys(object, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return MarshalFuncs[s.format](o)
 	}

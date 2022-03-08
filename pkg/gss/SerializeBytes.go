@@ -11,8 +11,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
-
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
@@ -92,5 +90,5 @@ func SerializeBytes(input *SerializeBytesInput) ([]byte, error) {
 	case "hcl", "hcl2":
 		return make([]byte, 0), fmt.Errorf("cannot serialize to format %q", f)
 	}
-	return make([]byte, 0), errors.Wrap(&ErrUnknownFormat{Name: f}, "could not serialize object")
+	return make([]byte, 0), fmt.Errorf("could not serialize object: %w", &ErrUnknownFormat{Name: f})
 }

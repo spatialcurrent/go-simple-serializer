@@ -8,11 +8,10 @@
 package gss
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
-
-	"github.com/pkg/errors"
 )
 
 // GetType takes in the content of an object as a string and the serialization format.
@@ -39,5 +38,5 @@ func GetType(content []byte, format string) (reflect.Type, error) {
 		return reflect.TypeOf([]interface{}{}), nil
 	}
 
-	return nil, errors.New("could not get type for format " + format)
+	return nil, fmt.Errorf("could not get type for format %s", format)
 }

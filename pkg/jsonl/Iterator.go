@@ -10,10 +10,9 @@ package jsonl
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
@@ -109,13 +108,13 @@ func (it *Iterator) Next() (interface{}, error) {
 		if it.Type != nil {
 			obj, err := json.UnmarshalType(line, it.Type)
 			if err != nil {
-				return obj, errors.Wrap(err, "error unmarshaling next JSON object")
+				return obj, fmt.Errorf("error unmarshaling next JSON object: %w", err)
 			}
 			return obj, nil
 		}
 		obj, err := json.Unmarshal(line)
 		if err != nil {
-			return obj, errors.Wrap(err, "error unmarshaling next JSON object")
+			return obj, fmt.Errorf("error unmarshaling next JSON object: %w", err)
 		}
 		return obj, nil
 	}

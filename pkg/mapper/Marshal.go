@@ -8,9 +8,8 @@
 package mapper
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )
@@ -125,7 +124,7 @@ func Marshal(object interface{}) (interface{}, error) {
 		for i := 0; i < v.Len(); i++ {
 			element, err := Marshal(v.Index(i).Interface())
 			if err != nil {
-				return nil, errors.Wrapf(err, "error marshaling %#v", v.Index(i).Interface())
+				return nil, fmt.Errorf("error marshaling %#v: %w", v.Index(i).Interface(), err)
 			}
 			out = append(out, element)
 		}
@@ -138,7 +137,7 @@ func Marshal(object interface{}) (interface{}, error) {
 		for it := in.MapRange(); it.Next(); {
 			v, err := Marshal(it.Value().Interface())
 			if err != nil {
-				return nil, errors.Wrapf(err, "error marshaling %#v", it.Value().Interface())
+				return nil, fmt.Errorf("error marshaling %#v: %w", it.Value().Interface(), err)
 			}
 			out.SetMapIndex(it.Key(), reflect.ValueOf(v))
 		}
@@ -155,7 +154,7 @@ func Marshal(object interface{}) (interface{}, error) {
 
 			tagValue, err := tagger.Lookup(f.Tag, "map")
 			if err != nil {
-				return nil, errors.Wrapf(err, "error unmarshaling struct tag value %q", f.Tag)
+				return nil, fmt.Errorf("error unmarshaling struct tag value %q: %w", f.Tag, err)
 			}
 
 			key := f.Name
@@ -192,7 +191,7 @@ func Marshal(object interface{}) (interface{}, error) {
 			// Marshal the underlying value
 			mfv, err := Marshal(fv.Interface())
 			if err != nil {
-				return nil, errors.Wrapf(err, "error marshaling value for field %v", f.Name)
+				return nil, fmt.Errorf("error marshaling value for field %v: %w", f.Name, err)
 			}
 
 			// If marshaled field value is empty

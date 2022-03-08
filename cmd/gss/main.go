@@ -26,13 +26,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -141,14 +141,14 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					EscapeNewLine:     true,
 				})
 				if err != nil {
-					return errors.Wrap(err, "error writing viper settings")
+					return fmt.Errorf("error writing viper settings: %w", err)
 				}
 				fmt.Println("")
 			}
 
 			fi, err := os.Stdin.Stat()
 			if err != nil {
-				return errors.Wrap(err, "error stating stdin")
+				return fmt.Errorf("error stating stdin: %w", err)
 			}
 
 			if fi.Mode()&os.ModeNamedPipe == 0 {
@@ -191,10 +191,10 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					DropCR:            v.GetBool(cli.FlagInputDropCR),
 				})
 				if errorIterator != nil {
-					return errors.Wrap(errorIterator, "error creating input iterator: %w")
+					return fmt.Errorf("error creating input iterator: %w", errorIterator)
 				}
 				if it == nil {
-					return errors.New(fmt.Sprintf("error building input iterator with format %q", inputFormat))
+					return fmt.Errorf("error building input iterator with format %q", inputFormat)
 				}
 				p = p.Input(it)
 
@@ -217,7 +217,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 					Reversed:          outputReversed,
 				})
 				if errWriter != nil {
-					return errors.Wrap(errWriter, "error building output writer")
+					return fmt.Errorf("error building output writer: %w", errWriter)
 				}
 				p = p.Output(w)
 
@@ -226,14 +226,14 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				}
 
 				if errRun := p.Run(); errRun != nil {
-					return errors.Wrap(errRun, "error piping data")
+					return fmt.Errorf("error piping data: %w", errRun)
 				}
 				return nil
 			}
 
 			inputBytes, err := ioutil.ReadAll(os.Stdin)
 			if err != nil {
-				return errors.Wrap(err, "error reading from stdin")
+				return fmt.Errorf("error reading from stdin: %w", err)
 			}
 
 			var inputType reflect.Type
@@ -278,7 +278,7 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 				OutputEscapeEqual:       v.GetBool(cli.FlagOutputEscapeEqual),
 			})
 			if err != nil {
-				return errors.Wrap(err, "error converting")
+				return fmt.Errorf("error converting: %w", err)
 			}
 			switch outputFormat {
 			case serializer.FormatCSV, serializer.FormatJSONL, serializer.FormatProperties, serializer.FormatTags, serializer.FormatTOML, serializer.FormatTSV, serializer.FormatYAML:

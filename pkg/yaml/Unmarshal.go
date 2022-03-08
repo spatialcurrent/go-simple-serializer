@@ -14,7 +14,6 @@ import (
 	"strings"
 	"unicode/utf8" // utf8 is used to decode the first rune in the string
 
-	"github.com/pkg/errors"
 	goyaml "gopkg.in/yaml.v2" // import the YAML library from https://github.com/go-yaml/yaml
 )
 
@@ -56,14 +55,14 @@ func Unmarshal(b []byte) (interface{}, error) {
 			if d := s.Bytes(); len(d) > 0 {
 				element, err := Unmarshal(d)
 				if err != nil {
-					return obj, errors.Wrapf(err, "error scanning document %d", i)
+					return obj, fmt.Errorf("error scanning document %d: %w", i, err)
 				}
 				obj = append(obj, element)
 				i++
 			}
 		}
 		if err := s.Err(); err != nil {
-			return obj, errors.Wrap(err, fmt.Sprintf("error scanning YAML %q", string(b)))
+			return obj, fmt.Errorf("error scanning YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	}
@@ -78,21 +77,21 @@ func Unmarshal(b []byte) (interface{}, error) {
 		obj := make([]interface{}, 0)
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	case '{':
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	case '"':
 		obj := ""
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	}
@@ -101,7 +100,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 		obj := map[string]interface{}{}
 		err := goyaml.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling YAML %q", string(b)))
+			return nil, fmt.Errorf("error unmarshaling YAML %q: %w", string(b), err)
 		}
 		return obj, nil
 	}

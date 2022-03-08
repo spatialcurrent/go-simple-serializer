@@ -8,10 +8,9 @@
 package tags
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -49,14 +48,14 @@ func NewWriter(w io.Writer, keys []interface{}, expandKeys bool, keyValueSeparat
 func (w *Writer) WriteObject(obj interface{}) error {
 	b, err := Marshal(obj, w.keys, w.expandKeys, w.keyValueSeparator, w.keySerializer, w.valueSerializer, w.sorted, w.reversed)
 	if err != nil {
-		return errors.Wrap(err, "error marshaling object")
+		return fmt.Errorf("error marshaling object: %w", err)
 	}
 	if len(w.lineSeparator) > 0 {
 		b = append(b, []byte(w.lineSeparator)...)
 	}
 	_, err = w.writer.Write(b)
 	if err != nil {
-		return errors.Wrap(err, "error writing to underlying writer")
+		return fmt.Errorf("error writing to underlying writer: %w", err)
 	}
 	return nil
 }
@@ -74,7 +73,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 		for i := 0; i < value.Len(); i++ {
 			err := w.WriteObject(value.Index(i).Interface())
 			if err != nil {
-				return errors.Wrap(err, "error writing object")
+				return fmt.Errorf("error writing object: %w", err)
 			}
 		}
 	}
@@ -87,7 +86,7 @@ func (w *Writer) Flush() error {
 	if flusher, ok := w.writer.(Flusher); ok {
 		err := flusher.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -98,7 +97,7 @@ func (w *Writer) Close() error {
 	if closer, ok := w.writer.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

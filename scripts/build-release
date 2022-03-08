@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# =================================================================
+#
+# Copyright (C) 2022 Spatial Current, Inc. - All Rights Reserved
+# Released as open source under the MIT License.  See LICENSE file.
+#
+# =================================================================
+
+set -euo pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+XC_OS=${1:-darwin freebsd linux openbsd solaris windows}
+XC_ARCH=${2:-386 amd64 arm arm64}
+XC_EXCLUDE_OSARCH="!darwin/arm !darwin/386 !freebsd/arm64 !openbsd/arm !openbsd/arm64 !solaris/386 !solaris/arm !solaris/arm64"
+
+export CGO_ENABLED=0
+
+export GOFLAGS="-mod=readonly"
+
+export GOPATH=${GOPATH:-$(go env GOPATH)}
+
+go mod download
+
+${DIR}/../bin/gox \
+-os="${XC_OS}" \
+-arch="${XC_ARCH}" \
+-osarch="${XC_EXCLUDE_OSARCH}" \
+-ldflags "-s -w" \
+-output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" \
+github.com/spatialcurrent/go-simple-serializer/cmd/gss

@@ -8,7 +8,8 @@
 package cli
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/spf13/viper"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/input"
@@ -19,11 +20,11 @@ import (
 func CheckConfig(v *viper.Viper, formats []string) error {
 	err := input.CheckInputConfig(v, formats)
 	if err != nil {
-		return errors.Wrap(err, "error with input configuration")
+		return fmt.Errorf("error with input configuration: %w", err)
 	}
 	err = output.CheckOutputConfig(v, formats)
 	if err != nil {
-		return errors.Wrap(err, "error with output configuration")
+		return fmt.Errorf("error with output configuration: %w", err)
 	}
 	return nil
 }

@@ -13,10 +13,10 @@
 package iterator
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
@@ -85,7 +85,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:      input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating CSV iterator")
+			return it, fmt.Errorf("error creating CSV iterator: %w", err)
 		}
 		return it, nil
 	case "gob":
@@ -124,7 +124,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:             input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating tags iterator")
+			return it, fmt.Errorf("error creating tags iterator: %w", err)
 		}
 		return it, nil
 	case "tsv":
@@ -139,7 +139,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:      input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating TSV iterator")
+			return it, fmt.Errorf("error creating TSV iterator: %w", err)
 		}
 		return it, nil
 	}

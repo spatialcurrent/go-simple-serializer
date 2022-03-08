@@ -14,7 +14,7 @@
 package properties
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var (
