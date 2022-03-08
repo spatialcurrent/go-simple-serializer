@@ -169,6 +169,7 @@ func Write(input *WriteInput) error {
 	// if streaming and not expanding header.
 	p := pipe.NewBuilder().OutputLimit(input.Limit)
 	if inputObjectKind == reflect.Array || inputObjectKind == reflect.Slice {
+		fmt.Println("Input Object:", input.Header, inputObject)
 		it, errorIterator := pipe.NewSliceIterator(inputObject)
 		if errorIterator != nil {
 			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
