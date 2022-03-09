@@ -13,11 +13,12 @@
 package iterator
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"reflect"
 
-	"github.com/pkg/errors"
-
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/jsonl"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/sv"
@@ -36,21 +37,21 @@ type Iterator interface {
 
 // NewIteratorInput provides the input parameters for the NewIterator function.
 type NewIteratorInput struct {
-	Reader            io.Reader     // the underlying reader
-	Format            string        // the format
-	Header            []interface{} // for csv and tsv, the header.  If not given, then reads first line of stream as header.
-	ScannerBufferSize int           // the initial buffer size for the scanner
-	SkipLines         int           // Skip a given number of lines at the beginning of the stream.
-	SkipBlanks        bool          // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	SkipComments      bool          // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	Comment           string        // The comment line prefix.  CSV and TSV only support single characters.  JSON Lines support any string.
-	Trim              bool          // Trim each input line before parsing into an object.
-	LazyQuotes        bool          // for csv and tsv, parse with lazy quotes
-	Limit             int           // Limit the number of objects to read and return from the underlying stream.
-	KeyValueSeparator string        // For tags, the key-value separator.
-	LineSeparator     string        // For JSON Lines, the new line byte.
-	DropCR            bool          // For JSON Lines, drop carriage returns at the end of lines.
-	Type              reflect.Type  //
+	Reader            io.Reader          // the underlying reader
+	Format            string             // the format
+	Header            object.ObjectArray // for csv and tsv, the header.  If not given, then reads first line of stream as header.
+	ScannerBufferSize int                // the initial buffer size for the scanner
+	SkipLines         int                // Skip a given number of lines at the beginning of the stream.
+	SkipBlanks        bool               // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	SkipComments      bool               // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	Comment           string             // The comment line prefix.  CSV and TSV only support single characters.  JSON Lines support any string.
+	Trim              bool               // Trim each input line before parsing into an object.
+	LazyQuotes        bool               // for csv and tsv, parse with lazy quotes
+	Limit             int                // Limit the number of objects to read and return from the underlying stream.
+	KeyValueSeparator string             // For tags, the key-value separator.
+	LineSeparator     string             // For JSON Lines, the new line byte.
+	DropCR            bool               // For JSON Lines, drop carriage returns at the end of lines.
+	Type              reflect.Type       //
 }
 
 // NewIterator returns an Iterator for the given input source, format, and other options.
@@ -85,7 +86,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:      input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating CSV iterator")
+			return it, fmt.Errorf("error creating CSV iterator: %w", err)
 		}
 		return it, nil
 	case "gob":
@@ -124,7 +125,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:             input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating tags iterator")
+			return it, fmt.Errorf("error creating tags iterator: %w", err)
 		}
 		return it, nil
 	case "tsv":
@@ -139,7 +140,7 @@ func NewIterator(input *NewIteratorInput) (Iterator, error) {
 			Limit:      input.Limit,
 		})
 		if err != nil {
-			return it, errors.Wrap(err, "error creating TSV iterator")
+			return it, fmt.Errorf("error creating TSV iterator: %w", err)
 		}
 		return it, nil
 	}

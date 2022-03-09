@@ -5,6 +5,8 @@
 //
 // =================================================================
 
+//lint:file-ignore ST1020 artifact of C-GO
+
 // gss.so creates a shared library of Go that can be called by C, C++, or Python
 //
 //
@@ -17,11 +19,8 @@ import (
 	"C"
 	"fmt"
 	"strings"
-)
 
-//"github.com/spatialcurrent/go-stringify/pkg/stringify"
-
-import (
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 
@@ -46,10 +45,9 @@ func Version() *C.char {
 func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, outputPretty *C.char, outputSorted *C.char, outputString **C.char) *C.char {
 
 	s, err := gss.Convert(&gss.ConvertInput{
-		InputBytes:  []byte(C.GoString(inputString)),
-		InputFormat: C.GoString(inputFormat),
-		//InputHeader:     stringify.StringSliceToInterfaceSlice(strings.Split(C.GoString(inputHeader), ",")),
-		InputHeader:         []interface{}{},
+		InputBytes:          []byte(C.GoString(inputString)),
+		InputFormat:         C.GoString(inputFormat),
+		InputHeader:         object.NewObjectArray(nil),
 		InputComment:        "",
 		InputLazyQuotes:     false,
 		InputSkipLines:      0,
@@ -57,7 +55,7 @@ func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, out
 		InputLineSeparator:  "\n",
 		InputEscapePrefix:   "//",
 		OutputFormat:        C.GoString(outputFormat),
-		OutputHeader:        []interface{}{},
+		OutputHeader:        object.NewObjectArray(nil),
 		OutputLimit:         -1,
 		OutputPretty:        C.GoString(outputFormat) == "1",
 		OutputSorted:        C.GoString(outputSorted) == "1",

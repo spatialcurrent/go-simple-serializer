@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
@@ -40,7 +41,7 @@ func TestSerializerCSVMap(t *testing.T) {
 }
 
 func TestSerializerCSVSliceString(t *testing.T) {
-	in := []string{"a", "b", "c"}
+	in := []interface{}{[]string{"a", "b", "c"}}
 	s := New(FormatCSV).Limit(NoLimit)
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
@@ -81,6 +82,16 @@ func TestSerializerCSVSliceExpandHeader(t *testing.T) {
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
 	assert.Equal(t, "a,b,c\n1,,3\n,5,6\n", string(out))
+	//a,b,c
+	//1,,3
+	//,5,6
+	//
+	//a,b,c
+	//1,,3
+	//,5,6
+	//a,c
+	//1,3
+	//,6
 }
 
 func TestSerializerCSVSliceExpandHeaderWithWildcard(t *testing.T) {
@@ -94,7 +105,7 @@ func TestSerializerCSVSliceExpandHeaderWithWildcard(t *testing.T) {
 			"c": "6",
 		},
 	}
-	s := New(FormatCSV).Limit(NoLimit).ExpandHeader(true).Header([]interface{}{"*", "c"})
+	s := New(FormatCSV).Limit(NoLimit).ExpandHeader(true).Header(object.NewObjectArray([]interface{}{"*", "c"}))
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
 	assert.Equal(t, "a,b,c\n1,,3\n,5,6\n", string(out))

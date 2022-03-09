@@ -8,10 +8,9 @@
 package gob
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	pkgfit "github.com/spatialcurrent/go-fit/pkg/fit"
 )
@@ -37,13 +36,13 @@ func (w *Writer) WriteObject(obj interface{}) error {
 	if w.fit {
 		err := w.encoder.EncodeValue(pkgfit.FitValue(reflect.ValueOf(obj)))
 		if err != nil {
-			return errors.Wrap(err, "error writing to underlying writer")
+			return fmt.Errorf("error writing to underlying writer: %w", err)
 		}
 		return nil
 	}
 	err := w.encoder.EncodeValue(reflect.ValueOf(obj))
 	if err != nil {
-		return errors.Wrap(err, "error writing to underlying writer")
+		return fmt.Errorf("error writing to underlying writer: %w", err)
 	}
 	return nil
 }
@@ -60,7 +59,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 		for i := 0; i < value.Len(); i++ {
 			err := w.WriteObject(value.Index(i).Interface())
 			if err != nil {
-				return errors.Wrap(err, "error writing object")
+				return fmt.Errorf("error writing object: %w", err)
 			}
 		}
 	}
@@ -73,7 +72,7 @@ func (w *Writer) Flush() error {
 	if flusher, ok := w.writer.(interface{ Flush() error }); ok {
 		err := flusher.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -84,7 +83,7 @@ func (w *Writer) Close() error {
 	if closer, ok := w.writer.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

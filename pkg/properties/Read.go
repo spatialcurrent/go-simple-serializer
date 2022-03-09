@@ -8,11 +8,10 @@
 package properties
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/escaper"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
@@ -76,7 +75,7 @@ func Read(input *ReadInput) (interface{}, error) {
 					}
 				}
 				if len(propertyName) == 0 {
-					return nil, errors.New("error deserializing properties for property " + property)
+					return nil, fmt.Errorf("error deserializing properties for property %s", property)
 				}
 				m.SetMapIndex(
 					reflect.ValueOf(e.Unescape(strings.TrimSpace(propertyName))),

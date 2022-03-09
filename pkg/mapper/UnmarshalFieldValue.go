@@ -8,9 +8,8 @@
 package mapper
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-fit/pkg/fit"
 )
@@ -64,5 +63,5 @@ func UnmarshalFieldValue(source reflect.Value, target reflect.Value) error {
 		return nil
 	}
 
-	return errors.Errorf("value %#v (%q) not assignable to field type %q", source.Interface(), source.Type(), target.Type())
+	return fmt.Errorf("value %#v (%q) not assignable to field type %q", source.Interface(), source.Type(), target.Type())
 }

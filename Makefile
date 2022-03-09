@@ -26,78 +26,77 @@ help:  ## Print the help documentation
 # Dependencies
 #
 
-deps_go:  ## Install Go dependencies
-	go get -d -t ./...
-
-.PHONY: deps_go_test
-deps_go_test: ## Download Go dependencies for tests
-	go get golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow # download shadow
-	go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow # install shadow
-	go get -u github.com/kisielk/errcheck # download and install errcheck
-	go get -u github.com/client9/misspell/cmd/misspell # download and install misspell
-	go get -u github.com/gordonklaus/ineffassign # download and install ineffassign
-	go get -u honnef.co/go/tools/cmd/staticcheck # download and instal staticcheck
-	go get -u golang.org/x/tools/cmd/goimports # download and install goimports
-
 deps_arm:  ## Install dependencies to cross-compile to ARM
 	# ARMv7
 	apt-get install -y libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
   # ARMv8
 	apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
-deps_gopherjs:  ## Install GopherJS
-	go get -u github.com/gopherjs/gopherjs
-
-deps_javascript:  ## Install dependencies for JavaScript tests
-	npm install .
-
 #
 # Go building, formatting, testing, and installing
 #
 
-.PHONY: fmt
 fmt:  ## Format Go source code
 	go fmt $$(go list ./... )
 
 .PHONY: imports
-imports: ## Update imports in Go source code
-	# If missing, install goimports with: go get golang.org/x/tools/cmd/goimports
-	goimports -w -local github.com/spatialcurrent/go-simple-serializer,github.com/spatialcurrent/ $$(find . -iname '*.go')
+imports: bin/goimports ## Update imports in Go source code
+	bin/goimports -w -local github.com/spatialcurrent/go-simple-serializer,github.com/spatialcurrent $$(find . -iname '*.go')
 
-.PHONY: vet
 vet: ## Vet Go source code
-	go vet $$(go list ./...)
+	go vet github.com/spatialcurrent/go-simple-serializer/pkg/... # vet packages
+	go vet github.com/spatialcurrent/go-simple-serializer/cmd/... # vet commands
+	go vet github.com/spatialcurrent/go-simple-serializer/plugins/... # vet plugins
+
+tidy: ## Tidy Go source code
+	go mod tidy
 
 .PHONY: test_go
-test_go: ## Run Go tests
+test_go: bin/errcheck bin/misspell bin/staticcheck bin/shadow ## Run Go tests
 	bash scripts/test.sh
-	
+
 .PHONY: test_cli
-test_cli: ## Run CLI tests
+test_cli: bin/gss ## Run CLI tests
 	bash scripts/test-cli.sh
 
-build: build_cli build_javascript build_so build_android  ## Build CLI, Shared Objects (.so), JavaScript, and Android
-
-install:  ## Install GSS CLI on current platform
-	go install -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+.PHONY: install
+install:  ## Install the CLI on current platform
+	go install -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
 
 #
 # Command line Programs
 #
 
-bin/gss_darwin_amd64: ## Build GSS CLI for Darwin / amd64
-	GOOS=darwin GOARCH=amd64 go build -o $(DEST)/gss_darwin_amd64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+bin/errcheck:
+	go build -o bin/errcheck github.com/kisielk/errcheck
 
-bin/gss_linux_amd64: ## Build GSS CLI for Linux / amd64
-	GOOS=linux GOARCH=amd64 go build -o $(DEST)/gss_linux_amd64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+bin/goimports:
+	go build -o bin/goimports golang.org/x/tools/cmd/goimports
 
-bin/gss_windows_amd64.exe:  ## Build GSS CLI for Windows / amd64
-	GOOS=windows GOARCH=amd64 go build -o $(DEST)/gss_windows_amd64.exe -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+bin/gox:
+	go build -o bin/gox github.com/mitchellh/gox
 
-bin/gss_linux_arm64: ## Build GSS CLI for Linux / arm64
-	GOOS=linux GOARCH=arm64 go build -o $(DEST)/gss_linux_arm64 -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+bin/misspell:
+	go build -o bin/misspell github.com/client9/misspell/cmd/misspell
 
-build_cli: bin/gss_darwin_amd64 bin/gss_linux_amd64 bin/gss_windows_amd64.exe bin/gss_linux_arm64  ## Build command line programs
+bin/staticcheck:
+	go build -o bin/staticcheck honnef.co/go/tools/cmd/staticcheck
+
+bin/shadow:
+	go build -o bin/shadow golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
+
+bin/gss: ## Build CLI for Darwin / amd64
+	go build -o bin/gss -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
+
+bin/gss_linux_amd64: bin/gox ## Build CLI for Darwin / amd64
+	scripts/build-release linux amd64
+
+.PHONY: build
+build: bin/gss
+
+.PHONY: build_release
+build_release: bin/gox
+	scripts/build-release
 
 #
 # Shared Objects
@@ -140,30 +139,6 @@ bin/gss.aar:  ## Build Android Archive Library
 build_android: bin/gss.arr  ## Build artifacts for Android
 
 #
-# JavaScript
-#
-
-dist/gss.mod.js:  ## Build JavaScript module
-	gopherjs build -o dist/gss.mod.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.mod.js
-
-dist/gss.mod.min.js:  ## Build minified JavaScript module
-	gopherjs build -m -o dist/gss.mod.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.mod.js
-
-dist/gss.global.js:  ## Build JavaScript library that attaches to global or window.
-	gopherjs build -o dist/gss.global.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
-
-dist/gss.global.min.js:  ## Build minified JavaScript library that attaches to global or window.
-	gopherjs build -m -o dist/gss.global.min.js github.com/spatialcurrent/go-simple-serializer/cmd/gss.global.js
-
-build_javascript: dist/gss.mod.js dist/gss.mod.min.js dist/gss.global.js dist/gss.global.min.js  ## Build artifacts for JavaScript
-
-test_javascript:  ## Run JavaScript tests
-	npm run test
-
-lint:  ## Lint JavaScript source code
-	npm run lint
-
-#
 # Examples
 #
 
@@ -182,8 +157,6 @@ run_example_cpp: bin/gss.so bin/gss_example_cpp  ## Run C++ example
 run_example_python: bin/gss.so  ## Run Python example
 	LD_LIBRARY_PATH=bin python examples/python/test.py
 
-run_example_javascript: dist/gss.mod.min.js  ## Run JavaScript module example
-	node examples/js/index.mod.js
 
 ## Clean
 

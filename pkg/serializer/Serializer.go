@@ -11,14 +11,15 @@ package serializer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/hcl"
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-fit/pkg/fit"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/bson"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
@@ -109,17 +110,17 @@ type Serializer struct {
 	format            string // one of gss.Formats
 	formatSpecifier   string
 	fit               bool
-	header            []interface{} // if formt as csv or tsv, the column names
-	comment           string        // the line comment prefix
-	lazyQuotes        bool          // if format is csv or tsv, allow LazyQuotes.
-	scannerBufferSize int           // the initial buffer size for the scanner.
-	skipLines         int           // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
-	skipBlanks        bool          // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
-	skipComments      bool          // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
-	limit             int           // if format is a csv, tsv, or jsonl, then limit the number of items processed.
-	objectType        reflect.Type  // the type of the output object
-	pretty            bool          // pretty output
-	lineSeparator     string        // new line character, used by properties and jsonl
+	header            object.ObjectArray // if formt as csv or tsv, the column names
+	comment           string             // the line comment prefix
+	lazyQuotes        bool               // if format is csv or tsv, allow LazyQuotes.
+	scannerBufferSize int                // the initial buffer size for the scanner.
+	skipLines         int                // if format is csv, tsv, or jsonl, the number of lines to skip before processing.
+	skipBlanks        bool               // Skip blank lines.  If false, Next() returns a blank line as (nil, nil).  If true, Next() simply skips forward until it finds a non-blank line.
+	skipComments      bool               // Skip commented lines.  If false, Next() returns a commented line as (nil, nil).  If true, Next() simply skips forward until it finds a non-commented line.
+	limit             int                // if format is a csv, tsv, or jsonl, then limit the number of items processed.
+	objectType        reflect.Type       // the type of the output object
+	pretty            bool               // pretty output
+	lineSeparator     string             // new line character, used by properties and jsonl
 	keyValueSeparator string
 	sorted            bool // sort output
 	reversed          bool // if sorted, sort in reverse alphabetical order
@@ -234,7 +235,7 @@ func NewWithOptions(format string, options ...map[string]interface{}) (*Serializ
 					s = s.ExpandHeader(v > 0.0)
 				}
 			case "header":
-				s = s.Header(toInterfaceSlice(value))
+				s = s.Header(object.NewObjectArray(toInterfaceSlice(value)))
 			default:
 				return s, &ErrUnknownOption{Name: key}
 			}
@@ -263,7 +264,7 @@ func (s *Serializer) Fit(f bool) *Serializer {
 }
 
 // Header sets the header of the serializer.
-func (s *Serializer) Header(header []interface{}) *Serializer {
+func (s *Serializer) Header(header object.ObjectArray) *Serializer {
 	s.header = header
 	return s
 }
@@ -529,10 +530,10 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(objectType))
 		obj, err := hcl.Parse(string(b))
 		if err != nil {
-			return nil, errors.Wrap(err, "Error parsing hcl")
+			return nil, fmt.Errorf("Error parsing hcl: %w", err)
 		}
 		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-			return nil, errors.Wrap(err, "Error decoding hcl")
+			return nil, fmt.Errorf("Error decoding hcl: %w", err)
 		}
 		return ptr.Elem().Interface(), nil
 	}
@@ -540,7 +541,7 @@ func (s *Serializer) Deserialize(b []byte) (interface{}, error) {
 }
 
 // Serialize serializes an object into a slice of byte and returns and error, if any.
-func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
+func (s *Serializer) Serialize(obj interface{}) ([]byte, error) {
 
 	keySerializer := s.keySerializer
 	if keySerializer == nil {
@@ -554,9 +555,9 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 
 	switch s.format {
 	case FormatBSON:
-		o, err := stringify.StringifyMapKeys(object, keySerializer)
+		o, err := stringify.StringifyMapKeys(obj, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return bson.Marshal(o)
 	case FormatCSV, FormatTSV:
@@ -568,7 +569,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		errWrite := sv.Write(&sv.WriteInput{
 			Writer:          buf,
 			Separator:       separator,
-			Object:          object,
+			Object:          object.NewObject(obj),
 			KeySerializer:   keySerializer,
 			ValueSerializer: valueSerializer,
 			Sorted:          s.sorted,
@@ -578,14 +579,14 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:           s.limit,
 		})
 		if errWrite != nil {
-			return make([]byte, 0), errors.Wrap(errWrite, "error writing separated values")
+			return make([]byte, 0), fmt.Errorf("error writing separated values: %w", errWrite)
 		}
 		return buf.Bytes(), nil
 	case FormatFmt:
 		if s.fit {
-			return []byte(fmt.Sprintf(s.formatSpecifier, fit.Fit(object))), nil
+			return []byte(fmt.Sprintf(s.formatSpecifier, fit.Fit(obj))), nil
 		}
-		return []byte(fmt.Sprintf(s.formatSpecifier, object)), nil
+		return []byte(fmt.Sprintf(s.formatSpecifier, obj)), nil
 	case FormatGo:
 		// TODO:
 		// Pretty output disabled until https://github.com/kr/pretty/issues/45 is fixed
@@ -594,26 +595,26 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 		//	return []byte(krpretty.Sprint(object)), nil
 		//}
 		if s.fit {
-			return []byte(fmt.Sprintf("%#v", fit.Fit(object))), nil
+			return []byte(fmt.Sprintf("%#v", fit.Fit(obj))), nil
 		}
-		return []byte(fmt.Sprintf("%#v", object)), nil
+		return []byte(fmt.Sprintf("%#v", obj)), nil
 	case FormatGob:
-		return gob.Marshal(object, s.fit)
+		return gob.Marshal(obj, s.fit)
 	case FormatJSON:
-		o, err := stringify.StringifyMapKeys(object, keySerializer)
+		o, err := stringify.StringifyMapKeys(obj, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return json.Marshal(o, s.pretty)
 	case FormatJSONL:
-		return jsonl.Marshal(object, s.lineSeparator, keySerializer, s.pretty, s.limit)
+		return jsonl.Marshal(obj, s.lineSeparator, keySerializer, s.pretty, s.limit)
 	case FormatProperties:
 		buf := new(bytes.Buffer)
 		err := properties.Write(&properties.WriteInput{
 			Writer:            buf,
 			LineSeparator:     s.lineSeparator,
 			KeyValueSeparator: s.keyValueSeparator,
-			Object:            object,
+			Object:            obj,
 			KeySerializer:     keySerializer,
 			ValueSerializer:   valueSerializer,
 			Sorted:            s.sorted,
@@ -625,7 +626,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			EscapeEqual:       s.escapeEqual,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing properties")
+			return make([]byte, 0), fmt.Errorf("error writing properties: %w", err)
 		}
 		return buf.Bytes(), nil
 	case FormatTags:
@@ -639,7 +640,7 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			ExpandKeys:        s.expandHeader,
 			KeyValueSeparator: s.keyValueSeparator,
 			LineSeparator:     s.lineSeparator,
-			Object:            object,
+			Object:            obj,
 			KeySerializer:     keySerializer,
 			ValueSerializer:   valueSerializer,
 			Sorted:            s.sorted,
@@ -647,13 +648,13 @@ func (s *Serializer) Serialize(object interface{}) ([]byte, error) {
 			Limit:             s.limit,
 		})
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error writing tags")
+			return make([]byte, 0), fmt.Errorf("error writing tags: %w", err)
 		}
 		return buf.Bytes(), nil
 	case FormatTOML, FormatYAML:
-		o, err := stringify.StringifyMapKeys(object, keySerializer)
+		o, err := stringify.StringifyMapKeys(obj, keySerializer)
 		if err != nil {
-			return make([]byte, 0), errors.Wrap(err, "error stringifying map keys")
+			return make([]byte, 0), fmt.Errorf("error stringifying map keys: %w", err)
 		}
 		return MarshalFuncs[s.format](o)
 	}

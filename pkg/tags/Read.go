@@ -8,19 +8,19 @@
 package tags
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 
-	"github.com/pkg/errors"
-
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
 // ReadInput provides the input for the Read function.
 type ReadInput struct {
-	Type              reflect.Type  // the output type
-	Reader            io.Reader     // the underlying reader
-	Keys              []interface{} // the keys to read
+	Type              reflect.Type       // the output type
+	Reader            io.Reader          // the underlying reader
+	Keys              object.ObjectArray // the keys to read
 	SkipLines         int
 	SkipBlanks        bool
 	SkipComments      bool
@@ -50,7 +50,7 @@ func Read(input *ReadInput) (interface{}, error) {
 		DropCR:            input.DropCR,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating interator")
+		return nil, fmt.Errorf("error creating interator: %w", err)
 	}
 	output := reflect.MakeSlice(inputType, 0, 0).Interface()
 	w := pipe.NewSliceWriterWithValues(output)

@@ -10,6 +10,7 @@ package tags
 import (
 	"fmt"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
@@ -20,7 +21,7 @@ func ExampleMarshal_map() {
 		"b": 2,
 		"c": 3,
 	}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray([]interface{}{})
 	b, err := Marshal(obj, keys, true, "=", stringify.NewStringer("", false, false, false), stringify.NewStringer("", false, false, false), true, false)
 	if err != nil {
 		panic(err)
@@ -36,7 +37,7 @@ func ExampleMarshal_stuct() {
 		B string
 		C string
 	}{A: "1", B: "2", C: "3"}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray([]interface{}{})
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 	b, err := Marshal(in, keys, true, "=", keySerializer, valueSerializer, true, false)

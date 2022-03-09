@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	bstoml "github.com/BurntSushi/toml"
-	"github.com/pkg/errors" // import the BurntSushi toml library as bstoml
 )
 
 // Unmarshal parses a slice of bytes into a map[string]interface{} object
@@ -27,7 +26,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 	obj := map[string]interface{}{}
 	_, err := bstoml.Decode(string(b), &obj)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling TOML %q", string(b)))
+		return nil, fmt.Errorf("error unmarshaling TOML %q: %w", string(b), err)
 	}
 	return obj, nil
 }

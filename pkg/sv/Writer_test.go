@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
@@ -23,7 +24,7 @@ func TestWriteHeader(t *testing.T) {
 	w := NewWriter(
 		buf,
 		',',
-		[]interface{}{"a", "b", "d"},
+		object.NewObjectArray([]interface{}{"a", "b", "d"}),
 		stringify.NewStringer("", false, false, false),
 		stringify.NewStringer("", false, false, false),
 		true,
@@ -43,7 +44,7 @@ func TestWriteHeader(t *testing.T) {
 }
 
 func TestWriteObject(t *testing.T) {
-	object := map[string]interface{}{
+	obj := map[string]interface{}{
 		"a": "1",
 		"b": "2",
 		"c": "3",
@@ -54,7 +55,7 @@ func TestWriteObject(t *testing.T) {
 	w := NewWriter(
 		buf,
 		',',
-		[]interface{}{"a", "b", "d"},
+		object.NewObjectArray([]interface{}{"a", "b", "d"}),
 		stringify.NewStringer("", true, false, false),
 		stringify.NewStringer("", true, false, false),
 		true,
@@ -65,7 +66,7 @@ func TestWriteObject(t *testing.T) {
 	err := w.WriteHeader()
 	assert.NoError(t, err)
 
-	err = w.WriteObject(object)
+	err = w.WriteObject(obj)
 	assert.NoError(t, err)
 
 	err = w.Flush()
@@ -95,7 +96,7 @@ func TestWriterObjects(t *testing.T) {
 	w := NewWriter(
 		buf,
 		',',
-		[]interface{}{"a", "b", "d"},
+		object.NewObjectArray([]interface{}{"a", "b", "d"}),
 		stringify.NewStringer("", true, false, false),
 		stringify.NewStringer("", true, false, false),
 		true,
@@ -144,7 +145,7 @@ func TestWriteStructs(t *testing.T) {
 	w := NewWriter(
 		buf,
 		',',
-		[]interface{}{"a", "b", "d"},
+		object.NewObjectArray([]interface{}{"a", "b", "d"}),
 		stringify.NewStringer("", true, false, false),
 		stringify.NewStringer("", true, false, false),
 		true,

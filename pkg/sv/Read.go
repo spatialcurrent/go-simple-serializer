@@ -8,11 +8,11 @@
 package sv
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 
-	"github.com/pkg/errors"
-
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
@@ -21,7 +21,7 @@ type ReadInput struct {
 	Type       reflect.Type // the output type
 	Reader     io.Reader
 	Separator  rune // the values separator
-	Header     []interface{}
+	Header     object.ObjectArray
 	SkipLines  int
 	Comment    string
 	LazyQuotes bool
@@ -55,7 +55,7 @@ func Read(input *ReadInput) (interface{}, error) {
 		Limit:      input.Limit,
 	})
 	if errorIterator != nil {
-		return nil, errors.Wrap(errorIterator, "error creating iterator")
+		return nil, fmt.Errorf("error creating iterator: %w", errorIterator)
 	}
 	output := reflect.MakeSlice(inputType, 0, 0).Interface()
 	w := pipe.NewSliceWriterWithValues(output)

@@ -10,12 +10,12 @@ package gss
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/hcl"
 
-	"github.com/pkg/errors"
-
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
@@ -25,7 +25,7 @@ import (
 type DeserializeBytesInput struct {
 	Bytes             []byte
 	Format            string
-	Header            []interface{}
+	Header            object.ObjectArray
 	Comment           string
 	LazyQuotes        bool
 	ScannerBufferSize int
@@ -66,12 +66,12 @@ func DeserializeBytes(input *DeserializeBytesInput) (interface{}, error) {
 			DropCR:            input.DropCR,
 		})
 		if errorIterator != nil {
-			return nil, errors.Wrap(errorIterator, "error creating iterator")
+			return nil, fmt.Errorf("error creating iterator: %w", errorIterator)
 		}
 		w := pipe.NewSliceWriterWithValues(reflect.MakeSlice(input.Type, 0, 0).Interface())
 		errorRun := pipe.NewBuilder().Input(it).Output(w).Run()
 		if errorRun != nil {
-			return w.Values(), errors.Wrap(errorRun, "error deserializing")
+			return w.Values(), fmt.Errorf("error deserializing: %w", errorRun)
 		}
 		return w.Values(), nil
 	case "bson", "json", "properties", "toml", "yaml":
@@ -99,13 +99,13 @@ func DeserializeBytes(input *DeserializeBytesInput) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeMap(input.Type))
 		obj, err := hcl.Parse(string(input.Bytes))
 		if err != nil {
-			return nil, errors.Wrap(err, "Error parsing hcl")
+			return nil, fmt.Errorf("Error parsing hcl: %w", err)
 		}
 		if err := hcl.DecodeObject(ptr.Interface(), obj); err != nil {
-			return nil, errors.Wrap(err, "Error decoding hcl")
+			return nil, fmt.Errorf("Error decoding hcl: %w", err)
 		}
 		return ptr.Elem().Interface(), nil
 	}
 
-	return nil, errors.Wrap(&ErrUnknownFormat{Name: input.Format}, "could not deserialize bytes")
+	return nil, fmt.Errorf("could not deserialize bytes: %w", &ErrUnknownFormat{Name: input.Format})
 }

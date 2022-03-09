@@ -8,9 +8,8 @@
 package mapper
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/tagger"
 )
@@ -31,11 +30,11 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 	}
 
 	if !targetValue.CanAddr() {
-		return errors.Errorf("target %#v (%v) is not addressable", targetValue.Interface(), targetValue.Type())
+		return fmt.Errorf("target %#v (%v) is not addressable", targetValue.Interface(), targetValue.Type())
 	}
 
 	if !targetValue.CanSet() {
-		return errors.Errorf("target %#v (%v) cannot be set", targetValue.Interface(), targetValue.Type())
+		return fmt.Errorf("target %#v (%v) cannot be set", targetValue.Interface(), targetValue.Type())
 	}
 
 	// If source value is not valid, then set the targetValue to it's zero value.
@@ -55,7 +54,7 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 
 	if sourceKind == reflect.Interface {
 		if !sourceValue.CanInterface() {
-			return errors.Errorf("source %v (%v) is of kind interface", sourceValue, sourceValue.Type())
+			return fmt.Errorf("source %v (%v) is of kind interface", sourceValue, sourceValue.Type())
 		}
 		// Re-value the object
 		return UnmarshalValue(reflect.ValueOf(sourceValue.Interface()), targetValue)
@@ -89,7 +88,7 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 		if sourceKind == reflect.Map {
 
 			if !reflect.TypeOf("").AssignableTo(sourceType.Key()) {
-				return errors.Errorf("string is not assignable to source map key %q", sourceType.Key())
+				return fmt.Errorf("string is not assignable to source map key %q", sourceType.Key())
 			}
 
 			// Iterate throught the struct fields
@@ -107,7 +106,7 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 
 				tagValue, err := tagger.Lookup(f.Tag, "map")
 				if err != nil {
-					return errors.Wrapf(err, "error unmarshaling struct tag value %q", f.Tag)
+					return fmt.Errorf("error unmarshaling struct tag value %q: %w", f.Tag, err)
 				}
 
 				key := f.Name
@@ -137,7 +136,7 @@ func UnmarshalValue(sourceValue reflect.Value, targetValue reflect.Value) error 
 				// unmarshal the concrete map value into the field
 				err = UnmarshalFieldValue(reflect.ValueOf(mv.Interface()), fv)
 				if err != nil {
-					return errors.Wrapf(err, "key %q found, but could not assign to field %q", key, f.Name)
+					return fmt.Errorf("key %q found, but could not assign to field %q: %w", key, f.Name, err)
 				}
 			}
 			return nil

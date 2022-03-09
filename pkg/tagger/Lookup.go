@@ -8,9 +8,8 @@
 package tagger
 
 import (
+	"fmt"
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // Lookup lookups and parses a struct tag key-value pair if found.
@@ -21,7 +20,7 @@ func Lookup(structTag reflect.StructTag, key string) (*Value, error) {
 		v := &Value{}
 		err := Unmarshal([]byte(str), v)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error unmarshaling struct tag value %q", str)
+			return nil, fmt.Errorf("error unmarshaling struct tag value %q: %w", str, err)
 		}
 		return v, nil
 	}

@@ -12,9 +12,6 @@ import (
 	stdjson "encoding/json" // import the standard json library as stdjson
 	"fmt"
 	"unicode/utf8"
-
-	"github.com/pkg/errors"
-	// utf8 is used to decode the first rune in the string
 )
 
 // Unmarshal parses a slice of bytes into an object using a few simple type inference rules.
@@ -58,21 +55,21 @@ func Unmarshal(b []byte) (interface{}, error) {
 		obj := make([]interface{}, 0)
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), obj))
+			return nil, fmt.Errorf("error unmarshaling JSON %q into %T: %w", string(b), obj, err)
 		}
 		return obj, nil
 	case '{':
 		obj := map[string]interface{}{}
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), obj))
+			return nil, fmt.Errorf("error unmarshaling JSON %q into %T: %w", string(b), obj, err)
 		}
 		return obj, nil
 	case '"':
 		obj := ""
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into string", string(b)))
+			return nil, fmt.Errorf("error unmarshaling JSON %q into string: %w", string(b), err)
 		}
 		return obj, nil
 	}
@@ -80,7 +77,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 	obj := 0.0
 	err := stdjson.Unmarshal(b, &obj)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into float", string(b)))
+		return nil, fmt.Errorf("error unmarshaling JSON %q into float: %w", string(b), err)
 	}
 	return obj, nil
 }

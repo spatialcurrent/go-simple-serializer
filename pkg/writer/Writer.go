@@ -13,10 +13,10 @@
 package writer
 
 import (
+	"errors"
 	"io"
 
-	"github.com/pkg/errors"
-
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/fmt"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gob"
@@ -36,7 +36,7 @@ type NewWriterInput struct {
 	Writer            io.Writer
 	Format            string
 	FormatSpecifier   string
-	Header            []interface{}
+	Header            object.ObjectArray
 	ExpandHeader      bool // in context, only used by tags as ExpandKeys
 	KeySerializer     stringify.Stringer
 	ValueSerializer   stringify.Stringer

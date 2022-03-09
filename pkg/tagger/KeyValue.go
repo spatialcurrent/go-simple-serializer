@@ -10,8 +10,6 @@ package tagger
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 // KeyValue represents a struct tag key:"value" pair.
@@ -25,7 +23,7 @@ type KeyValue struct {
 func (t KeyValue) MarshalText() ([]byte, error) {
 	v, err := t.Value.MarshalText()
 	if err != nil {
-		return make([]byte, 0), errors.Wrapf(err, "error marshaling %#v", t)
+		return make([]byte, 0), fmt.Errorf("error marshaling %#v: %w", t, err)
 	}
 	return []byte(fmt.Sprintf("%s:%q", t.Key, string(v))), nil
 }

@@ -8,12 +8,11 @@
 package tags
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/scanner"
 )
@@ -54,7 +53,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 
 	KeyValueSeparator, n := utf8.DecodeRuneInString(input.KeyValueSeparator)
 	if KeyValueSeparator == utf8.RuneError && n == 1 {
-		return nil, errors.Wrap(ErrInvalidUTF8, "error decoding key-value separator")
+		return nil, fmt.Errorf("error decoding key-value separator: %w", ErrInvalidUTF8)
 	}
 
 	s := scanner.New(input.Reader, input.LineSeparator, input.DropCR)
@@ -109,13 +108,13 @@ func (it *Iterator) Next() (interface{}, error) {
 		if it.Type != nil {
 			obj, err := UnmarshalType([]byte(line), it.KeyValueSeparator, it.Type)
 			if err != nil {
-				return obj, errors.Wrap(err, "error unmarshaling next tags object")
+				return obj, fmt.Errorf("error unmarshaling next tags object: %w", err)
 			}
 			return obj, nil
 		}
 		obj, err := Unmarshal([]byte(line), it.KeyValueSeparator)
 		if err != nil {
-			return obj, errors.Wrap(err, "error unmarshaling next tags object")
+			return obj, fmt.Errorf("error unmarshaling next tags object: %w", err)
 		}
 		return obj, nil
 	}

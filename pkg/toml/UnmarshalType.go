@@ -12,7 +12,6 @@ import (
 	"reflect"
 
 	bstoml "github.com/BurntSushi/toml"
-	"github.com/pkg/errors"
 )
 
 // import the BurntSushi toml library as bstoml
@@ -32,7 +31,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 	ptr.Elem().Set(reflect.MakeMap(outputType))
 	_, err := bstoml.Decode(string(b), ptr.Interface())
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling TOML %q", string(b)))
+		return nil, fmt.Errorf("error unmarshaling TOML %q: %w", string(b), err)
 	}
 	return ptr.Elem().Interface(), nil
 }

@@ -9,8 +9,7 @@ package bson
 
 import (
 	"fmt"
-	// import the mgo bson library
-	"github.com/pkg/errors"
+
 	mgobson "gopkg.in/mgo.v2/bson"
 )
 
@@ -27,7 +26,7 @@ func Unmarshal(b []byte) (interface{}, error) {
 	obj := map[string]interface{}{}
 	err := mgobson.Unmarshal(b, &obj)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling BSON %q", string(b)))
+		return nil, fmt.Errorf("error unmarshaling BSON %q: %w", string(b), err)
 	}
 
 	return obj, nil

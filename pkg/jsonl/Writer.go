@@ -8,10 +8,9 @@
 package jsonl
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-simple-serializer/pkg/json"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -40,18 +39,18 @@ func NewWriter(w io.Writer, separator string, keySerializer stringify.Stringer, 
 func (w *Writer) WriteObject(obj interface{}) error {
 	obj, err := stringify.StringifyMapKeys(obj, w.keySerializer)
 	if err != nil {
-		return errors.Wrap(err, "error stringify map keys")
+		return fmt.Errorf("error stringify map keys: %w", err)
 	}
 	b, err := json.Marshal(obj, w.pretty)
 	if err != nil {
-		return errors.Wrap(err, "error marshaling object")
+		return fmt.Errorf("error marshaling object: %w", err)
 	}
 	if len(w.separator) > 0 {
 		b = append(b, []byte(w.separator)...)
 	}
 	_, err = w.writer.Write(b)
 	if err != nil {
-		return errors.Wrap(err, "error writing to underlying writer")
+		return fmt.Errorf("error writing to underlying writer: %w", err)
 	}
 	return nil
 }
@@ -69,7 +68,7 @@ func (w *Writer) WriteObjects(objects interface{}) error {
 		for i := 0; i < value.Len(); i++ {
 			err := w.WriteObject(value.Index(i).Interface())
 			if err != nil {
-				return errors.Wrap(err, "error writing object")
+				return fmt.Errorf("error writing object: %w", err)
 			}
 		}
 	}
@@ -82,7 +81,7 @@ func (w *Writer) Flush() error {
 	if flusher, ok := w.writer.(Flusher); ok {
 		err := flusher.Flush()
 		if err != nil {
-			return errors.Wrap(err, "error flushing underlying writer")
+			return fmt.Errorf("error flushing underlying writer: %w", err)
 		}
 	}
 	return nil
@@ -93,7 +92,7 @@ func (w *Writer) Close() error {
 	if closer, ok := w.writer.(io.Closer); ok {
 		err := closer.Close()
 		if err != nil {
-			return errors.Wrap(err, "error closing underlying writer")
+			return fmt.Errorf("error closing underlying writer: %w", err)
 		}
 	}
 	return nil

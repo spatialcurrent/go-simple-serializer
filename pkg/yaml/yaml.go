@@ -12,7 +12,7 @@
 package yaml
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var (

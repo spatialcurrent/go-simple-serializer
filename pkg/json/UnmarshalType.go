@@ -13,8 +13,6 @@ import (
 	"reflect"
 
 	"unicode/utf8"
-
-	"github.com/pkg/errors" // utf8 is used to decode the first rune in the string
 )
 
 // UnmarshalType parses a slice of bytes into an object of a given type.
@@ -60,7 +58,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		ptr.Elem().Set(reflect.MakeSlice(outputType, 0, 0))
 		err := stdjson.Unmarshal(b, ptr.Interface())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), ptr.Interface()))
+			return nil, fmt.Errorf("error unmarshaling JSON %q into %T: %w", string(b), ptr.Interface(), err)
 		}
 		return ptr.Elem().Interface(), nil
 	case '{':
@@ -70,14 +68,14 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 			ptr.Elem().Set(reflect.MakeMap(outputType))
 			err := stdjson.Unmarshal(b, ptr.Interface())
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), ptr.Interface()))
+				return nil, fmt.Errorf("error unmarshaling JSON %q into %T: %w", string(b), ptr.Interface(), err)
 			}
 			return ptr.Elem().Interface(), nil
 		case reflect.Struct:
 			ptr := reflect.New(outputType)
 			err := stdjson.Unmarshal(b, ptr.Interface())
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into %T", string(b), ptr.Interface()))
+				return nil, fmt.Errorf("error unmarshaling JSON %q into %T: %w", string(b), ptr.Interface(), err)
 			}
 			return ptr.Elem().Interface(), nil
 		}
@@ -89,7 +87,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 		obj := ""
 		err := stdjson.Unmarshal(b, &obj)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into string", string(b)))
+			return nil, fmt.Errorf("error unmarshaling JSON %q into string: %w", string(b), err)
 		}
 		return obj, nil
 	}
@@ -100,7 +98,7 @@ func UnmarshalType(b []byte, outputType reflect.Type) (interface{}, error) {
 	obj := 0.0
 	err := stdjson.Unmarshal(b, &obj)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error unmarshaling JSON %q into float", string(b)))
+		return nil, fmt.Errorf("error unmarshaling JSON %q into float: %w", string(b), err)
 	}
 	return obj, nil
 }

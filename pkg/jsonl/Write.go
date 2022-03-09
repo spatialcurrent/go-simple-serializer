@@ -8,10 +8,9 @@
 package jsonl
 
 import (
+	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
@@ -46,20 +45,20 @@ func Write(input *WriteInput) error {
 		}
 		it, errorIterator := pipe.NewSliceIterator(inputObject)
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		p = p.Input(it)
 	} else {
 		it, errorIterator := pipe.NewSliceIterator([]interface{}{inputObject})
 		if errorIterator != nil {
-			return errors.Wrap(errorIterator, "error creating slice iterator")
+			return fmt.Errorf("error creating slice iterator: %w", errorIterator)
 		}
 		p = p.Input(it)
 	}
 	w := NewWriter(input.Writer, input.LineSeparator, input.KeySerializer, input.Pretty)
 	errorRun := p.Output(w).Run()
 	if errorRun != nil {
-		return errors.Wrap(errorRun, "error serializing jsonl")
+		return fmt.Errorf("error serializing jsonl: %w", errorRun)
 	}
 	return nil
 }

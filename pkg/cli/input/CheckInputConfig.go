@@ -8,7 +8,8 @@
 package input
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -37,16 +38,16 @@ func CheckInputConfig(v *viper.Viper, formats []string) error {
 	}
 	if len(v.GetString(FlagInputEscapePrefix)) == 0 {
 		if v.GetBool(FlagInputUnescapeColon) {
-			return errors.Wrap(ErrMissingInputEscapePrefix, "unescaping colon requires an escape prefix")
+			return fmt.Errorf("unescaping colon requires an escape prefix: %w", ErrMissingInputEscapePrefix)
 		}
 		if v.GetBool(FlagInputUnescapeEqual) {
-			return errors.Wrap(ErrMissingInputEscapePrefix, "unescaping equal requires an escape prefix")
+			return fmt.Errorf("unescaping equal requires an escape prefix: %w", ErrMissingInputEscapePrefix)
 		}
 		if v.GetBool(FlagInputUnescapeSpace) {
-			return errors.Wrap(ErrMissingInputEscapePrefix, "unescaping space requires an escape prefix")
+			return fmt.Errorf("unescaping space requires an escape prefix: %w", ErrMissingInputEscapePrefix)
 		}
 		if v.GetBool(FlagInputUnescapeNewLine) {
-			return errors.Wrap(ErrMissingInputEscapePrefix, "unescaping new line requires an escape prefix")
+			return fmt.Errorf("unescaping new line requires an escape prefix: %w", ErrMissingInputEscapePrefix)
 		}
 	}
 	inputComment := v.GetString(FlagInputComment)

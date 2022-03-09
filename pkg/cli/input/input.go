@@ -9,7 +9,7 @@
 package input
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 const (
