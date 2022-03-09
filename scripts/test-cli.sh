@@ -45,7 +45,7 @@ testJSONJSON() {
 testJSONLGOBJSONL() {
   local input='{"hello":"world"}'
   local expected='{"hello":"world"}'
-  local output=$(echo "${input}" | gss -i jsonl -o gob | gss -i gob -t -o jsonl)
+  local output=$(echo "${input}" | "${DIR}/../bin/gss" -i jsonl -o gob | gss -i gob -t -o jsonl)
   assertEquals "unexpected output" "${expected}" "${output}"
 }
 
