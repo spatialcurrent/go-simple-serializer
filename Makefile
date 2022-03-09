@@ -46,6 +46,7 @@ imports: bin/goimports ## Update imports in Go source code
 vet: ## Vet Go source code
 	go vet github.com/spatialcurrent/go-simple-serializer/pkg/... # vet packages
 	go vet github.com/spatialcurrent/go-simple-serializer/cmd/... # vet commands
+	go vet github.com/spatialcurrent/go-simple-serializer/plugins/... # vet plugins
 
 tidy: ## Tidy Go source code
 	go mod tidy

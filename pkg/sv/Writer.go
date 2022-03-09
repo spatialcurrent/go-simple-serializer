@@ -60,7 +60,6 @@ func NewWriter(underlying io.Writer, separator rune, columns []interface{}, keyS
 }
 
 func (w *Writer) WriteHeader() error {
-	fmt.Println("WriteHeader():", w.columns)
 	w.headerWritten = true
 
 	// Stringify columns into strings
@@ -82,47 +81,50 @@ func (w *Writer) ToRow(obj interface{}) ([]string, error) {
 }
 
 func (w *Writer) WriteObject(obj interface{}) error {
-	row := make([]string, 0)
+
 	if slc, ok := obj.([]string); ok {
-		row = slc
-	} else {
-		if !w.headerWritten {
-			if len(w.columns) == 0 {
-				inputObjectValue := reflect.ValueOf(obj)
-				for reflect.TypeOf(inputObjectValue.Interface()).Kind() == reflect.Ptr {
-					inputObjectValue = inputObjectValue.Elem()
-				}
-				inputObjectValue = reflect.ValueOf(inputObjectValue.Interface()) // sets value to concerete type
-				inputObjectKind := inputObjectValue.Type().Kind()
-				if inputObjectKind == reflect.Map {
-					w.columns = inspector.GetKeysFromValue(inputObjectValue, w.sorted, w.reversed)
-				} else if inputObjectKind == reflect.Struct {
-					fieldNames := make([]interface{}, 0)
-					for _, fieldName := range inspector.GetFieldNamesFromValue(inputObjectValue, w.sorted, w.reversed) {
-						fieldNames = append(fieldNames, fieldName)
-					}
-					fmt.Println("Field Names:", fieldNames)
-					w.columns = fieldNames
-				}
+		errorWrite := w.writer.Write(slc)
+		if errorWrite != nil {
+			return fmt.Errorf("error writing object: %w", errorWrite)
+		}
+		return nil
+	}
+
+	if !w.headerWritten {
+		if len(w.columns) == 0 {
+			inputObjectValue := reflect.ValueOf(obj)
+			for reflect.TypeOf(inputObjectValue.Interface()).Kind() == reflect.Ptr {
+				inputObjectValue = inputObjectValue.Elem()
 			}
-			if len(w.columns) == 0 {
-				return fmt.Errorf("could not infer the header from the given value %#v with type %T", obj, obj)
-			}
-			err := w.WriteHeader()
-			if err != nil {
-				return fmt.Errorf("error writing header: %w", err)
+			inputObjectValue = reflect.ValueOf(inputObjectValue.Interface()) // sets value to concerete type
+			inputObjectKind := inputObjectValue.Type().Kind()
+			if inputObjectKind == reflect.Map {
+				w.columns = inspector.GetKeysFromValue(inputObjectValue, w.sorted, w.reversed)
+			} else if inputObjectKind == reflect.Struct {
+				fieldNames := make([]interface{}, 0)
+				for _, fieldName := range inspector.GetFieldNamesFromValue(inputObjectValue, w.sorted, w.reversed) {
+					fieldNames = append(fieldNames, fieldName)
+				}
+				w.columns = fieldNames
 			}
 		}
-		r, errorRow := w.ToRow(obj)
-		if errorRow != nil {
-			return fmt.Errorf("error serializing object as row: %w", errorRow)
+		if len(w.columns) == 0 {
+			return fmt.Errorf("could not infer the header from the given value %#v with type %T", obj, obj)
 		}
-		row = r
+		err := w.WriteHeader()
+		if err != nil {
+			return fmt.Errorf("error writing header: %w", err)
+		}
+	}
+	row, errorRow := w.ToRow(obj)
+	if errorRow != nil {
+		return fmt.Errorf("error serializing object as row: %w", errorRow)
 	}
 	errorWrite := w.writer.Write(row)
 	if errorWrite != nil {
 		return fmt.Errorf("error writing object: %w", errorWrite)
 	}
+
 	return nil
 }
 
