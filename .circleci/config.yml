@@ -8,10 +8,12 @@
 version: "2.1"
 
 executors:
-  # `main` uses the `cimg/go:1.17` docker image.
-  main:
-    docker:
-      - image: cimg/go:1.17
+
+  # `arm` uses an ARM machine image.
+  arm:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
 
   # `base` uses the `cimg/base` docker image.
   base:
@@ -23,6 +25,11 @@ executors:
     macos:
       xcode: 12.4.0
       resource_class: medium
+
+  # `main` uses the `cimg/go:1.17` docker image.
+  main:
+    docker:
+      - image: cimg/go:1.17
 
   # `windows` uses the Windows machine image.
   windows:
@@ -56,9 +63,19 @@ jobs:
     executor: main
     steps:
       - checkout
+      # Update apt cache
+      - run: sudo apt-get update
+
+      # Tidy dependencies
       - run: make tidy
+
+      # Install ARM dependencies
       - run: sudo make deps_arm
+
+      # Build shared objects
       - run: make build_so
+
+      # Run examples
       - run: make run_example_c
       - run: make run_example_cpp
       - run: make run_example_python
@@ -75,6 +92,12 @@ jobs:
       # Tidy dependencies
       - run: make tidy
 
+      # Make gox
+      - run: make bin/gox
+
+      # Print supported OS/Arch combinations
+      - run: bin/gox -osarch-list
+
       # Build Executeables
       - run: make build_release
 
@@ -84,15 +107,22 @@ jobs:
       - store_artifacts:
           path: bin
           destination: /
+          
       - persist_to_workspace:
           root: bin
           paths:
             - gss_darwin_amd64
             - gss_darwin_arm64
+            - gss_freebsd_386
+            - gss_freebsd_amd64
+            - gss_freebsd_arm
             - gss_linux_386
             - gss_linux_amd64
             - gss_linux_arm
             - gss_linux_arm64
+            - gss_openbsd_386
+            - gss_openbsd_amd64
+            - gss_solaris_amd64
             - gss_windows_386.exe
             - gss_windows_amd64.exe
 
@@ -110,6 +140,15 @@ jobs:
           at: bin
       - run: bin/gss_linux_386 --help
       - run: bin/gss_linux_amd64 --help
+
+  # `verify_linux_arm` verifys the linux/arm build
+  verify_linux_arm:
+    executor: arm
+    steps:
+      - attach_workspace:
+          at: bin
+      - run: bin/gss_linux_arm --help
+      - run: bin/gss_linux_arm64 --help
 
   # `verify_macos` verifys the macOS build
   verify_macos:
@@ -136,6 +175,9 @@ workflows:
       - build
       - examples
       - verify_linux:
+          requires:
+            - build
+      - verify_linux_arm:
           requires:
             - build
       - verify_macos:
