@@ -12,16 +12,17 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // Writer formats and writes objects to the underlying writer as JSON Lines (aka jsonl).
 type Writer struct {
-	writer            io.Writer     // writer for the underlying stream
-	keys              []interface{} // known keys in order
-	expandKeys        bool          // expand keys with unknown keys
-	keyValueSeparator string        // the separator between a key and value
-	lineSeparator     string        // the separator stirng to use, e.g, null byte or \n.
+	writer            io.Writer          // writer for the underlying stream
+	keys              object.ObjectArray // known keys in order
+	expandKeys        bool               // expand keys with unknown keys
+	keyValueSeparator string             // the separator between a key and value
+	lineSeparator     string             // the separator stirng to use, e.g, null byte or \n.
 	keySerializer     stringify.Stringer
 	valueSerializer   stringify.Stringer
 	sorted            bool // sort the keys by alphabetical order
@@ -29,7 +30,7 @@ type Writer struct {
 }
 
 // NewWriter returns a writer for formating and writing objets to the underlying writer as JSON Lines (aka jsonl).
-func NewWriter(w io.Writer, keys []interface{}, expandKeys bool, keyValueSeparator string, lineSeparator string, keySerializer stringify.Stringer, valueSerializer stringify.Stringer, sorted bool, reversed bool) *Writer {
+func NewWriter(w io.Writer, keys object.ObjectArray, expandKeys bool, keyValueSeparator string, lineSeparator string, keySerializer stringify.Stringer, valueSerializer stringify.Stringer, sorted bool, reversed bool) *Writer {
 	return &Writer{
 		writer:            w,
 		keys:              keys,

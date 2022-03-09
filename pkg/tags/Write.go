@@ -12,18 +12,19 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // WriteInput provides the input for the Write function.
 type WriteInput struct {
-	Writer            io.Writer     // the underlying writer
-	Keys              []interface{} // subset of keys to print
-	ExpandKeys        bool          // dynamically expand keys
-	KeyValueSeparator string        // the key-value separator
-	LineSeparator     string        // the line separator
-	Object            interface{}   // the object to write
+	Writer            io.Writer          // the underlying writer
+	Keys              object.ObjectArray // subset of keys to print
+	ExpandKeys        bool               // dynamically expand keys
+	KeyValueSeparator string             // the key-value separator
+	LineSeparator     string             // the line separator
+	Object            interface{}        // the object to write
 	KeySerializer     stringify.Stringer
 	ValueSerializer   stringify.Stringer
 	Sorted            bool // sort keys

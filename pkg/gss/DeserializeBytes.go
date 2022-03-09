@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/hcl"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
@@ -24,7 +25,7 @@ import (
 type DeserializeBytesInput struct {
 	Bytes             []byte
 	Format            string
-	Header            []interface{}
+	Header            object.ObjectArray
 	Comment           string
 	LazyQuotes        bool
 	ScannerBufferSize int

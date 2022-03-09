@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/gss"
 )
 
@@ -46,7 +47,7 @@ func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, out
 	s, err := gss.Convert(&gss.ConvertInput{
 		InputBytes:          []byte(C.GoString(inputString)),
 		InputFormat:         C.GoString(inputFormat),
-		InputHeader:         []interface{}{},
+		InputHeader:         object.NewObjectArray(nil),
 		InputComment:        "",
 		InputLazyQuotes:     false,
 		InputSkipLines:      0,
@@ -54,7 +55,7 @@ func Convert(inputString *C.char, inputFormat *C.char, outputFormat *C.char, out
 		InputLineSeparator:  "\n",
 		InputEscapePrefix:   "//",
 		OutputFormat:        C.GoString(outputFormat),
-		OutputHeader:        []interface{}{},
+		OutputHeader:        object.NewObjectArray(nil),
 		OutputLimit:         -1,
 		OutputPretty:        C.GoString(outputFormat) == "1",
 		OutputSorted:        C.GoString(outputSorted) == "1",

@@ -294,8 +294,6 @@ github.com/pelletier/go-toml v1.9.4 h1:tjENF6MfZAg8e4ZmZTeWaWiT2vXtsoO6+iuOjFhEC
 github.com/pelletier/go-toml v1.9.4/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
-github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
@@ -329,6 +327,8 @@ github.com/spatialcurrent/go-pipe v0.0.0-20211121224133-8c3e90fc2b6a h1:wqR56ICm
 github.com/spatialcurrent/go-pipe v0.0.0-20211121224133-8c3e90fc2b6a/go.mod h1:Lq/brpH++gKrSYVzimS8cBqldqdZyZPRhAj06ZEl5S0=
 github.com/spatialcurrent/go-stringify v0.0.0-20220308153339-0abf902cfee4 h1:9Pg1iV1PATa6xYxQAlSGsRYwHh1OEnp7Lphaf+MV6bs=
 github.com/spatialcurrent/go-stringify v0.0.0-20220308153339-0abf902cfee4/go.mod h1:QOkIEQRq/x7eI60dZf97Z1kCCICTXEoRCcHPbtq0kIQ=
+github.com/spatialcurrent/go-try-get v0.0.0-20211130135300-b29289e7960d h1:6ElNijSE4fc9acQ96SzfgauPrJmKd+RDk5LZ8DALMe0=
+github.com/spatialcurrent/go-try-get v0.0.0-20211130135300-b29289e7960d/go.mod h1:q7+eppnJzzYY5lBaKARbyOrplvKt7xneBJYjJLE7Jjc=
 github.com/spf13/afero v1.3.3/go.mod h1:5KUK8ByomD5Ti5Artl0RtHeI5pTF7MIDuXL3yY520V4=
 github.com/spf13/afero v1.6.0 h1:xoax2sJ2DT8S8xA2paPFjDCScCNeWsg75VG0DLRreiY=
 github.com/spf13/afero v1.6.0/go.mod h1:Ai8FlHk4v/PARR026UzYexafAt9roJ7LcLMAmO6Z93I=

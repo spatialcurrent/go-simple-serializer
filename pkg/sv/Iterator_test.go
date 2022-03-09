@@ -14,6 +14,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/spatialcurrent/go-object/pkg/object"
 )
 
 func TestIterator(t *testing.T) {
@@ -68,7 +70,7 @@ joe,XYZ,79
 		Comment:    "",
 		SkipLines:  1, // skip the first line: a,b,c
 		LazyQuotes: false,
-		Header:     []interface{}{"name", "type", "age"},
+		Header:     object.NewObjectArray([]interface{}{"name", "type", "age"}),
 	})
 	assert.NoError(t, err)
 

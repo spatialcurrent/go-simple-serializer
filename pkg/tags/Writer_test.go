@@ -14,25 +14,26 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func TestWriteObject(t *testing.T) {
-	object := map[string]interface{}{
+	obj := map[string]interface{}{
 		"a": 1,
 		"b": 2,
 		"c": 3,
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
 	w := NewWriter(buf, keys, true, "=", "\n", keySerializer, valueSerializer, true, false)
 	assert.NotNil(t, w)
 
-	err := w.WriteObject(object)
+	err := w.WriteObject(obj)
 	assert.NoError(t, err)
 
 	err = w.Flush()
@@ -44,7 +45,7 @@ func TestWriteObject(t *testing.T) {
 }
 
 func TestWriteStruct(t *testing.T) {
-	object := struct {
+	obj := struct {
 		A string
 		B string
 		C string
@@ -55,9 +56,9 @@ func TestWriteStruct(t *testing.T) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	keys := make([]interface{}, 0)
-	keySerializer := func(object interface{}) (string, error) {
-		str, err := stringify.NewStringer("", false, false, false)(object)
+	keys := object.NewObjectArray(nil)
+	keySerializer := func(obj interface{}) (string, error) {
+		str, err := stringify.NewStringer("", false, false, false)(obj)
 		if err != nil {
 			return str, err
 		}
@@ -68,7 +69,7 @@ func TestWriteStruct(t *testing.T) {
 	w := NewWriter(buf, keys, true, "=", "\n", keySerializer, valueSerializer, true, false)
 	assert.NotNil(t, w)
 
-	err := w.WriteObject(object)
+	err := w.WriteObject(obj)
 	assert.NoError(t, err)
 
 	err = w.Flush()
@@ -94,7 +95,7 @@ func TestWriterObjects(t *testing.T) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 

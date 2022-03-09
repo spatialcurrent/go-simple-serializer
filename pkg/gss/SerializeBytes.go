@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 )
 
@@ -20,7 +21,7 @@ type SerializeBytesInput struct {
 	Format            string
 	FormatSpecifier   string
 	Fit               bool
-	Header            []interface{}
+	Header            object.ObjectArray
 	Limit             int
 	Pretty            bool
 	Sorted            bool

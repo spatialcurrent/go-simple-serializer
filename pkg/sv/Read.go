@@ -12,6 +12,7 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
@@ -20,7 +21,7 @@ type ReadInput struct {
 	Type       reflect.Type // the output type
 	Reader     io.Reader
 	Separator  rune // the values separator
-	Header     []interface{}
+	Header     object.ObjectArray
 	SkipLines  int
 	Comment    string
 	LazyQuotes bool

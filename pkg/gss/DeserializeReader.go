@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/iterator"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
@@ -23,7 +24,7 @@ import (
 type DeserializeReaderInput struct {
 	Reader          io.Reader
 	Format          string
-	Header          []interface{}
+	Header          object.ObjectArray
 	Comment         string
 	LazyQuotes      bool
 	SkipLines       int

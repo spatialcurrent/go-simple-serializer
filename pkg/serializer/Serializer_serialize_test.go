@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
@@ -104,7 +105,7 @@ func TestSerializerCSVSliceExpandHeaderWithWildcard(t *testing.T) {
 			"c": "6",
 		},
 	}
-	s := New(FormatCSV).Limit(NoLimit).ExpandHeader(true).Header([]interface{}{"*", "c"})
+	s := New(FormatCSV).Limit(NoLimit).ExpandHeader(true).Header(object.NewObjectArray([]interface{}{"*", "c"}))
 	out, err := s.Serialize(in)
 	assert.NoError(t, err)
 	assert.Equal(t, "a,b,c\n1,,3\n,5,6\n", string(out))

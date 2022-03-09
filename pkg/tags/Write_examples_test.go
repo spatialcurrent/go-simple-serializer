@@ -11,13 +11,14 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 // This example shows you can marshal a single map into a JSON object
 func ExampleWrite_map() {
 	obj := map[string]string{"a": "b", "c": "beautiful world", "d": "beautiful \"wide\" world"}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
@@ -54,7 +55,7 @@ func ExampleWrite_slice() {
 			"c": 6,
 		},
 	}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 

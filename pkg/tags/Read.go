@@ -12,14 +12,15 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 )
 
 // ReadInput provides the input for the Read function.
 type ReadInput struct {
-	Type              reflect.Type  // the output type
-	Reader            io.Reader     // the underlying reader
-	Keys              []interface{} // the keys to read
+	Type              reflect.Type       // the output type
+	Reader            io.Reader          // the underlying reader
+	Keys              object.ObjectArray // the keys to read
 	SkipLines         int
 	SkipBlanks        bool
 	SkipComments      bool

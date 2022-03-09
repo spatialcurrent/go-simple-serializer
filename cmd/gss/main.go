@@ -36,6 +36,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-pipe/pkg/pipe"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/cli/formats"
@@ -88,13 +89,13 @@ Supports the following file formats: ` + strings.Join(gss.Formats, ", "),
 
 			inputFormat := v.GetString(cli.FlagInputFormat)
 
-			inputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagInputHeader))
+			inputHeader := object.NewStringArray(v.GetStringSlice(cli.FlagInputHeader)).ObjectArray()
 
 			inputLineSeparator := v.GetString(cli.FlagInputLineSeparator)
 
 			outputFormat := v.GetString(cli.FlagOutputFormat)
 
-			outputHeader := stringify.StringSliceToInterfaceSlice(v.GetStringSlice(cli.FlagOutputHeader))
+			outputHeader := object.NewStringArray(v.GetStringSlice(cli.FlagOutputHeader)).ObjectArray()
 
 			outputSorted := v.GetBool(cli.FlagOutputSorted)
 			outputReversed := v.GetBool(cli.FlagOutputReversed)

@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
@@ -29,7 +30,7 @@ func TestWrite(t *testing.T) {
 			"c": 6,
 		},
 	}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{
@@ -61,7 +62,7 @@ func TestWriteKeys(t *testing.T) {
 			"c": 6,
 		},
 	}
-	keys := []interface{}{"a", "c"}
+	keys := object.NewObjectArray([]interface{}{"a", "c"})
 
 	buf := new(bytes.Buffer)
 	err := Write(&WriteInput{

@@ -13,13 +13,15 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+
+	"github.com/spatialcurrent/go-object/pkg/object"
 )
 
 // Iterator is used to iterate over a table of separated values.
 type Iterator struct {
 	Reader *csv.Reader
 	Type   reflect.Type
-	header []interface{}
+	header object.ObjectArray
 	limit  int
 	count  int
 }
@@ -29,7 +31,7 @@ type NewIteratorInput struct {
 	Reader     io.Reader
 	Type       reflect.Type // required
 	Separator  rune         // the values separator
-	Header     []interface{}
+	Header     object.ObjectArray
 	SkipLines  int
 	Comment    string
 	LazyQuotes bool
@@ -64,7 +66,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 	}
 
 	header := input.Header
-	if len(input.Header) == 0 {
+	if header.Empty() {
 		h, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
@@ -72,10 +74,7 @@ func NewIterator(input *NewIteratorInput) (*Iterator, error) {
 			}
 			return nil, fmt.Errorf("error reading header: %w", err)
 		}
-		header = make([]interface{}, 0, len(h))
-		for _, str := range h {
-			header = append(header, str)
-		}
+		header = object.NewStringArray(h).ObjectArray()
 	}
 
 	return &Iterator{Reader: reader, Type: input.Type, header: header, limit: input.Limit, count: 0}, nil
@@ -100,7 +99,7 @@ func (it *Iterator) Next() (interface{}, error) {
 		return nil, fmt.Errorf("error reading next line: %w", err)
 	}
 	m := reflect.MakeMap(it.Type)
-	for i, h := range it.header {
+	for i, h := range it.header.Value() {
 		if i < len(row) {
 			m.SetMapIndex(reflect.ValueOf(h), reflect.ValueOf(row[i]))
 		}
@@ -108,6 +107,6 @@ func (it *Iterator) Next() (interface{}, error) {
 	return m.Interface(), nil
 }
 
-func (it *Iterator) Header() []interface{} {
+func (it *Iterator) Header() object.ObjectArray {
 	return it.header
 }

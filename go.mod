@@ -2,14 +2,16 @@ module github.com/spatialcurrent/go-simple-serializer
 
 go 1.17
 
+replace github.com/spatialcurrent/go-object => ../go-object
+
 require (
 	github.com/BurntSushi/toml v1.0.0
 	github.com/client9/misspell v0.3.4
 	github.com/hashicorp/hcl v1.0.0
 	github.com/kisielk/errcheck v1.6.0
 	github.com/mitchellh/gox v1.0.1
-	github.com/pkg/errors v0.9.1
 	github.com/spatialcurrent/go-fit v0.0.0-20220308154842-0eadb7a509c2
+	github.com/spatialcurrent/go-object v0.0.0-00010101000000-000000000000
 	github.com/spatialcurrent/go-pipe v0.0.0-20211121224133-8c3e90fc2b6a
 	github.com/spatialcurrent/go-stringify v0.0.0-20220308153339-0abf902cfee4
 	github.com/spf13/cobra v1.3.0
@@ -32,6 +34,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/spatialcurrent/go-try-get v0.0.0-20211130135300-b29289e7960d // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

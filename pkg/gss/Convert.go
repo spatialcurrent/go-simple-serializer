@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-simple-serializer/pkg/serializer"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
@@ -19,7 +20,7 @@ import (
 type ConvertInput struct {
 	InputBytes              []byte
 	InputFormat             string
-	InputHeader             []interface{}
+	InputHeader             object.ObjectArray
 	InputComment            string
 	InputLazyQuotes         bool
 	InputScannerBufferSize  int
@@ -36,7 +37,7 @@ type ConvertInput struct {
 	OutputFormat            string
 	OutputFormatSpecifier   string
 	OutputFit               bool
-	OutputHeader            []interface{}
+	OutputHeader            object.ObjectArray
 	OutputLimit             int
 	OutputPretty            bool
 	OutputSorted            bool
@@ -55,7 +56,7 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 	return &ConvertInput{
 		InputBytes:              bytes,
 		InputFormat:             inputFormat,
-		InputHeader:             NoHeader,
+		InputHeader:             object.NewObjectArray(NoHeader),
 		InputComment:            NoComment,
 		InputLazyQuotes:         false,
 		InputScannerBufferSize:  0,
@@ -71,7 +72,7 @@ func NewConvertInput(bytes []byte, inputFormat string, outputFormat string) *Con
 		OutputFormat:            outputFormat,
 		OutputFormatSpecifier:   "",
 		OutputFit:               false,
-		OutputHeader:            NoHeader,
+		OutputHeader:            object.NewObjectArray(NoHeader),
 		OutputLimit:             NoLimit,
 		OutputPretty:            false,
 		OutputSorted:            false,

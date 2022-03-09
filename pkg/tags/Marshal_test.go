@@ -12,13 +12,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/spatialcurrent/go-object/pkg/object"
 	"github.com/spatialcurrent/go-stringify/pkg/stringify"
 )
 
 func TestMarshalMap(t *testing.T) {
 
 	in := map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
@@ -30,7 +31,7 @@ func TestMarshalMap(t *testing.T) {
 func TestMarshalMapKeys(t *testing.T) {
 
 	in := map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0}
-	keys := []interface{}{"a", "c"}
+	keys := object.NewObjectArray([]interface{}{"a", "c"})
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
@@ -42,7 +43,7 @@ func TestMarshalMapKeys(t *testing.T) {
 func TestMarshalMapKeysExpand(t *testing.T) {
 
 	in := map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0}
-	keys := []interface{}{"a", "c"}
+	keys := object.NewObjectArray([]interface{}{"a", "c"})
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
@@ -54,7 +55,7 @@ func TestMarshalMapKeysExpand(t *testing.T) {
 func TestMarshalMapUpper(t *testing.T) {
 
 	in := map[string]interface{}{"a": 1.0, "b": 2.0, "c": 3.0}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, true)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 
@@ -69,7 +70,7 @@ func TestMarshalStruct(t *testing.T) {
 		B string
 		C string
 	}{A: "1", B: "2", C: "3"}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 	b, err := Marshal(in, keys, true, "=", keySerializer, valueSerializer, true, false)
@@ -83,7 +84,7 @@ func TestMarshalStructKeys(t *testing.T) {
 		B string
 		C string
 	}{A: "1", B: "2", C: "3"}
-	keys := []interface{}{"A", "C"}
+	keys := object.NewObjectArray([]interface{}{"A", "C"})
 	keySerializer := stringify.NewStringer("", false, false, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 	b, err := Marshal(in, keys, false, "=", keySerializer, valueSerializer, true, false)
@@ -97,7 +98,7 @@ func TestMarshalStructLower(t *testing.T) {
 		B string
 		C string
 	}{A: "1", B: "2", C: "3"}
-	keys := make([]interface{}, 0)
+	keys := object.NewObjectArray(nil)
 	keySerializer := stringify.NewStringer("", false, true, false)
 	valueSerializer := stringify.NewStringer("", false, false, false)
 	b, err := Marshal(in, keys, true, "=", keySerializer, valueSerializer, true, false)
