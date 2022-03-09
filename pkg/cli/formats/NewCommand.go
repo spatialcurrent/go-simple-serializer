@@ -41,7 +41,7 @@ func NewCommand() *cobra.Command {
 
 			f := v.GetString(FlagFormat)
 
-			b, err := serializer.New(f).LineSeparator("\n").Serialize(gss.Formats)
+			b, err := serializer.New(f).LineSeparator("\n").Serialize([]interface{}{gss.Formats})
 			if err != nil {
 				return fmt.Errorf("error serializing formats with format %q: %w", f, err)
 			}

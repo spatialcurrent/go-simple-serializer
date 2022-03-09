@@ -61,7 +61,7 @@ test_cli: bin/gss ## Run CLI tests
 
 .PHONY: install
 install:  ## Install the CLI on current platform
-	go install github.com/spatialcurrent/go-simple-serializer/cmd/gss
+	go install -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
 
 #
 # Command line Programs
@@ -86,7 +86,7 @@ bin/shadow:
 	go build -o bin/shadow golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
 
 bin/gss: ## Build CLI for Darwin / amd64
-	go build -o bin/gss github.com/spatialcurrent/go-simple-serializer/cmd/gss
+	go build -o bin/gss -ldflags="$(LDFLAGS)" github.com/spatialcurrent/go-simple-serializer/cmd/gss
 
 bin/gss_linux_amd64: bin/gox ## Build CLI for Darwin / amd64
 	scripts/build-release linux amd64

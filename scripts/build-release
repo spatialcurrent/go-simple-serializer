@@ -21,12 +21,14 @@ export GOFLAGS="-mod=readonly"
 
 export GOPATH=${GOPATH:-$(go env GOPATH)}
 
+export LDFLAGS="-s -w -X main.gitBranch=$(git branch | grep \* | cut -d ' ' -f2) -X main.gitCommit=$(git rev-list -1 HEAD)"
+
 go mod download
 
 ${DIR}/../bin/gox \
 -os="${XC_OS}" \
 -arch="${XC_ARCH}" \
 -osarch="${XC_EXCLUDE_OSARCH}" \
--ldflags "-s -w" \
+-ldflags "${LDFLAGS}" \
 -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" \
 github.com/spatialcurrent/go-simple-serializer/cmd/gss
